@@ -105,6 +105,12 @@ Data-Juicer 不训练模型，但在「数据课程调度」上提供了两类�
   针对 T2I 与 T2V 分别做专项优化；T2I 微调使用 6000 万内部高质量图像；I2V 则从 T2V 初始化后用 450 万文本-图像-视频三元组微调。
 【关联设计】数据流水线的分辨率分档过滤阈值（Table 4）就是为这套课程量身定制的——每个训练分辨率档位都有一批已按对应严格度筛好的数据待命，数据侧与训练侧高度耦合。
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（无披露，仅有架构层的间接线索）。官方未公开任何训练阶段划分、数据课程调度（分辨率/时长/质量分/模态维度的阶段推进），也未描述图像→视频、低清→高清、短→长的课程设计。
+唯一与训练机制相关的公开信息是 Hailuo 02 提出的 NCR（Noise-aware Compute Redistribution，噪声感知的计算再分配）架构，官方称其在同等参数规模下将训练与推理效率提升约 2.5 倍。从名称推断，NCR 是按扩散过程的噪声水平（时间步）动态分配计算量的机制——即在不同去噪阶段投入不同算力，属于训练/推理效率优化，而非数据课程调度。MiniMax 未就 NCR 发布论文或技术细节，本条解读为基于名称的推测。
+此外「原生 1080p」的表述暗示高分辨率阶段是真实训练阶段而非纯后处理超分，可能对应一个高清微调阶段，但同样无一手依据。
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
 【无多阶段课程——单阶段扁平训练】TV2A 主模型的全部 10 万小时数据在单一训练阶段一次性混合训练，共 200k 步，128 张 H20 GPU，有效 batch size 2048，AdamW 优化器，学习率 1e-4，各模态独立施加 0.1 的 CFG dropout。不存在分辨率课程、时长课程、质量课程或模态课程。
@@ -355,6 +361,17 @@ Seedance 1.5 pro 明确把「基于课程的数据调度（curriculum-based data
 
 完全未披露。无阶段划分信息（低清→高清、图像→视频、短→长、静音→有声等），无任何按分辨率/时长/质量分/模态调度数据课程的描述。可间接推断的线索：产品分为 Sora 2（720p）与 Sora 2 Pro（1080p）两档，且时长上限从10秒逐步放开到15/25秒，符合分辨率与时长渐进式课程的一般规律，但这属于产品分层与推理配置，不能直接等同于训练课程。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+数据集本身以「四分支 + 双质量档（全量 / HQ）」的形式为多阶段课程提供了现成的调度结构，基线模型据此设计了三阶段训练：
+【阶段一：预训练（单人 + 纯视频目标）】使用单人分支数据，以 ASR 转写文本与 caption 作为条件，生成目标仅为视频模态。此阶段建立文本/语音条件到人像视频的基础映射。
+【阶段二：联合音视频训练】生成目标扩展到视频 + 音频双模态，使用经过滤的音频数据。此阶段建立跨模态联合生成能力。
+【阶段三：微调 / SFT（双人对话 + 高质量）】使用高质量的双人对话音视频配对数据（HQ 子集），完成从单人生成到双人交互生成的能力迁移。
+【课程调度依据】三个维度同时递进：模态（视频 → 视频+音频）、交互复杂度（单人 → 双人对话）、数据质量（全量 → HQ 子集）。与 MOVA 以「分辨率 + 质量」为主轴的课程不同，SpeakerVid-5M 基线的课程主轴是「模态与交互复杂度」——这正是其数据集四分支结构的直接映射。
+【分辨率课程】无。基线全程使用固定的 480×768 分辨率，不做低清到高清的分辨率爬升。
+【时长课程】无。clip 长度固定在 3–14 秒区间，不做短到长的时长爬升；多轮对话的长上下文由 multi-turn 分支的转写聚合提供，而非通过延长视频序列实现。
+【算力】阶段一与阶段二合计在 128 张 NVIDIA L40S 上训练 15 天；阶段三微调在 32 张 NVIDIA A800 上训练 5 天。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 采用明确的四步级联训练（cascaded training pipeline），课程轴同时覆盖模态、分辨率与帧长，且团队明确指出其目的是「加速收敛并充分利用不同质量的视频数据集」——即课程台阶与数据档位一一对应：
@@ -423,6 +440,51 @@ Unison 存在两层嵌套的阶段划分，需要分开理解——外层是按�
 阶段2 Causal Adaptation：从预训练双向模型初始化自回归模型，用统一 Teacher Forcing 与 Diffusion Forcing 的混合训练策略适配到因果生成设定，使模型获得稳定的多步自回归生成能力；
 阶段3 DMD 蒸馏：采用 Distribution Matching Distillation 配合 Phased Consistency Models（PCM）正则，将自回归模型蒸馏为少步生成器，在保持生成质量的同时大幅提升推理效率。
 各阶段所用数据是否有差异未说明 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 给出了完整的分辨率-模态渐进课程（2.5+ 未披露）：
+【问题诊断】报告先说明为何不能直接高分辨率长视频联合训练：(1) 序列过长（1280×720 的81帧）严重降低训练吞吐，在固定 GPU-hour 预算下数据吞吐不足、收敛受阻；(2) 显存占用过大迫使 batch size 偏小，梯度方差尖峰引发训练不稳定。
+【阶段划分】
+- 阶段0 图像预训练：14B 模型先做 256px 低分辨率文生图预训练，目的是在引入高分辨率视频模态之前先建立跨模态语义-文本对齐与几何结构保真度。
+- 阶段1 图文视频联合：256px 图像 + 5秒视频（192px，16fps）。
+- 阶段2：图像与视频同步升到 480px，视频时长保持5秒不变。
+- 阶段3：图像与视频同步升到 720px，视频仍为5秒。
+- 后训练：保持架构与优化器不变、以预训练 checkpoint 初始化，在 480px 与 720px 上用后训练数据集联合训练。
+【课程的数据侧配套】分辨率过滤阈值本身随阶段变化（「resolution thresholds are applied at different training stages」），即数据准入标准与训练阶段联动，而非一次性筛好。
+【训练配置】flow matching / Rectified Flow 框架（xt = t·x1 + (1−t)·x0，预测速度场 vt = x1 − x0，MSE 损失），timestep 取自 logit-normal 分布；bf16 混合精度、AdamW、weight decay 1e−3、初始 lr 1e−4，并在 FID 与 CLIP Score 出现平台期时动态降低学习率——用评测指标平台期触发 lr 衰减是一个值得注意的工程细节。
+【维度演进推断】课程中时长始终固定为5秒，而 2.6/2.7 已支持 2–15 秒与多镜头叙事，说明 2.5 之后必然新增了「时长扩展阶段」与「多镜头阶段」，并在某个阶段引入音频模态，但阶段划分与切换判据全部未知。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者作为评测基准本身不涉及生成模型的训练课程[不适用]。唯一涉及训练的是 AVBench 的评测器训练：VT 与 AV 评测器基于 Qwen2.5-Omni 7B 采用「仅微调 LLM 部分、冻结其余」的部分参数策略；AT 评测器基于 Qwen2-Audio 7B 采用「微调 LLM + connector 层」策略。二者均为单阶段偏好学习微调，未采用多阶段课程；具体学习率、epoch 数、batch size 等超参未在可获取内容中披露[不确定]。
+可反向借鉴的课程设计信号：AVBench 的 Normal（1–2 说话人）/ Hard（3–4 说话人 + 重叠语音 + 噪声）双子集分层、AV-SyncBench 的扰动强度多档位设计（偏移 5 档、抖动 3 档、变速 10 档），本质都是难度分级体系，可直接映射为训练数据的由易到难课程编排依据。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+【captioner 自身的训练课程】
+· AuroraCap：三阶段训练，累计超 2000 万条图/视频-文本对（图像→视频的经典课程）。
+· Tarsier2：预训练（40M video-text pairs）→ 细粒度时序对齐 SFT → model-based sampling 构造偏好对 + DPO，三阶段。
+· AVoCaDO / AVSCap：SFT → GRPO 两阶段。AVSCap 明确论断「RL 带来的增益大于扩大 SFT 数据量」，这是 caption 模型训练资源分配的关键结论。
+· video-SALMONN 2：SFT → MrDPO（多轮 DPO，周期性用新训的轻量 adapter 重置 reference policy，避免 reference 陈旧）。
+· Omni-Captioner（阿里）：两阶段 curriculum，audio → audio-visual（先学听、再学看+听）—— 与视觉侧「图像→视频」课程正好互补，是 omni captioner 特有的课程设计。
+· SkyCaptioner-V1：Qwen2.5-VL-72B 通用描述 + 三子专家 → 融合 → 蒸馏进 7B，属于「多教师并行 → 单学生蒸馏」而非串行课程。
+【captioner 在生成模型训练课程中的角色（分级打标）】
+· Open-Sora 2.0：256px 阶段海量数据用 LLaVA-Video 打标、768px 阶段精选 5M 用 Qwen 2.5 Max 重标 —— 打标质量金字塔与数据金字塔严格对应。
+· Movie Gen：70% caption 来自 8B、30% 来自 70B，是同一权衡的另一实现；后训练阶段 caption 由人工精修。
+· Open-Sora Plan v1.3：阶段二用未过滤 Panda70M（约 100k 步接近收敛），阶段三换成过滤后数据（仅 30k 步、lr 降至 1e-5）实现质量跃升 —— 「大量粗数据学分布、少量精数据提质量」的间接证据。
+· Motif-Video 2B：caption 三变体按 0.5/0.3/0.2 概率采样，第 1–3 阶段用 sentence-level embedding 文本编码器、第 4 阶段起换为 T5Gemma2（借鉴 PixArt-α 的「类条件到文本条件」课程思路）。
+【生态结论】打标质量随训练阶段升级是 2025–2026 年的稳定实践，且「便宜模型标底层、贵模型标顶层」的成本结构在多家独立收敛。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+作为数据集本身不定义训练课程，但均提供了支撑课程调度的分层结构。SpatialVID 提供最明确的两级数据课程基础：全量 2.71M clip 可用于大规模预训练，均衡采样的 SpatialVID-HQ（0.37M clip、20.63M帧）作为高质量退火/SFT子集；Action100M 提供语义重采样子集（k-means，k=10³/10⁴/10⁵ 三档粒度），可按需构造从粗到细的课程；SceneScribe-1M 在下游实验中采用“基线模型 + 引入 SceneScribe-1M 继续训练”的两段式配方，用于验证数据增益；WildWorld 用于对 Wan2.2-TI2V-5B 基线做条件微调，训练片段固定81帧、分辨率 544×960、推理16FPS，未描述分辨率/时长渐进课程[不确定]
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+【锚论文的四阶段课程即其核心贡献】Phase 1 SFT → Phase 2 RLHF(GRPO) → Phase 3 PE → Phase 4 AD。四阶段之间的依赖关系被论证得比较清晰：SFT 为 RLHF 提供稳定参考策略并扩大探索空间；PE 与 RLHF 共用同一套奖励回路但作用于输入侧，二者互补；AD 把前三阶段的能力迁移到因果架构。AD 内部又细分三个子阶段：① DMD 蒸馏——先把原始预训练模型蒸成只需少量去噪步的双向学生模型，保留全局注意力感受野，为后续迁移到因果架构提供高质量、易回归的教师轨迹；② Causal ODE 回归——直接用 DMD loss 训因果学生会因架构差异而不稳定，故引入高效初始化策略并装配块因果掩码，训练模型仅凭因果历史做有效去噪预测；③ Self-Forcing 蒸馏——每帧基于此前自生成输出通过带 KV cache 的自回归 rollout 生成，从而在视频级施加 DMD loss，直接评估整段序列的质量。
+【GRPO 的具体课程设计（锚论文的技术要点）】沿用 DanceGRPO 把流匹配采样表述为 MDP，稀疏奖励仅在终止步给出。针对视频生成，作者指出 MixGRPO 在随机子集较小时会出现 reward collapse，故受 Flash-GRPO 启发采用「等时分组（isotemporal grouping）」——每条 prompt 被指派一个不同的时间步 t_i，去噪过程中每个 prompt 组只在其指派时间步做一次 ODE→SDE 转换，该步用 SDE 采样以支持探索与梯度计算，其余所有时间步用确定性 ODE 更新以产出更高质量的生成与更可靠的奖励信号。并引入「时序梯度校正（Temporal Gradient Rectification）」显式归一化时间相关缩放因子 λ(t)=√Δt/σ_t + σ_t√Δt(1−t)/(2t)。遵循 DanceGRPO 省略 KL 正则项。
+【横向课程对比】HunyuanVideo 1.5 的 CT→SFT→RLHF 三段且 T2V/I2V 全程分开；SkyReels-V2 的 540p 概念均衡 SFT→720p 高质量 SFT→三阶段 DPO；Cosmos-Predict 2.5 的五域并行 SFT→模型合并→GRPO→rCM 蒸馏；Motif-Video 2B 把 SFT 插入分辨率阶梯中间（720p 预训练从 480p SFT checkpoint 起步）；Seedance 1.0 的多子模型 SFT→model merging→RLHF；LongCat Avatar 1.5 把 GRPO 从视频级奖励扩展到逐帧奖励，多段 rollout 支持最多 5 个 clip 且仅末段参与优化，并用 DMD2 蒸馏至 8 步。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -509,6 +571,10 @@ Allegro 的「配比」并非多来源加权混合，而是单一语料的嵌套
 (3) **分辨率驱动的数据池收缩**：480p 阶段 36M → 720p 阶段 24M → 1080p 阶段 7M，越到后期数据越少、质量门槛越高，本身构成一种隐式的退火（annealing）——高分辨率末期训练实际上就是在高质量子集上进行。
 (4) **分布均衡的时机**：论文未说明分布均衡（阶段5）是对全量数据一次性执行，还是在不同训练阶段采用不同配比。
 【未披露】各阶段图像:视频的具体混合比例、每阶段训练步数与见过的 token 数、是否有显式的高质量退火阶段。[部分不确定]
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未说明预训练、退火（annealing）、SFT 各阶段的数据配比如何变化，也未提及是否存在高质量子集精调阶段。Hailuo 02 的「数据量4倍+质量与多样性提升」是对整体训练集的笼统描述，无阶段维度的拆解。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -685,6 +751,16 @@ Seedance 1.0 给出了少数可查的配比数字：视频预训练期间保留�
 
 完全未披露。预训练/退火（annealing）/SFT 各阶段的数据配比变化，无任何信息。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+【规模层面的配比变化】呈典型的「大规模低门槛预训练 → 小规模高门槛后训练」金字塔：
+  - 预训练阶段：7,375 小时（即总量 8,743 小时扣除 HQ 子集 1,368 小时后的剩余部分）。论文明确将这部分表述为 large-scale pretraining 数据。
+  - 微调阶段：571K clips / 1,368 小时的高质量 SFT 子集，约占总时长的 15.6%。
+  值得注意的是论文采取的是「HQ 子集与预训练集互斥」的划分方式（7,375 + 1,368 = 8,743），而非「HQ 子集是预训练集的子集」——即高质量数据被保留到后训练阶段专用，预训练不使用它们。这与多数工作「预训练用全量、SFT 用其中的精选子集」的做法不同，是一个较特别的选择。
+【分支层面的配比变化】预训练用单人分支（single），微调用对话分支（dialogue）的高质量配对。listening 与 multi-turn 分支在基线训练中的具体使用比例未说明。[不确定]
+【模态层面的配比变化】阶段一仅视频目标，阶段二起加入音频目标，即音频数据的参与是从零到有的阶跃式引入，而非渐进配比调整。
+【未披露】各阶段内部不同数据源/分支/主题类目的采样权重、是否存在 annealing（退火）阶段、是否对长尾说话人做重采样均未说明。论文未提供 stage-wise 的数据配比表。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 配比策略以「同一套标签、逐级抬高阈值」的方式表达，而非显式的类别配比数字：
@@ -733,6 +809,52 @@ Seedance 1.0 给出了少数可查的配比数字：视频预训练期间保留�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。论文完全未披露三个训练阶段之间的数据配比变化，也未提及退火（annealing）阶段或高质量子集。数据侧只描述了一条统一的清洗流水线，未说明其产物如何在阶段间划分。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 明确存在「随阶段滚动调整的三维配比」，这是其数据方法论中最具借鉴价值的一条，但只有定性表述与一张示意图，无数值。
+【核心表述】报告 Fig.3 标题为「Data provisioning across different training phases」，图注写明：对每一个训练阶段，我们依据数据吞吐（data throughput）动态调整与运动（motion）、质量（quality）、类别（category）相关的数据比例。即配比调度沿三个正交轴进行，且调度依据是吞吐量约束（高分辨率阶段吞吐低，故必须提高单位样本的质量密度）。
+【与六档运动分级的耦合】静态视频与相机主导运动被「降低采样比例/降低采样优先级」，而非删除——采样率本身就是配比控制手段，且可以随阶段变化。
+【预训练 → 后训练的切换】后训练阶段整体切换到精选高质量子集（图像取专家分 top20% + 人工精选，视频取质量分类器 top 且按简单/复杂运动分别取百万级，覆盖12大类），并保持 480px/720px 联合。这是明确的「退火/精调阶段用小而精数据」的做法。
+【缺口】各阶段三维配比的具体数值、图像与视频的样本比例、音频数据在 2.5+ 联合训练中的混入比例，均无。也未说明音视频联合训练时是否仍混入纯视频（无音轨）数据以保护视觉质量。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者均不涉及生成模型训练的阶段性配比[不适用/不确定]。可提取的配比相关设计为：
+【AVBench】评测器训练数据按维度均匀配比 —— 每个一致性维度各 100K 对，AT/VT/AV 三维度合计 300K，即严格 1:1:1 均衡配比；正负样本比例未披露[不确定]。评测集则按 350:120（约 74.5% : 25.5%）划分 Normal 与 Hard 子集，这一「约 3:1 的常规:困难」比例可作为 SFT 高质量子集中难例占比的参考锚点。
+【AV-SyncBench】时序挑战 37,569 样本 vs 语义挑战 821 样本，比例约 46:1，反映的是构造成本而非理想配比。
+【VABench】T2AV 778 : I2AV 521 : 立体声 116，约 6.7 : 4.5 : 1。
+【PhyAVBench】337 组配对提示词跨 6 大维度 41 个测试点，平均每测试点约 8 组；各维度间的组数分配未逐项披露[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+【captioner 训练的数据配比】
+· AVoCaDO-SFT-107K 的六源配比即为显式的 mixture 设计：FineVideo 29K（27%）> TikTok-10M 24K（22%）> Shot2Story 20K（19%）> ShortVideo 18K（17%）> YouTube-Commons 11K（10%）> CinePile 5K（5%），以 UGC 为主体、影视为少量高质量补充。
+· AVSCap-130K = 4 万视频 × 3 份标注（visual / audio / synergistic），三类标注 1:1:1 配比而非偏向融合式，说明单模态锚定标注对训练同样重要。
+· SkyCaptioner-V1：1000 万条精选出 200 万条概念均衡数据（保留率 20%），配比目标是概念均衡而非源均衡。
+【caption 在生成模型各阶段的配比变化】
+· Motif-Video 2B：caption 三变体 0.5/0.3/0.2 的采样概率（论文坦承是「务实的配方选择而非经隔离验证的最优性主张」）。
+· UniTalking：「分头标注后拼接」与「统一模型融合标注」两条路径的产物在训练时被随机采样使用 —— 把标注策略的选择交给随机采样，让模型同时适应两种文本分布。
+· SkyReels-V4：短/长/结构化三档描述并存供混训。
+· Movie Gen：8B/70B caption 的 70/30 混比贯穿全训练集，非阶段性变化。
+· NAVA（JAVG 批次）：模态配比从 3:1 调度到 1:2，160K SFT 子集，但无对照实验验证收益。
+【生态缺口】几乎没有工作报告「不同 caption 风格/长度的混合比例」的消融最优点，Motif 的坦诚说明（0.5/0.3/0.2 未经验证）代表了行业真实状态。[不确定]
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SpatialVID 的 HQ 子集是显式的配比产物——在美学、亮度、运动三项指标上做分布收紧，并对场景类别分布与运动多样性做均衡，相对 Panda-70M 展现出更集中的质量分布，可直接充当退火阶段的高质量配比源；Action100M 的 k-means 语义重采样即为对抗长尾的配比工具，配合7.58M重复组去重使用；SceneScribe-1M 的下游实验统一采用“原配方 vs 原配方+SceneScribe-1M”的加法式混合，未披露具体混合比例[不确定]；WildWorld 未涉及多阶段配比调度[不确定]
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】各阶段数据配比全部未披露 [不确定]。可确认的结构性事实是：SFT 用「文本-视频配对数据」，RLHF/DMD/ODE 回归/self-forcing 四个环节共用一个「curated prompt set」（只需 prompt 不需配对视频）——这是后训练数据结构的关键分野：SFT 需要成对数据，而 RL 与蒸馏只需 prompt。这大幅降低了后三个阶段的数据获取成本，也解释了为何后训练阶段的 prompt 集构建（多样性、类目均衡、去重、与 SFT 集不重叠）比素材采集更受重视。
+【横向的阶段配比数字】
+· ALIVE 最完整：Continue-Training 4.3M balanced samples（3 epochs）→ SFT 5M（高美学与写实数据 3:1 混合，仅 0.5 epoch，非对称学习率 video 1e-5 / audio 1e-6）→ 1080p Refiner 0.7M（1 epoch）→ Character-driven 0.8M。SFT 刻意只训 0.5 epoch 以避免过拟合到高美学分布而损失多样性，是配比之外的重要 trick；
+· SkyReels-V4：500 万（3 epoch）→ 100 万人工精选（3 epoch）；
+· Cosmos-Predict 2.5：五域各自 30k iterations、batch 256，另 388K 条 4K 冷却数据；
+· Movie Gen：SFT 后做 model averaging；Seedance 1.0：多子模型 SFT 后 model merging——权重平均是「数据配比」的一种替代实现；
+· Foley-Omni：Stage 3 用 216 小时目标域数据 + 每域 100 小时回放防遗忘，是后训练阶段显式做经验回放的少数案例；
+· HunyuanVideo 1.5：CT 每任务 100 万 → SFT 更严子集 → RLHF O(10K) prompt；超分模块独立用 100 万条 1K–4K 片段训练。
+【规律】SFT 阶段普遍训得「浅」（低 epoch、小学习率、早停）——Seedance 1.0 用比预训练更小的学习率、有限 GPU 数并配合早停以防过拟合与保持文本可控性，ALIVE 只训 0.5 epoch，CogVideoX 只训 10k 步。这与预训练的「训到收敛」形成鲜明对比，本质是在「贴合高质量分布」与「保留预训练的多样性与可控性」之间求平衡。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -804,6 +926,11 @@ Seedance 1.0 给出了少数可查的配比数字：视频预训练期间保留�
 此外 Stage-3 的 T2I 专项微调使用 6000 万内部高质量图像，可视为图像侧的精调集。
 【明确缺失】论文**未涉及任何偏好学习环节**：没有 RLHF/DPO、没有偏好对（preference pairs）数量与标注方式、没有 reward model 及其训练数据、没有人类反馈对齐流程。这与同期及后续的 Movie Gen、Seedance、Kling 等强调后训练对齐的工作形成鲜明对比，是 Goku 在后训练维度上的显著空白。
 【未披露】4.5M I2V 三元组的具体筛选规则、首帧选取策略（是否用美学分挑首帧）、微调步数与超参。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未公布 SFT 精选集的规模与筛选标准，未公布偏好对（DPO/RLHF）数量与标注方式，未提及 reward model 及其训练数据。
+间接线索（推测）：Hailuo 2.3 相对 02 的提升集中在「微表情自然度、肢体运动流畅性与精确性、风格化质量、运动指令响应」等主观感受维度，且参数量与架构未宣称变化，这类提升在业界通常来自高质量 SFT 子集精调与人类偏好对齐（美学/运动质量 reward model），推测 MiniMax 做了相应的后训练数据建设，但无任何官方确认。海螺AI 产品端庞大的用户生成量与评价/举报入口具备沉淀偏好数据的条件，是否用于 RLHF 未知。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -980,6 +1107,14 @@ Seedance 1.5 pro：使用高质量音视频数据集做 SFT，随后采用专为
 
 完全未披露训练用后训练数据。无SFT精选集规模与筛选标准，无偏好对数量与标注方式，无reward model训练数据说明。唯一相关的公开信息属于安全对齐评测而非模型能力后训练：OpenAI 通过定向红队收集了「数千条对抗性prompt」，按用例与政策领域分类，用 helpful-only 版本视频模型生成输出后打分，并转化为自动化评测集，用于测量生产安全栈的 not_unsafe（拦截召回）与 not_overrefuse（避免误拦）两项指标。公布结果：成人裸露/性内容（不涉肖像）96.04%/96.20%；成人裸露/性内容（涉肖像）98.40%/97.60%；自残 99.70%/94.60%；暴力血腥 95.10%/97.00%；违规政治说服 95.52%/98.67%；极端主义/仇恨 96.82%/99.11%。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+【SFT 精选集】571K clips / 1,368 小时，筛选标准为五条阈值同时满足：手部模糊分 > 0.5、人脸模糊分 > 0.7、DOVER 融合分 > 0.6、运动强度分 > 2（5 分制）、ASR 转写置信度 > −1。相比全量数据的过滤门槛（模糊分 > 0.1、DOVER > 0.25、ASR 置信度 > −1.5、无运动分要求），HQ 阈值在每一维上都显著收紧，尤其是模糊分从 0.1 提到 0.5/0.7（提升 5–7 倍）与新增的运动强度下限。这套阈值组合的意图很明确：要「人脸清晰、手部清晰、画质好、动作丰富、口齿清楚」的样本，直指手势与表情生成的质量瓶颈。
+【使用方式】用于基线模型的第三阶段微调（32 张 A800 训练 5 天），数据为「premium dialogue audio-video pairs（优质双人对话音视频配对）」。
+【偏好数据与奖励模型】无。论文未构建任何偏好对（preference pairs）、未训练 reward model、未使用 DPO/RLHF 类的偏好优化。基线的后训练仅为监督微调（SFT）一种形式。
+【人类反馈】无。评测侧 VidChatBench 全部为自动客观指标，未包含人类偏好评测或 Arena 式对比，因此也不存在可复用为偏好数据的人类标注。
+【对比】MOVA 同样无独立 SFT/RLHF 阶段而以三阶段渐进课程替代；SpeakerVid-5M 基线则有明确的 SFT 阶段但无偏好优化，处于「有 SFT、无 RL」的中间形态。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 后训练分两段，数据构建方式披露相对清晰：
@@ -1028,6 +1163,58 @@ Seedance 1.5 pro：使用高质量音视频数据集做 SFT，随后采用专为
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定/基本没有]。论文未提及任何 SFT 精选集、偏好对（DPO）、RLHF 或 reward model 训练数据。第三阶段的 DMD+PCM 蒸馏属于模型压缩/加速而非偏好后训练，其监督来自阶段1的双向教师模型分布而非人工偏好数据。人工偏好只用于评测（Vidu-StreamBench 500 样本 A/B 测试），未反哺训练。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 的后训练（3.2节）披露较细，但仅覆盖 SFT 式的高质量数据精选，不含偏好学习环节。
+【总原则】后训练核心目标是通过高质量数据同时提升视觉保真度与运动动态；对静态与动态数据采用不同策略——图像数据优化视觉质量，视频数据专门打磨运动质量。
+【图像侧（两条构造路径）】
+1) 专家模型驱动：从高分图像池中取专家模型预测分数的 top 20%，且在该子集内额外考虑风格与类别因素以保证分布多样性；
+2) 人工收集：人工从各类别、各数据源收集顶级图像，并主动填补数据集中缺失的概念以增强模型泛化。
+二者合计得到「数百万（millions）」张精选图像，筛选标准明确为质量（quality）、构图（composition）、细节（details）三方面出众。
+【视频侧】先用视觉质量分类器筛出排名靠前的视频，再用运动质量分类器分别选出「数百万条简单运动视频」与「数百万条复杂运动视频」；所有选择均遵循强调类别均衡与高多样性的策略，并从12大类（科技、动物、艺术、人物、车辆等）中取数以增强常用类目的生成能力。
+【任务专用微调数据（5.1.2节，同属后训练范畴）】
+- I2V 数据：发现首帧与视频内容差异过大会导致图像驱动生成不稳定，因此用 SigLIP 特征计算「首帧特征」与「其余帧特征均值」的余弦相似度，只保留高于预设阈值者（阈值未公布）；
+- 视频续写数据：用同样方法计算前1.5秒与后3.5秒片段的 SigLIP 特征余弦相似度，据此筛选时序一致的视频；
+- 首尾帧转场数据：反其道而行，提高首尾帧差异显著样本的比例，以迎合社区对转场平滑度的需求。
+【缺口】无 RLHF/DPO 章节，无偏好对数量与标注方式，无 reward model 训练数据说明（Wan-Bench 用了人类反馈加权，但那是评测权重而非训练信号）。2.5/2.6/2.7 的后训练数据完全未披露；考虑到其「角色扮演」「分镜控制」等能力，必然存在大规模任务专用 SFT 集，但无从判断。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+严格意义上五者均不产出生成模型的后训练数据[不适用]，但 AVBench 与 AV-SyncBench 的产出可直接充当后训练资产：
+【AVBench 最具后训练价值】其 300K 条带硬负例的偏好对本身就是标准的偏好数据格式；论文明确指出评测器输出的连续可微分数可用作 RLHF 的 reward signal 与数据过滤机制，即该评测器可直接充当 AV 生成模型后训练的 reward model。这是本次调研中唯一显式定位为「可复用 reward model」的基准。其人工偏好标注采用 4 名专家 2AFC 成对比较、允许打平、胜率式 (W + 0.5T)/(W + T + L)，是标准的偏好标注协议。
+【AV-SyncBench】38,390 条带精确扰动标签的样本可直接作为同步性判别模型或 sync reward model 的训练/校准数据。
+【Omni-Judge】600 条视频 × 9 维度 × 6 名博士生的人工评分构成小规模但高质量的人类偏好校准集，可用于校准自动 reward model 与人类的一致性。
+【VABench / PhyAVBench】定位为纯评测，未提供偏好对或 reward 训练数据[不适用]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+【captioner 的后训练数据（本生态 2025–2026 年的核心竞争点）】
+· AVoCaDO 的 GRPO：reward 由三项构成 —— ℛ_C（五维 checklist 覆盖度，GPT-4.1 判定）、ℛ_D（对白 F1，speaker 准确率 + content 编辑距离 DP 对齐相似度，阈值 0.6）、ℛ_L（长度正则，>4096 token 惩罚）。偏好信号在线生成，无固定规模的偏好对数据集。
+· AVSCap 的 GRPO：hybrid reward = 长度控制 + speech preservation（语音保真）+ audio-visual consistency。论文关键论断「RL 增益 > 扩 SFT 数据量」，是后训练投入优先于标注量扩张的直接依据。
+· Tarsier2 的 DPO：用 model-based sampling 自动构造偏好数据（无需人工标注偏好对），规模未披露[不确定]。
+· video-SALMONN 2 的 MrDPO：多轮 DPO，周期性用新训的轻量 adapter 重置 reference policy；caption 质量目标同时奖励完整性（completeness）与事实性（factual accuracy），7B 模型 caption 错误率相对基线降 28%。
+· video-SALMONN-o1 的 pDPO：过程级 DPO，用对比式 step 选择做 step-level reward，配套 RivaBench（4000+ 专家标注 QA，覆盖脱口秀、学术演讲、合成视频检测）。
+· 腾讯混元 1.5 的 caption 模型：用 OPA-DPO（针对多模态幻觉的偏好优化）做 RL 后训练以抑制幻觉 —— 是生成侧团队唯一公开 captioner 后训练方法的案例。
+【SFT 精选集的筛选标准】AVoCaDO 只保留 GPT-4.1 打分 ≥4/5 的样本；SkyCaptioner 从 1000 万精选 200 万；ALIVE 的 caption 数据为 MLLM 生成后人工修订再做两轮 SFT。
+【生态趋势】2025 年之前 captioner 后训练几乎只做 SFT，2025 下半年起 DPO/GRPO 成为标配，且 reward 设计（尤其对白准确率与跨模态一致性）取代数据量成为主要竞争维度。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+四者均不提供偏好对、reward model 训练数据或RLHF素材。最接近后训练精选集概念的是 SpatialVID-HQ（0.37M clip，筛选标准为美学分、亮度区间、运动轨迹多样性与场景类别均衡）与 WildBench（200条人工挑选样本，但定位是评测集而非训练集，按协作/单挑各100条配比，覆盖多角色、武器、怪物、难度与关键事件）。Action100M 的高置信子集通过多轮 Self-Refine 收敛得到，但未单独发布为SFT集[不确定]
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+本条目即以此字段为主题，此处给出可直接复用的结论性汇总。
+【一、SFT 精选集的规模与筛选标准】规模量级 10^6–10^7 条、占预训练池 0.4%–20%（NAVA 1.07%、Allegro 0.4%、CogVideoX 20%、Goku 12.5%、Cosmos ~10%、SkyReels-V4 第二段 20%）。筛选标准的通用结构为四层叠加：① 预训练阈值的严格化版本（美学分、清晰度、运动分、文字面积、CLIP 相似度——Allegro 给出了唯一一套完整可复现的阈值组合）；② 概念/领域均衡（LongCat 的 caption 嵌入密度倒数采样、Movie Gen 的 k-NN 概念平衡、Cosmos 的分类器五域拆分、Seedance 的数百类目定向采集、Motif 的 style/subject 标签驱动 domain-balancing）；③ caption 重打标升级（NAVA 用 Gemini-3-Pro 重打、Open-Sora 2.0 用 Qwen2.5-Max 重打、Movie Gen 人工重写、Step-Video 人工优化）；④ 人工终审（HunyuanVideo 的美学四项 + 运动三项七维 rubric、Step-Video 的清晰度/美学/运动恰当性/转场平滑四项）。训练配置上普遍「浅训」以防过拟合。
+【二、偏好对的数量与标注方式】规模量级 10^4–10^5 对，比 SFT 集小 2–3 个数量级。四种构造方式：
+① 人工标注真实偏好（最贵、最可靠）：Step-Video-T2V（多种子生成 + 标注员评分 + 质控监督一致性）、Kling 3.0 Omni（同 MVL 多变体人类比较）、HunyuanVideo 1.5（GSB 标注 + 非重复配对）、SkyReels-V2（3 万人工样本对）；
+② 自动构造负样本：SkyReels-V2 的受控失真损坏样本（覆盖 V2V/I2V/T2V）；
+③ 多奖励模型自动排序：JavisDiT++（六 RM + 归一化模态感知排序，2.5 万对）；
+④ 在线奖励取代离线偏好对（当前主流）：GRPO 路线的锚论文、LongCat-Video（group size 4、每步 64 prompts、约 0.5k iterations）、Cosmos-Predict 2.5（8 rollout × 20 步、组内归一化、256 steps、batch 32）——不存在预标注偏好对数据集，偏好由 RM 在 rollout 时在线给出。
+标注协议的两条关键工程经验：Seedance 1.0 的「指定维度选最优/最差且最优者在其他维度不劣于最差者」；JavisDiT++ 的「归一化模态感知排序」以避免优质音频与劣质视频混搭配对。评测协议上 GSB（Good–Same–Bad）已成为工业报告的事实标准（锚论文、Kling、Seedance、HunyuanVideo 1.5 均用），其优点是允许标注者表达无差别以减少边缘case噪声。
+【三、Reward Model 训练数据】公开资产两个：HPDv3（108 万文本-图像对、117 万成对比较）与 VideoReward 偏好集（1.6 万 prompt、12 个 T2V 模型生成的 10.8 万视频、18.2 万三元组，专业标注员在 VQ/MQ/TA 三维分别记录 A 胜/平局/B 胜，采用带平局的 Bradley-Terry 模型 BTT，另留 1.3 万 prompt 不重叠的三元组作验证集）。锚论文的 RM 训练范式：Qwen3.5 VLM 主干 + MLP 头、不确定性感知排序损失、两阶段训练（Stage 1 数据感知正交梯度投影融合 HPDv3++ 的多样美学偏好同时保留 HPSv3 原有知识；Stage 2 利用不同能力等级模型与不同 RL 迭代产生的无标注数据）。多奖励融合被论文明确指认为系统的关键难点，需精心设计聚合策略与权重系数。
+【四、行业分层结论】闭源工业模型（Seedance、Kling、HunyuanVideo 1.5、Step-Video、SkyReels、LongCat）已普遍完成 SFT + 偏好对齐两段式后训练；开源与学术侧（Movie Gen、CogVideoX、Allegro、Goku、Motif、MAGI-1、Open-Sora、以及几乎全部 AV 学术工作）绝大多数止步于 SFT，偏好对齐是最大缺口，其中 JAVG 音视频联合生成领域除 JavisDiT++ 外为完全空白。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1106,6 +1293,11 @@ Seedance 1.5 pro：使用高质量音视频数据集做 SFT，随后采用专为
 
 [不确定]（数据处理侧）。论文第3节详细描述了**训练**基础设施——包括基于 ByteCheckpoint 的容错与快速故障恢复、并行策略（序列并行/ FSDP 等）、大规模集群上的稳定性优化、活动重计算与显存优化等，目标是「efficient and robust large-scale training」，但这些全部服务于模型训练算力，**不涉及数据处理流水线的基础设施**。
 论文未披露：数据处理使用的框架（未提及 NeMo Curator、Data-Juicer 或自研系统名称）、GPU 加速比、单位时间处理片段数、处理 36M 视频所耗机时与成本、分布式调度方案。仅能从所用组件（PySceneDetect、DINOv2、RAFT、OCR、InternVL2.0、Tarsier2、Qwen2）推断这是一条重度依赖 GPU 推理的重型流水线——其中 Tarsier2 对 36M 片段做整段视频 caption 是最大的算力开销项。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（数据侧无披露）。未提及 NeMo Curator、Data-Juicer 或自研数据处理系统，未给出 GPU 加速比、处理规模或成本。
+官方唯一的效率相关披露在模型侧而非数据侧：NCR 架构使训练与推理效率提升约 2.5 倍；Hailuo 02 与 2.3 均以「业界最开放的访问与最具性价比的定价」为卖点，2.3 Fast 进一步将批量创作成本降低最多 50%，说明推理成本优化是重点投入方向，但这些均不涉及数据处理基础设施。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1271,6 +1463,15 @@ Seedance 1.5 pro 称其数据框架由「针对海量多模态数据处理优化
 
 完全未披露。未提及 NeMo Curator、Data-Juicer 或自研数据处理框架，无GPU加速比、处理规模或成本数据。间接的经济性线索来自媒体报道：Sora 服务运行成本被报道为约每日1500万美元而收入仅约210万美元，活跃用户在2026年初跌破50万，被认为是OpenAI于2026年3月关停Sora消费应用的主因——这反映的是推理侧算力经济性而非数据处理吞吐。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+披露有限，但代码开源程度较高：
+【处理框架】未使用 NeMo Curator、Data-Juicer 等成熟数据处理框架，也未提及 Ray、Spark 等分布式调度框架，为自研的脚本化 pipeline。GitHub Dorniwang/SpeakerVid-5M-Code 以六段独立脚本的形式组织：base annotation（音视频同步抽取 + 单人检测）、DWpose 骨架标注、ASR 标注、blur score 计算、luminance 计算、scene detection + speaker diarization（可选，部分结果已预计算）。这种分步脚本设计便于复用与断点续跑，但不含统一的调度层。
+【依赖工具栈】3D-Speaker、YOLO、DWpose、Whisper、PySceneDetect、SyncNet、ArcFace、Deepface、UniSpeech、Deep3DFaceRecon、yt-dlp，均为开源组件。
+【处理规模】输入 153K 条视频 / 64,386 小时，输出 5.2M+ clips / 8,743 小时，并对每个 clip 运行 YOLO 跟踪、DWpose 姿态、ArcFace 特征、SyncNet 同步、Whisper ASR、Qwen2.5-VL caption 与三次 persona 打分、Qwen-3 话题分类——按 clip 数计，MLLM 调用量在千万次量级（5.2M clips × 至少 4 次 VLM/LLM 调用），是相当可观的推理成本。
+【未披露】数据处理所用的 GPU 型号与卡数、总处理耗时（wall-clock）、GPU-hours 或金钱成本、GPU 加速比、吞吐量（clips/hour）等全部缺失。论文仅披露了模型训练侧的算力（128×L40S 训练 15 天 + 32×A800 微调 5 天），未披露数据侧算力。
+【骨架数据的体积问题】DWpose 骨架序列因体积过大未随数据集上传，仅提供计算代码——这从侧面说明该标注的数据量级相当可观（5.2M clips 的逐帧全身+手部+面部关键点）。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 数据处理基础设施与吞吐未披露。报告未提及 NeMo Curator、Data-Juicer 或任何自研数据处理框架的名称，未给出 GPU 加速比、处理吞吐（clip/小时）、集群规模或处理成本。可反推的工程压力：要产出 2B 视频-文本对，需要对更大规模的原始视频完成 PySceneDetect 切分 + 7 类质量打分 + Farneback 光流 + 自研 VLM 三路 caption 推理 + VideoCLIP embedding + 12 万簇 K-means + 8 帧 CLIP Score 计算，其中 VLM caption 与 VideoCLIP 推理是十亿级样本的多模型批量推理任务，工程量极大，但报告完全未着墨。
@@ -1311,6 +1512,48 @@ Seedance 1.5 pro 称其数据框架由「针对海量多模态数据处理优化
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。论文未披露数据处理侧的基础设施、框架（未提 NeMo Curator / Data-Juicer / 自研系统）、GPU 加速比、处理规模或成本。报告的工程篇幅全部投向推理与服务侧：自研 TurboDiffusion（模型加速）与 TurboServe（高效流式调度），采用 Ulysses 式上下文并行（context parallelism）做多卡切分、算子融合减少 host launch 与同步开销、RoPE Repositioning 避免历史特征重复计算、TwinCache（阶段感知的噪声缓存 + 干净缓存双缓存）提升流式推理效率与时序稳定性；实测 RTX 5090 上 540p 42 FPS，超过 30 FPS 实时播放阈值，消费级 GPU 即可运行。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+数据处理基础设施与吞吐完全未披露：Wan 2.1 报告未提及 NeMo Curator、Data-Juicer 或任何自研数据处理框架（值得注意的是 Data-Juicer 本身即阿里出品，但 Wan 报告未引用），无 GPU 加速比、无处理吞吐、无处理规模与成本、无分布式实现说明。
+报告中大量的基础设施篇幅（4.3 模型扩展与训练效率、4.4 推理）全部属于训练与推理侧：并行策略（DP/FSDP/上下文并行等）、显存优化、集群可靠性、推理并行策略、Diffusion Cache、量化。唯一与「吞吐」相关且间接影响数据策略的表述是训练课程中的诊断——长序列导致训练吞吐下降进而「数据吞吐不足」，以及 Fig.3 中「依据数据吞吐动态调整配比」，说明团队把数据吞吐当作配比调度的一等约束，但没有任何数值。
+2.5/2.6/2.7 无。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者均未披露数据处理基础设施、GPU 加速比、处理吞吐或成本[不确定]，这是评测基准类论文的普遍缺失。可间接观察到的工程量级为：
+【PhyAVBench】11,605 条视频 / 25.5 小时全部为新录制，涉及 184 名参与者、多种录制设备与可控环境布置，另有 74 名 PVR-MOS 评分员与 29+ 位作者协作，是五者中人力工程投入最大的（成本数据未披露[不确定]）。
+【AV-SyncBench】3,269 条视频经 Gemini 3 Flash 全量调用做初筛，再由 5 名标注员做 ≥3 人交叉复核（约 9,800+ 人次审核），随后程序化生成 38,390 条扰动样本；Gemini API 调用成本未披露[不确定]。选用 Flash 级轻量模型而非 Pro 级，本身即是成本-吞吐权衡的体现。
+【AVBench】300K 训练样本的合成与 7B 模型微调所需算力未披露[不确定]；提供 HuggingFace Leaderboard 说明有持续的在线评测服务基础设施。
+【VABench】1,299 条样本 × 多个商业模型 API 生成（Veo3、Wan2.5、Sora2、Seedance、Kling 走官方 API，ThinkSound 与 MMAudio 本地部署），API 调用成本未披露[不确定]。
+未提及 NeMo Curator、Data-Juicer 等专用数据处理框架[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+[部分不确定] 该维度披露稀少，但吞吐考量深刻影响了打标器选型：
+【明确的算力数字】
+· SkyCaptioner-V1：32 张 A800、全局 batch size 512、约 200 万条训练数据。
+· Panda-70M 的 UMT 择优模型：8×A100-80G，12 帧 224×224，AdamW lr 2e-5，batch 32，10 epoch。
+· Open-Sora Plan v1.3 的 prompt refiner：LLaMA-3.1-8B-Instruct LoRA（rank 64，batch 32，1 epoch），单张 H100 上 30 分钟训完。
+· MOVA：打标使用 NVIDIA GPU 与华为昇腾 Ascend NPU 混合执行 —— 少见的国产芯片参与大规模打标的公开记录。
+· Motif-Video 2B：PaddleOCR-VL 经 vLLM 服务化；CineDance 推理框架致谢 vLLM。vLLM 是打标批量推理的事实标准。
+【吞吐决定选型的直接证据（本生态最有价值的工程记录）】
+· Open-Sora 官方文档：「GPT-4V 效果更好，但 20 秒/样本的速度对我们太慢」—— 因此改用 PLLaVA-13B。这是开源项目在打标成本上最坦诚的权衡记录。
+· Allegro 选 Aria 的关键理由是官方称可在 10 秒内为 256 帧视频生成 caption。
+· 全生态参数量收敛到 7B（ShareCaptioner、Tarsier2、SkyCaptioner、AVoCaDO、AVSCap、MiMo-VL）本身就是吞吐约束的产物；把 120B 级模型（GPT-OSS-120B）只放在融合裁决环节而非逐样本感知环节，同理。
+· UniVerse-1 的在线标注架构强制要求轻量模型（Qwen2.5-Omni + Whisper），无法承受 120B 级模型的逐样本推理开销 —— 「标注时机」与「标注模型容量」的耦合。
+· MAGI-1 把大 MLLM 的增强 prompt 蒸馏到约 7B 小模型（约 200 万条语料）以降低推理延迟，人评显示质量相当而延迟与算力开销大幅下降。
+【成本】无任何工作公开打标的美元成本或 GPU 小时数[不确定]。Apollo/Klear 在 8100 万条样本上调用 Gemini-2.5-Pro 是已知最大规模的商用 API 打标投入，但金额未披露。
+【专用框架】未见 captioner 生态使用 NeMo Curator / Data-Juicer 等数据工程框架的公开记录；打标环节普遍是自研脚本 + vLLM 批量推理。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+Action100M 披露最完整的算力账单：约130万 V100 GPU小时 + 30万 H100/H200 GPU小时完成1.47亿片段的标注，最终标注产物仅约205GB；未使用 NeMo Curator / Data-Juicer 等现成框架，为自研流水线（V-JEPA 2 编码 + 层次聚类 + 三模型caption + LLM聚合）。SpatialVID 自研标注流水线并开源，产物约3.53TB，组织为74个分组（每组约14GB视频 + 1.5GB标注），未披露GPU小时与成本[不确定]；其吞吐瓶颈明确在 MegaSaM 重建环节（论文称选它正是因为精度与效率的平衡）。SceneScribe-1M 的流水线成本未披露[不确定]，主要开销在 Qwen2.5-VL-72B 全库推理与 MegaSaM + TAPIP3D 逐clip重建。WildWorld 的基础设施是自建游戏数据采集平台（OBS Studio + Reshade 分屏、多源时间戳同步、深度无损编码），采集1.08亿帧约1,800小时游戏时长，为实时录制而非离线GPU处理
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未披露任何基础设施与吞吐数据（无 GPU 数、无训练时长、无成本）[不确定]，但正文两次强调后训练的算力约束是核心矛盾：「post-training must operate under strict constraints on sampling cost, evaluation quality, and system efficiency」「rollout generation is expensive」，并引 DanceGRPO 为据。其对策有三：① 等时分组——每个 prompt 只在一个指派时间步做 SDE 采样与梯度计算，其余步用 ODE，把 GRPO 的梯度计算量压到接近单步；② 冻结生成主干只训 PE 的 LLM 策略，使 PE 可套用任意现成生成器而无需重训视频模型；③ 自回归蒸馏把双向模型压成因果少步模型以降低部署推理成本。
+【横向的后训练算力数字】Movie Gen 的视频 SFT 只用 512 张 H100（相对其预训练规模属极小）；Allegro SFT 消耗 2.6M 样本、batch 256、10K 步、256× H100；Cosmos-Predict 2.5 的 GRPO 因显存限制把轨迹概率拆解为逐步条件概率之和，每两步计算一次梯度并沿整条 10 步轨迹累积后做一次参数更新，训练 256 steps、batch 32；Seedance 1.5 pro 称针对 RLHF 流水线的基础设施优化带来近 3 倍训练加速；BranchGRPO 通过把 rollout 组织成分支树、共享前缀降低开销并剪除低奖励路径；MixGRPO 用混合 ODE-SDE 提升训练效率。数据处理工具侧：NeMo Curator 与 Data-Juicer 均不提供视频生成的偏好对构造能力（Data-Juicer 2.0 声明支持基础模型后训练但视频侧仅覆盖监督式蒸馏路线），后训练数据构建目前完全依赖各团队自研 [不确定]。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 

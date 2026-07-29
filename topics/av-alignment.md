@@ -75,6 +75,10 @@ CogSound 侧的对齐是建模层面的机制而非数据过滤层面的检测�
 
 不适用。Goku 无音频模态，数据流水线中不存在音视频同步检测环节（无口型同步检测、无音画事件对齐、无 SyncNet/AV-align 类方法）。其数据流水线中与「对齐」相关的唯一概念是**视觉时序一致性**：用 DINOv2 相邻帧余弦相似度（480p ≥0.85、720p ≥0.90）保证片段内视觉连贯不跳变——这是视觉内部的时序一致性约束，与音视频跨模态同步在方法论上不同源。
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+不适用。模型不生成音频，训练流水线中不存在音视频同步检测环节（口型同步、事件对齐）。若训练数据保留了原始音轨，也未见任何证据表明其被用于同步性筛选。
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
 音视频对齐检测是本工作数据流水线中方法论价值最高的一环，且在数据侧与模型侧形成了完整闭环：
@@ -237,6 +241,18 @@ Ovi 把音视频同步过滤当作整个数据 pipeline 中优先级最高的一
 
 训练数据侧的音视频同步检测方法完全未披露——这是本次调研最核心的关切点，而 OpenAI 恰恰零披露。System Card 中没有任何关于唇形同步检测、事件对齐检测、异步样本剔除的表述。能力侧仅宣称音频「properly synchronized with on-screen action, including accurate lip-sync for speaking characters」，以及音效与画面事件绑定、音乐节奏匹配场景节奏。可以确定训练pipeline中必然存在某种AV同步质量控制（否则无法学得唇同步），但方法、模块、判据全部未知。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+音视频同步检测是 SpeakerVid-5M pipeline 的中枢，其作用超出了「质量过滤」的常规范畴，而是承担了三项结构性职能：
+【职能一：音画身份绑定（最核心）】在 human detection 之后，用 SyncNet 计算每个候选人体框与音轨的唇音重合度，依据 confidence score 把音频侧的说话人 ID 绑定到视觉侧的 bounding box。这一步回答「这段声音是画面中哪个人发出的」，等价于 active speaker detection（主动说话人检测），是构建整个数据集的前提——没有它，diarization 得到的声纹 ID 无法与画面中的人对应。
+【职能二：说话/倾听状态判定】
+  - 共处同框场景：若仅一人在说话，且两人的 SyncNet 分数差异大于预设阈值，则较低分者被判为「倾听状态」。
+  - 非共处场景：若 ASR 结果有效、转写置信度高于阈值、但该人的 SyncNet 分数低于预设阈值，则判为倾听者。
+  由此派生出 listening 分支——这是把 SyncNet 从「过滤器」升格为「语义状态分类器」的用法。
+【职能三：同步质量过滤与标注】SyncNet 的三项输出（offset 时间偏移、confidence 置信度、embedding distance 嵌入距离）作为逐 clip 的持久化标注保存于数据集中，供使用方自行按需筛选；Figure 3 给出了 SyncNet 置信度的分布直方图。
+【事件级对齐】不涉及。数据集为纯语音场景，无音效-画面事件对齐（如脚步、碰撞）的检测需求，也未使用 Synchformer、ImageBind 等语义对齐工具。
+【评测侧】VidChatBench 的六维指标之一即为音视频同步性，同样以 SyncNet confidence 度量。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。模型无音频模态，训练数据不含音轨，pipeline 中不存在音视频同步检测环节，报告全文无 SyncNet、AV-align、唇同步、事件对齐等任何相关内容。[不确定]
@@ -287,6 +303,53 @@ Ovi 把音视频同步过滤当作整个数据 pipeline 中优先级最高的一
 (1) 预过滤级的粗筛：入 pipeline 前即按「音视频同步性（audio-visual synchronization）」这一指标剔除不同步的原始视频，与帧率、分辨率、音视频完整性并列为四项技术门槛；
 (2) Diarization 级的精细对齐：论文强调「只有当模型在训练中观察到与对应语音一致的视觉表现，才能学到高保真的唇形同步」，因此用 VAD + ASD 定位每段语音的时间戳与说话人，并通过说话人与画面主体的匹配关系判定 onscreen/offscreen/overlap；offscreen（画外音，声画主体不一致）与 overlap（多人声重叠）均被视为破坏声画对应关系而处理——含 overlap 的 clip 直接整条剔除。此外镜头切分时切点避开语音中段，也是为保护语音-唇形段的完整性。
 评测侧使用 Sync-D 指标（基于 SyncNet/Wav2Lip 的 lip-sync expert，引用文献[59] Prajwal 等 「A lip sync expert is all you need」）衡量音视频同步，Vidu S1 在 HDTF 上取得 7.8470（越低越好），优于 OmniAvatar 9.242、StableAvatar-1.3B 11.18、Hallo3 8.660、Wan2.2-S2V-14B 8.255、LiveAvatar 8.447、LemonSlice 7.921、HeyGen 8.037、Kling Avatar 2.0 8.158。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 系唯一明确写出的音画同步数据过滤方法在 Wan2.2-S2V 论文中，这是本条目对调研主题最有价值的一手信息；2.5/2.6/2.7 自身未披露。
+【Wan2.2-S2V 的做法（论文第2章 Pose Tracking and Fine-grained Filtering 末段）】原文：「to address audio-visual alignment challenges, we utilized Light-ASD to detect and exclude videos where (1) the audio is not synchronized with the active speaker, or (2) no active speaker exists in the scene.」
+即以 Light-ASD（CVPR 2023 的轻量级主动说话人检测模型，Liao et al. 2023）作为音画对齐的判别器，执行两条排除规则：
+(1) 音频与画面中的活跃说话人不同步 → 剔除（直接对应配音、后期贴音、画外音等异步样本）；
+(2) 画面中根本不存在活跃说话人 → 剔除（对应旁白、画外音源、音画无因果关系的样本）。
+这两条规则的组合实质上同时完成了「时序不同步剔除」与「声源不在画内剔除」，是相当干净的设计。
+【配套的前置条件】同一段落还要求「保留全序列中人脸持续一致可见的视频」，理由明确写为「以确保模型能从给定音频信号中学到音频驱动的面部表情」——即唇同步学习的前提是人脸全程可见，这是一条与同步检测互补的数据准入条件。
+【Wan 2.1 V2A 的对齐处理（架构侧而非过滤侧）】没有任何同步检测过滤器，而是靠三点保证时间对齐：(1) 放弃「梅尔频谱 + 图像式 VAE」路线，因为 DiT 需要把二维 latent 切 patch 再 reshape 成 (Ha·Wa)×Ca，这一过程会破坏与视频内容的时间对齐；改为直接在原始波形上训练 1D-VAE，产出 Ta×Ca 的 latent，显式保留时间轴信息，报告称这是「精确同步所必需的」。(2) 用 CLIP 提取逐帧视觉嵌入，再通过特征复制（feature replication）做时间率适配以匹配音频特征采样率，然后线性投影后逐元素相加融合。(3) 实现上把输入视频下采样为「12秒对应48帧」的固定比例，以保证帧级精确同步。
+【2.5/2.6/2.7】官方仅有「原生音画同步」「声音直接驱动角色口型与表演」的宣传表述，无任何检测方法、模型或流程披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+五个基准共同构成了当前最完整的 AV 同步检测方法论集合：
+
+【AV-SyncBench —— 解耦式同步检测（本次调研核心方法）】统一协议：将视频与音频切成互不重叠的 0.64 秒 chunk，独立提取视觉与音频嵌入，计算时序相似度矩阵的对角线元素余弦相似度并取均值 S = (1/N)Σ sim(v_i, a_i)；判定采用二值准确率 —— 原始配对的得分是否高于扰动配对。时序侧考察三类扰动的可分性（全局偏移、局部抖动、全局变速），语义侧在严格保持时间不变的前提下只改音色/声源，考察语义可分性。被测表征模型五个：Synchformer、SparseSync、ImageBind、CAV-MAE、CAV-MAE-Sync。
+
+【VABench】两条同步线：① Desync —— 用 Synchformer 预测音视频偏移量，仅在首/末各 4.8 秒窗口计算；② Lip-Sync —— 借鉴 LatentSync 方法计算对齐置信度，仅施加于检测到 talking head 的人声-语言性子集。跨模态语义对齐另用三件套：ViCLIP（文本-视频，具时序理解）、CLAP（文本-音频余弦相似度）、ImageBind（音视频联合嵌入空间）。
+
+【AVBench】将 AV 一致性做成可训练的专用评测器（Qwen2.5-Omni 7B 微调），而非依赖固定的 SyncNet 类模型；另设独立的 Lip Sync Consistency 维度。
+
+【PhyAVBench】提出 FGAS（Fine-Grained Alignment Score）—— 帧级视觉与音频 token 的余弦相似度，取时序相似度矩阵对角线元素均值；核心指标 CPRS 使用 CAV-MAE Sync 编码器（后续版本改用 CLAP 嵌入）度量配对样本间声学变化方向与真实参考向量的一致性。
+
+【Omni-Judge】把 audio-video synchronization 作为 9 维度之一交由 Qwen3-Omni 判断，结论为负面：τ_b 仅 0.142，明确指出 Omni-LLM 因时间分辨率不足而不适合承担同步检测。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+captioner 生态与音视频同步检测的关系是「间接但关键」——captioner 不直接做同步检测，但它是同步质量的语义验收方：
+【captioner 承担的同步职能】
+· AVSCap 的第三准则 Audio-Visual Synergy 明确要求 caption 显式绑定视听事件并做时序对齐 —— 这是把「同步性」从信号级指标提升到语义级描述的尝试。AVSCapBench 的 Synergy 维度即在量化这一能力：AVSCap-7B 57.70、Gemini-3-Pro 48.88、AVoCaDO 29.13、video-SALMONN-2 12.43、Qwen2.5-Omni 裸基座 7.00。
+· AVoCaDO 的第五维 Cross-modal Narrative Logic（视听互相解释/补充/引导）是同一思路的早期形态，但其 Synergy 得分仅 29.13，说明 checklist 里有这一维不等于模型真学会了。
+· Ovi 明确要求 caption 覆盖所有相关视觉与听觉事件并「遵守时间顺序（respecting chronology）」，为此做了多轮 prompt 迭代实验。
+【信号级同步检测由专用工具承担（在 captioner 上游/下游）】SyncNet、Synchformer 是主流：Foley-Omni 用 Synchformer 同时作为训练特征提供者与过滤阶段的同步性打分器（一模型两用，保证过滤标准与模型学习目标一致）；MOVA 用 LSE-D/LSE-C；SkyReels-V4 用 SyncNet。这些与 caption 生成解耦。
+【口型同步的说话人归属问题】TalkNet（InstructAV2AV）做主动说话人检测以确定「谁在说」，CineDance 用 Qwen3-Omni + 滑窗 prompt 把 ASR-角色绑定从 67.2% 提升到 95.4% —— 说话人归属是 caption 侧最接近同步检测的任务。
+[不确定] 无任何 captioner 工作把同步性检测结果作为 caption 字段直接输出（如「音画不同步 0.3 秒」），同步信息只以「事件绑定」的语义形式隐含在 caption 中。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+不适用。四个数据集均无音轨，不涉及唇形同步或音画事件对齐检测。可类比的“对齐”概念在这批数据集中体现为跨模态几何对齐——WildWorld 用多源时间戳同步保证 RGB 帧、深度帧、骨骼与世界状态在同一时刻严格对齐（采集平台的核心工程挑战即此）；SpatialVID 用相机位姿先验校验并纠正VLM生成的运动方向描述，属于“文本-几何对齐”而非音视频对齐
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文在后训练数据侧完全不涉及音视频同步检测 [不确定]——四个奖励模型（视频美学、图像美学、运动质量、文本-视频对齐）无一涉及同步性，PE 的三项奖励亦然。对 AV 模型的处理仅在 Phase 4 蒸馏阶段，遵循 OmniForcing 配备非对称块因果对齐与音频 sink token，属架构对齐而非数据侧同步检测。这意味着：即使用该框架对 AV 模型做完整四阶段后训练，唇同步与事件对齐质量也不会被任何奖励信号直接优化。
+【横向后训练侧唯一的完整同步奖励实践】JavisDiT++ 的 AV-DPO：六个奖励模型中 Synchformer 专司时序同步性，ImageBind 专司跨模态语义相似度，二者在偏好排序中并列参与——这是把 AV 同步作为独立偏好维度的唯一公开案例。约 2.5 万条偏好对、3 万条 prompt 池（与 SFT 数据不重叠）、每 prompt 3 个生成 + 1 条真值共 4 候选、1 epoch、LoRA 121M 可训参数。
+【其余】Seedance 1.5 pro 的 RLHF 称覆盖「音频保真度」，但是否含同步维度未披露 [不确定]；Kling 3.0 Omni 的 DPO 是否把口型同步作为独立打分项未披露 [不确定]。数据侧的 AV 同步过滤（SyncNet/Synchformer 阈值筛选）在各模型中一律发生在预训练数据 pipeline 而非后训练阶段。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -348,6 +411,10 @@ Ovi 把音视频同步过滤当作整个数据 pipeline 中优先级最高的一
 ### [Goku](../models/Goku.md)
 
 不适用。无音视频同步指标与阈值。可对照记录的是其视觉侧一致性阈值体系（作为「阈值设定风格」的参考）：DINOv2 帧间余弦相似度 ≥0.85（480×864）/ ≥0.90（720×1280）；美学分 ≥4.3（480p）/ ≥4.5（720p+）；OCR 文字面积 ≤0.02（480p）/ ≤0.01（720p+）；RAFT 运动分数 [0.3, 20.0]（480p）/ [0.5, 15.0]（720p）/ [0.5, 8.0]（1080p）。这些阈值全部按分辨率分档、随清晰度提升而收紧，是 Goku 阈值设计的统一哲学。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+不适用。无 SyncNet / Synchformer / LSE-D / LSE-C 等任何同步指标与阈值。与 MOVA（LSE-D≤9.5 且 LSE-C≥4.5）、SkyReels-V4（SyncNet |offset|≤3 且 conf>1.5）、Vidu S1（Sync-D 评测）等对象不可比。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -528,6 +595,16 @@ SkyReels-V4 给出了明确的阈值数值，在同类模型中属于披露较�
 
 完全未披露。无 SyncNet、AV-align 或任何自研同步指标的名称，无任何置信度阈值数值（无法与 UniTalking 的 SyncNet conf>0.9 之类做对比）。OpenAI 亦未公布 Sora 2 在任何第三方AV同步评测基准上的分数。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+【使用的指标】SyncNet 系指标，逐 clip 记录三项：offset（音视频时间偏移帧数）、confidence（同步置信度）、embedding distance（音视频嵌入距离，即 LSE-D 的等价量）。数据集把这三项作为标注字段发布，而非仅用作内部过滤。
+【阈值披露状况】论文在多处使用「pre-defined threshold（预设阈值）」的表述而未给出具体数值，这是本条目最遗憾的披露空白：
+  - 说话/倾听判定中「两人 SyncNet 分数差异大于预设阈值」——差值阈值未公开。
+  - 非共处倾听判定中「SyncNet 分数低于预设阈值」——该下限未公开。
+  - HQ / SFT 子集的五条筛选条件（手部模糊 > 0.5、人脸模糊 > 0.7、DOVER > 0.6、运动分 > 2、ASR 置信度 > −1）中不含 SyncNet 项，说明 SyncNet 未被用作 HQ 子集的硬性门槛。
+【与同类工作的对比】MOVA 明确给出 LSE-D ≤ 9.5 且 LSE-C ≥ 4.5 的双阈值并披露该过滤产出约 2.5M clips；SkyReels-V4 给出 SyncNet |offset| ≤ 3 且 conf > 1.5。SpeakerVid-5M 虽然对 SyncNet 的依赖程度最深（用它做身份绑定与状态分类，而不只是过滤），却是三者中唯一未公开具体阈值数值的，这在方法可复现性上是明显短板——不过其开源的 curation 代码库中可能包含实际阈值常量，可作为补充查证路径。
+【自研指标】无，未提出新的同步度量。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。未使用任何音视频同步指标，无相应阈值。可作为对照说明的是，本条目在「跨模态对齐」上的唯一手段是视觉-文本对齐：从片段中均匀抽取 8 帧，分别计算帧 embedding 与 caption 文本 embedding 的余弦相似度并取平均，得到 CLIP Score 作为图文对齐度标签，用于过滤错配样本——但该阈值的具体数值同样未公布。[不确定]
@@ -575,6 +652,54 @@ SkyReels-V4 给出了明确的阈值数值，在同类模型中属于披露较�
 
 数据过滤阶段：论文只说明按「音视频同步性」预过滤，未给出所用同步检测模型（是否 SyncNet）与任何阈值数值 [不确定]。启发式规则中的「语音能量占比过低」同样未给出具体阈值 [不确定]。
 评测阶段：明确使用 Sync-D（SyncNet 系 lip-sync expert 距离指标），Vidu S1 = 7.8470（HDTF，全场最优）；同期报告 CSIM = 0.9192（身份保持，最优）、DOVER = 0.5660（感知质量，最优）。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+训练数据过滤的阈值全系为零披露，评测侧有一个可比数值。
+【过滤阈值】Wan2.2-S2V 只说用 Light-ASD「检测并排除」不同步样本，未给出置信度阈值、时间偏移容忍窗口（如 |offset|≤3 帧）或任何数值；Wan 2.1 V2A 只有「剔除无音轨、剔除含语音/人声」的类别规则，无数值阈值；2.5/2.6/2.7 无。因此无法与 MOVA（LSE-D≤9.5 且 LSE-C≥4.5）、SkyReels-V4（SyncNet |offset|≤3 ∧ conf>1.5）、UniTalking（SyncNet conf>0.9）等给出明确阈值的工作对齐。
+【评测指标】Wan2.2-S2V 在 EMTD 数据集上使用 Sync-C（源自 Chung & Zisserman 2017 的 SyncNet 置信度）作为唇音同步质量指标，实测结果：Wan-S2V 4.51，对比 HY-Avatar 4.71（更高）、EMO2 4.58（更高）、EchoMimicV2 4.44、FantasyTalking 3.00、MimicMotion 2.68。即在唇同步单项上 Wan-S2V 并非最优（略逊于 HunyuanVideo-Avatar 与 EMO2），其优势体现在画面质量与身份一致性上：FID 15.66（最优）、FVD 129.57、SSIM 0.734（最优）、PSNR 20.49（最优）、CSIM 0.677（最优）、HKC 0.435、HKV 0.142、EFID 0.283。
+【Wan-Bench 无同步维度】Wan 2.1 自建的 Wan-Bench 三大维度14项指标中不含任何音视频同步类目，音画同步能力从未进入其主基准。2.5/2.6/2.7 未公布任何同步基准分数。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+具体指标与量化参数（可直接作为训练数据同步过滤的参数参考）：
+
+【AV-SyncBench 的扰动强度谱 —— 最有价值的阈值标定数据】
+- 全局偏移：50–500 ms，五个档位；
+- 局部抖动：30–700 ms，三档严重度；
+- 全局变速：0.8×–1.25×，十个档位；
+- 时间粒度：0.64 秒 chunk；视频统一 25 FPS，音频统一 16 kHz。
+关键实测结论：在 50 ms 偏移档位上，各 SOTA 同步模型的判别准确率仅约 0.51（接近随机猜测）。这意味着以 Synchformer/SparseSync 类模型做训练数据同步过滤时，其有效分辨率下限约在 50 ms 以上，低于此量级的失配无法可靠检出 —— 对设定同步阈值有直接指导意义。
+模型能力分化实测：ImageBind 在音色编辑（语义）任务上总体准确率最高 0.859，但时序对齐任务较弱；SparseSync 呈相反趋势；Synchformer 与 SparseSync 擅长时序偏移检测；CAV-MAE 在局部抖动与变速上较强。结论：单一模型无法同时胜任时序与语义两类过滤，训练 pipeline 应组合使用。
+
+【AVBench 硬负例参数】时间偏移 0.2–3.0 秒（覆盖粗粒度失配区间）；声学损坏含音高变换与变速；评测器输出经 Yes/No 单 token 概率比归一化为连续分数（0–1），天然可设阈值。
+
+【VABench】Desync 基于 Synchformer 预测偏移，计算窗口为首/末各 4.8 秒；MLLM 宏观打分为 1–5 分制；立体声 Mono Compat = 1 − 归一化单声道损失。未公布用于筛选的绝对阈值[不确定]。
+
+【PhyAVBench】CPRS = ½(cosine_similarity + 1)，归一化到 [0,1]，1.0 为完美对齐、0.5 为正交、0.0 为反向；要求每组配对至少 N≥20 条 ground-truth 样本取均值以抑制噪声（实测均值 17）。
+
+五者均未使用 SyncNet/LSE-D/LSE-C 这套经典指标[不确定为何未采用]，而是普遍转向 Synchformer / CAV-MAE-Sync / ImageBind 等更现代的表征模型 —— 这本身是 2026 年同步检测技术栈迁移的信号。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+[不确定] captioner 本身不设同步指标阈值，本字段记录生态中与 caption 相关的可比阈值：
+【caption 质量阈值（本生态自有的阈值）】
+· AVoCaDO：GPT-4.1 对 synthesis completeness 打 1–5 分，保留阈值 ≥4；对白 content 相似度用编辑距离 + 动态规划对齐，阈值 0.6；caption 长度上限 4096 token（超出由 ℛ_L 惩罚），最优区间 2048–4096 token。
+· Foley-Omni：Bandit 声学后验证的能量门控阈值 −35 dB（用于纠正 Gemini 标注中的视觉幻觉，即画面看到但实际无声的对象）。
+· Panda-70M：UMT 检索择优的难负例权重设置（未选中的 7 条 caption 权重 1.0，batch 内其他负例权重 0.01）。
+【下游生成模型的同步阈值（供对照，非 captioner 阈值）】MOVA 要求 LSE-D ≤ 9.5 且 LSE-C ≥ 4.5；SkyReels-V4 要求 SyncNet |offset| ≤ 3 且 conf > 1.5；Foley-Omni 用 Sync 分 ≥ 0.2、IB ≥ 0.3、AudioBox ≥ 0.6；OmniCustom 用 SyncNet 双阈值。这些均在 captioner 之外执行。
+【生态缺口】没有任何工作发布「caption 与音视频同步性的联合阈值表」，即不存在「当同步性低于某阈值时该样本的 caption 应如何处理（丢弃/降级/标记）」的公开规程 —— 这是 AV 数据 pipeline 中一个明显的方法论空白。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+不适用，四者均无 SyncNet / Synchformer / LSE-D / LSE-C 等音画同步指标与阈值。其对应位置的量化阈值出现在几何与画质维度：SpatialVID 的美学分 <4.0 剔除、亮度需落在 [20,140]、OCR文字面积占比 >30% 剔除、片段时长 3–15 秒；SceneScribe-1M 的分辨率 >1080p、帧率 ≥10fps、时长 5–60 秒；Action100M 的片段 >0.5 秒、树节点 >4 秒；WildWorld 的 State Alignment 骨骼关键点像素距离阈值 4/8/16/32 px
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文无任何同步指标与阈值 [不确定]。横向在后训练阶段唯一可点名的指标是 JavisDiT++ 用 Synchformer 作为时序同步奖励模型，但作为奖励模型使用时是连续分数参与归一化排序，不设阈值——这与数据过滤阶段的阈值范式（如 MOVA 的 LSE-D≤9.5 且 LSE-C≥4.5、SkyReels-V4 的 SyncNet |offset|≤3 且 conf>1.5、UniTalking 的 SyncNet conf>0.9）有本质区别：
+· 数据过滤阶段：硬阈值二分（通过/剔除），目的是保证训练素材本身同步；
+· 后训练奖励阶段：连续分数参与组内相对比较，目的是把模型输出推向更同步的方向。
+这个「阈值→连续奖励」的转换是同步性从数据侧走向训练信号侧的关键形态变化，但目前只有 JavisDiT++ 一例完整实现。Unison 的评测体系含 LSE-C/LSE-D，UniVerse-1 的 Verse-Bench 含 LSE-C/AV-A，均仅用于评测未回流训练。[不确定]
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -631,6 +756,10 @@ Apollo 明确地把时序同步与语义同步分离为两个独立的过滤条�
 ### [Goku](../models/Goku.md)
 
 不适用（无音视频模态）。若强行类比 Goku 在视觉侧的「时序 vs 语义」分离处理，可以观察到一个近似结构：镜头切分阶段用 **PySceneDetect（像素/直方图层面的时序突变检测）** 与 **DINOv2 特征余弦相似度（语义层面的内容一致性判定）** 两个相互独立的条件串联把关——前者管「有没有硬切」，后者管「内容是不是同一件事」。这与音视频模型把「时间对齐」与「内容语义匹配」拆成两个独立过滤条件的思路同构，可作为方法论层面的间接参照。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+不适用。不存在时序同步与语义同步的分离处理问题。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -789,6 +918,14 @@ SkyReels-V4 在数据侧对二者做了事实上的分工，但论文未把它�
 
 完全未披露。是否将「时间轴对齐」与「内容语义匹配」拆分为两个独立过滤条件，无任何信息。从能力描述可看出模型同时具备时序对齐（唇形与语音逐帧对齐、音效与碰撞时刻对齐）与语义匹配（环境音符合场景语境、音乐情绪匹配画面基调）两类能力，暗示数据侧可能有分离处理，但纯属推断。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+SpeakerVid-5M 只处理时序同步，不做语义同步，两者未被分离为独立过滤条件：
+【时序同步】由 SyncNet 全面覆盖——offset 直接度量音画时间错位帧数，confidence 与 embedding distance 度量唇形与音素的帧级对应强度。这是数据集唯一的对齐维度，且贯穿身份绑定、状态判定、质量标注三个环节。
+【语义同步（内容层面的音画语义匹配）】完全未涉及。没有使用 ImageBind、Synchformer 语义分支、CLAP 或任何跨模态语义相似度模型来判断「音频内容与画面内容在语义上是否匹配」。
+【为何缺失是合理的】数据集是纯语音、纯人物近景场景，音频内容就是画面中人物的说话内容，语义匹配关系由 SyncNet 的唇音对应天然保证——只要口型对得上，语义就必然对得上。语义同步过滤的主要价值在于剔除「画面是海浪、音频是钢琴曲」这类通用音视频数据中的错配，而在 dyadic talking 场景中这类错配不存在。
+【与 MOVA 的对比】MOVA 将时序对齐（SynchFormer）与语义对齐（ImageBind，IB-Score）显式分离为两个独立过滤条件，因其数据覆盖 foley、音乐、环境音等通用音视频内容；SpeakerVid-5M 因场景垂直而无此需要。这是数据集定位差异导致的方法论差异，而非疏漏。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用（无音频）。在纯视觉侧存在一个结构上的类比：pipeline 把「时序/运动维度」（第3阶段 Farneback 光流的三项运动分）与「语义匹配维度」（第6阶段 CLIP Score 图文对齐）设为两个相互独立的过滤条件，分别处理「动得对不对」和「拍的是不是描述的东西」，这与 AV 模型将时序同步与语义匹配拆成两个独立门限的思路同构，可作为方法论层面的弱参考。[不确定]
@@ -831,6 +968,44 @@ Unison 的 AV 达 0.91，为 TI2AV 全场最优（LTX-2 0.89、MOVA 0.88、Ovi 0
 ### [Vidu S1](../models/Vidu_S1.md)
 
 存在事实上的分离处理，但论文未用此术语表述：时序同步由预过滤的音视频同步指标 + VAD 语音段时间戳 + 切点避开语音中段共同保证；语义/身份层面的声画匹配则由 ASD 主动说话人检测与 onscreen/offscreen 分类保证（判断「这个声音是不是画面里这个人发出的」），二者是流程中两个独立的过滤条件。此外 caption 的 dual-path 策略（视觉属性只看画面、听觉属性只听音轨）也是在语义标注层面刻意解耦两模态以避免跨模态幻觉。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 系在设计意图上区分了「时序对齐」与「语义/情绪匹配」，但未把二者落为两个独立的数据过滤条件。
+【Wan 2.1 V2A 的显式二分表述】报告开篇即把 V2A 的目标拆成两条并列要求：(1) 环境音「必须与视频的视觉内容在时间上对齐（temporally aligned）」；(2) 伴随的音乐「应准确反映视频的情绪基调（emotional tone）与情境设定（contextual setting）」。即环境音/音效对应时序同步，音乐对应语义与情绪匹配——这是相当清晰的二分，并直接体现在其三段式 caption 结构上（环境音字段承载时序事件，音乐字段承载风格/节奏/旋律/配器等语义属性）。
+【机制上的分工】时序侧由 1D-VAE 保留时间轴 + CLIP 帧级特征复制对齐 + 12秒/48帧固定比例承担；语义侧由 umT5 文本条件与音乐 caption 承担；框架还支持用户通过文本指定「画内音（on-screen）/画外音（off-screen）」及音乐的风格与有无，本质上是把「声源是否在画内」这一语义条件显式暴露给用户。
+【过滤侧】Wan2.2-S2V 的 Light-ASD 两条规则其实隐含了同样的二分——规则(1)「音频与活跃说话人不同步」是时序条件，规则(2)「场景中无活跃说话人」是语义/声源归属条件；但论文未把它们表述为两个独立过滤维度。
+2.5/2.6/2.7 未披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+AV-SyncBench 是这一理念的首个系统化实现，论文明确宣称为「第一个完全分离音视频同步的时序与语义评测的基准」，其解耦设计对训练数据过滤有直接可移植性：
+
+【解耦的实现机制】关键在于扰动构造的正交性 —— 时序扰动只改时间轴不改音频内容（全局偏移、局部抖动、全局变速），语义扰动则强制施加时间不变性约束（temporal invariance），只替换音色/声源而保持时间结构完全一致（OpenVoice V2 做人声音色替换、预训练 DDSP 做乐器音色迁移）。由于两类扰动在构造上正交，模型在两个轴上的表现可被独立观测。
+
+【解耦的实证价值】实测显示两个轴确实测量不同能力：ImageBind 语义判别强（0.859）但时序对齐弱，SparseSync 恰好相反。这直接证明「一个同步分数走天下」的做法会掩盖模型的能力缺陷，也意味着训练数据过滤时若只用单一同步分数，会同时漏掉「时间对但内容错」和「内容对但时间错」两类坏样本中的一类。
+
+【对训练数据 pipeline 的启示】同步过滤应设为两个独立的串联条件：① 时序对齐条件 —— 用 Synchformer / SparseSync 类模型检出偏移，注意 50ms 以下不可靠；② 语义匹配条件 —— 用 ImageBind / CLAP 类跨模态嵌入检出声画内容错配（如配错的音效、后期贴的背景音乐、画外解说）。
+
+【其他基准的对应设计】VABench 同样做了拆分：Desync（Synchformer 时序偏移）与 Audio-Visual Align（ImageBind 语义对齐）分列两项独立指标，Module 2 的 Alignment 维度则显式定义为「时序同步 + 语义对应」两者的合并判断。AVBench 的 AV Consistency 维度合并了两者未做拆分，其硬负例中时间偏移（时序）与说话人身份错配/情绪反转（语义）虽分属两类但用同一评测器判定。PhyAVBench 的 Time and Causality 维度专攻时序因果（光声速差远场延迟、瞬态起振止声、周期/非周期节奏一致性），而其余五个维度属声学语义正确性，也构成隐式的时序/语义分离。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+本生态对「时序同步」与「语义匹配」的分离处理有明确的方法论演进：
+【分离的三层证据】
+(1) AVSCap 的评测维度设计本身即是分离：Visual / Speech / Music / SFX 四项衡量**语义完整性**（该说的内容有没有说到），Synergy 单独衡量**跨模态绑定与时序对齐**。数据显示两者可以严重脱节 —— AVoCaDO 的 Speech 高达 70.42（语义完整）但 Synergy 仅 29.13（绑定失败），证明「听得清」不等于「对得上」。
+(2) Foley-Omni 的双特征通路：CLIP 提供场景语义特征、Synchformer 提供时序同步特征，两路独立注入。消融显示移除 Z_sync 同步通路后 IB_V2ST 从 0.26 降至 0.22、FD_VGG 从 1.57 升至 2.21（劣化 41%）、WER_V2ST 从 7.59 升至 12.40 —— 定量证明时序特征通路对语义一致性也有实质贡献，二者并非完全正交。
+(3) MOVA 的过滤设计把「跨模态语义一致性检查」（GPT-OSS-120B）与「唇同步信号检测」（LSE-D/LSE-C 阈值）作为两个独立条件串联。
+【caption 侧的具体分工】语义匹配靠 captioner 与 LLM 裁判（是否描述了正确的声音来源、是否有画外音幻觉）；时序对齐靠 Synchformer/SyncNet 信号级检测与 ASR 时间戳（ElevenLabs Scribe、CineDance 的句级 ASR）。
+【一个反例警示】Foley-Omni 用 Bandit 做声学后验证的动机正是：Gemini 依据画面生成的音频描述可能描述了实际不存在的声音（视觉幻觉），这是纯语义判断无法自我纠正的错误，必须引入信号级验证 —— 说明语义与时序/信号两条链路互为兜底，不可偏废。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+不适用于音视频语境。在几何标注语境下四者确有类似的“时序 vs 语义”分离思想：SpatialVID 把时序层面的相机轨迹（逐帧位姿、MoveDist/RotAngle/TrajTurns）与语义层面的场景描述（天气/时段/人群/光照/场景类型标签）作为两套独立标注并行维护，并在精修阶段令二者互相校验；Action100M 显式区分时序定位（何时发生，由V-JEPA 2嵌入聚类决定）与语义内容（发生了什么，由VLM caption决定），两条流水线解耦；WildWorld 的 WildBench 也把 Action Following（语义是否执行了正确动作）与 State Alignment（时空状态是否精确对齐）拆为两个独立指标
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文不涉及 [不确定]。JavisDiT++ 的六奖励设计事实上实现了这一分离：时序同步由 Synchformer 单独承担，语义匹配由 ImageBind 在文本-音频、文本-视频、音视频跨模态三条链路上分别承担——即时间对齐与内容语义匹配是两个独立的奖励项，而非合并为单一「AV 质量分」。其「归一化的模态感知排序」进一步保证配对时不会把优质音频与劣质视频混搭，等价于在偏好构造层面维持模态内一致性。这一设计与 Seedance 1.0 人工标注协议的约束条件（最优者在其他维度不劣于最差者）在目标上完全一致：防止多维奖励下产生自相矛盾的偏好信号。这是本主题在后训练数据构造上最具可迁移性的两条工程经验。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -899,6 +1074,10 @@ Unison 的 AV 达 0.91，为 TI2AV 全场最优（LTX-2 0.89、MOVA 0.88、Ovi 0
 ### [Goku](../models/Goku.md)
 
 不适用。数据流水线中无任何音频质量过滤环节：无 SNR 信噪比判定、无静音检测与静音占比阈值、无无音轨剔除、无画外音/旁白源剔除、无背景音乐分离（如 Demucs/BS-RoFormer）。训练数据形态为纯「视频-文本对」，音轨在数据构建中被完全忽略。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+不适用 + [不确定]。无音频建模目标，官方未披露训练数据是否保留音轨；若音轨在切分阶段即被丢弃，则不存在 SNR、静音占比、画外音剔除、背景音乐分离等任何音频质量过滤环节。无任何一手信息。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1062,6 +1241,16 @@ SkyReels-V4 的音频质量过滤是本条目中指标最齐全的部分，采�
 
 完全未披露。未提及信噪比阈值、静音检测与静音占比阈值、无音轨样本剔除策略、画外音/旁白源剔除、背景音乐分离（source separation）等任何手段。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+音频侧过滤全部依托 Whisper 的诊断输出，采用三条并列否决规则，满足任一即剔除：
+【1. 转写置信度】Whisper confidence score < −1.5 的剔除。HQ / SFT 子集进一步收紧到 > −1。该指标间接反映音频的可懂度与信噪水平——嘈杂、混响重、远场录音会显著拉低置信度。
+【2. 无语音概率】no-speech probability > 0.8 的剔除。这条同时承担两个职能：剔除静音片段与纯背景音片段，以及把数据集约束为纯语音语料（音效、音乐、环境音主导的片段会被此条淘汰）。
+【3. 压缩比】compression ratio > 2.5 的剔除。这是 Whisper 内部用于检测转写退化的指标——当模型陷入重复循环输出（如「谢谢观看谢谢观看…」）时压缩比会异常升高。该条实质是在剔除 ASR 幻觉样本，属于对标注可靠性的防护，而非对音频信号质量的直接度量。
+【4. 语言不匹配】pipeline 中还提到基于「detected language mismatches（检测到的语言不匹配）」的过滤，即 Whisper 检出的语种与预期不符时剔除。
+【未做的处理】论文未描述任何显式的 SNR 信噪比估计与阈值、静音占比（silence ratio）统计与阈值、背景音乐分离（BGM separation / source separation）、语音增强或降噪、画外音/旁白源剔除、响度归一化。相比 MOVA 使用 Audiobox-aesthetics 的 PQ/CU/CE 三维美学分加静音占比与带宽阈值，SpeakerVid-5M 的音频质量把控明显更薄——它依赖 Whisper 一个模型的副产品指标完成全部音频筛选，是成本低但维度单一的方案。
+【无音轨样本】原始采集口径即为 audio-visual 成对视频，且 no-speech 与置信度双重过滤保证保留样本均含有效语音，因此不存在无音轨或无语音样本。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。数据 pipeline 不提取、不保留、不处理音轨，无 SNR 计算、静音检测、无音轨剔除、画外音源剔除或背景音乐分离等任何环节。[不确定]
@@ -1118,6 +1307,41 @@ SkyReels-V4 的音频质量过滤是本条目中指标最齐全的部分，采�
 (3) 背景音乐/歌唱剔除：观察到 diarization 模型在唱歌或强背景音乐场景下不稳定（人声被误分到 music stem、产生合成音色与失真伪影），故引入启发式规则丢弃「说话人在发声但语音能量占比过低」的片段；这实际上也起到了人声与背景音乐分离质量的兜底作用；
 (4) 语音成分提取：训练前从原始音频中显式抽取 speech component。
 未提及 SNR 阈值、静音占比阈值等具体数值 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+训练侧只有类别层面的规则，无任何信号层面的量化阈值。
+【Wan 2.1 V2A】唯一的音频侧过滤是两条排除规则：剔除无音轨（lacking soundtracks）的视频、剔除含语音或人声演唱（speech/vocal music）的视频。其中「剔除无音轨」承担了无声样本清除的职能。未见 SNR 阈值、响度/RMS 阈值、静音占比阈值、音频事件密度指标；未说明是否做背景音乐与人声的源分离（source separation）；未说明对原始音轨采样率与声道数的准入要求。
+【Wan2.2-S2V】通过 Light-ASD 间接剔除了画外音/无画内声源的样本，但同样无音频信号质量指标（无 SNR、无静音检测）。
+【技术规格旁证】Wan 2.1 V2A 输出为 44.1kHz 立体声、最长12秒；音频经 1D-VAE 直接在波形域压缩。
+【推理侧的输入音频约束（可反映训练侧的规格偏好）】wan2.5/2.6 的 audio_url 要求 wav/mp3、时长 3～30 秒、≤15MB；wan2.7 放宽为 2～30 秒。超出 duration 的部分自动截断丢弃；音频短于视频时长时，超出音频长度的部分输出为无声视频（例如3秒音频配5秒视频，则前3秒有声后2秒无声）——这一行为说明模型对「部分静音」是有条件容忍的，可能对应训练数据中存在带静音段的样本。
+2.5/2.6/2.7 的音频质量过滤策略未披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【AV-SyncBench 的双关卡】第一关 Gemini 3 Flash 自动剔除「画外声源（off-screen sound sources）」样本 —— 这是 AV 训练数据最关键也最难做的过滤项（后期配音、画外解说、贴片背景音乐均属此类）；第二关 5 人交叉人工复核，确认主声源在画面内可见，并剔除音质差、噪声过大、语义模糊的片段。二者共同保证「所见即所闻」，是本次调研中 on-screen 声源过滤的最佳实践样板（未公布 SNR 等量化阈值[不确定]）。
+【VABench】音频质量三件套可直接复用为过滤器：DNSMOS 测背景噪声/语音清晰度、NISQAv2 测整体质量与自然度、Audiobox 测音频美学（愉悦度、有用性、制作复杂度与质量）；生成侧统一抽取 48kHz 立体声轨。
+【AVBench】NISQA MOS 测音频质量、Audiobox 测音频美学，二者输出连续分数，论文明确其可用作数据过滤机制。Hard 子集刻意保留噪声背景与重叠语音样本，说明其定位是「难而非脏」—— 训练数据过滤时也应区分「噪声大但真实」与「音质坏需剔除」。
+【PhyAVBench】受控环境录制从源头保证音质；质控阶段人工复核剔除含非预期物理混杂因素（相当于剔除混入的无关声源）的样本。
+【Omni-Judge】设有 audio quality 与 audio aesthetic 两个维度交由 Omni-LLM 判断，但整体结论提示感知类维度的 LLM 判分不可靠。
+五者均未提及静音占比阈值、无音轨剔除、背景音乐分离（source separation）的具体做法[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+captioner 生态中的音频质量处理主要体现为「打标前的分流闸门」与「打标后的声学验证」：
+【打标前分流】UniVerse-1 在离线漏斗中用 Whisper 判定片段是否含语音，作为分流闸门决定走哪条标注路径；JavisDiT 系列的视频阶段用 FunASR 剔除含语音片段（而音频阶段明确「不做任何过滤以最大化 T2A 能力覆盖三类音频」——「音频不过滤、视频严过滤」的反差是团队对两种模态质量-数量权衡的实践判断）；LTX-2 的数据子集筛选标准为「包含显著且信息量大的音频成分」，以剔除静音与无信息音轨。
+【SNR / 音频质量打分】Movie Gen 使用专门的音频质量预测模型（输出 1–10 分）；Foley-Omni 用 AudioBox 阈值 0.6；InstructAV2AV 用 Audiobox 阈值。这些均在 captioner 上游。
+【背景音乐分离与声源分离】Bandit（Foley-Omni，按 speech/effects/music 三路分离，与三字段 schema 同构）；Mel-RoFormer（Unison，训练侧把混合音频解耦为语音与音效两路 ground-truth latent，评测侧做 WER 前的人声分离）；SAM-Audio（InstructAV2AV，按语义把目标实体的声音从混合音轨分离）。
+【画外音源剔除】Foley-Omni 的 −35 dB 能量门控本质上是在剔除「画面中有但音轨里没有」的幻觉标注，反向操作则可识别画外音（音轨里有但画面中没有）。Movie Gen 的评测维度中「画内音正确性（on-screen sound correctness）」是唯一显式量化这一问题的指标，其 SFT 相对 PT 提升 +31.0±16.0。
+[不确定] 没有任何 captioner 工作公开其训练数据的静音占比阈值或 SNR 阈值。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+不适用。四个数据集均不处理音轨，无SNR、静音占比、画外音、背景音乐分离等过滤环节。SpatialVID 转码为 H.265 MP4 时是否保留原始音轨论文未说明[不确定]；Action100M 只发布文本标注，音频由用户自行从 HowTo100M 源获取
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文不涉及 [不确定]。后训练阶段的音频质量控制主要以奖励模型形态出现而非阈值过滤：JavisDiT++ 用 AudioBox-Aesthetics 评估音频质量；Seedance 1.5 pro 的多维奖励含音频保真度（audio fidelity）。数据侧的例外是 Movie Gen 的音频 SFT 集——cinematic split 由影视感分类器 + AED 声音事件检测自动筛后人工选定，且明确排除含人声片段；Foley-Omni Stage 3 的准入条件是通过完整清洗 pipeline（六项过滤阈值 + Gemini 标注 + Bandit 能量验证）且含多个音频组件。SNR、静音占比、无音轨剔除、背景音乐分离等具体阈值在所有后训练材料中均未出现 [不确定]——这些属于预训练数据 pipeline 的职责。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1193,6 +1417,10 @@ Apollo 把「按音频类型分类并分别处理」提升为 pipeline 的一级
 ### [Goku](../models/Goku.md)
 
 不适用。无语音/音效/音乐的分类与差异化处理策略。Goku 在音频维度是完全空白的，其对本调研的价值集中在纯视觉侧的数据分布均衡与分辨率分档阈值体系上。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+不适用。不区分语音/音效/音乐，无音频类型分类与分别处理策略。MiniMax 的语音（MiniMax Speech 2.8）与音乐（MiniMax Music 3.0）能力由独立模型与独立数据流水线承担，与视频线未见任何数据层面的打通证据。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1373,6 +1601,14 @@ SkyReels-V4 采取「先分类、再按类分流处理」的清晰策略，是�
 
 完全未披露。模型输出侧明确区分对白、音效/foley、音乐、环境音四类，但训练数据侧是否对这四类做显式分类并分别设计过滤/配比/标注策略，OpenAI 未做任何说明。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+SpeakerVid-5M 不做音频类型的分类与分别处理——它通过过滤把非语音类型整体排除，而非分类后差异化对待：
+【实际策略：单一类型收敛】no-speech probability > 0.8 即剔除的规则，配合 ASR 置信度下限，使得最终语料在音频类型上收敛为单一的「人声语音」。音效（foley）、音乐、环境音、静音片段没有被分类保留，而是被直接淘汰。因此数据集内不存在需要「分别处理」的音频类型分支。
+【未使用的工具】没有音频类型分类器（对比 MOVA 使用 EAT 自监督音频 Transformer 构建 speech / non-speech 子集并按目标能力分流），没有音源分离，没有针对音乐或音效的专门标注或过滤路径。
+【唯一的类型相关设计是角色维度而非声学维度】数据集的分支划分（talking / listening / dialogue / multi-turn）区分的是「说话人角色与交互形态」，全部四类的音轨都是语音，不构成声学类型的分流。listening 分支的画面主体不说话但音轨仍是对方语音——这是音画角色的错位，不是音频类型的差异。
+【下游后果】使用该数据集训练的模型只能获得语音-唇同步能力，无法学习 foley、音乐或环境音生成。这与 MOVA 的实践一致：MOVA 将 SpeakerVid-5M 定位为唇同步能力来源，而通用音效与音乐能力另从 VGGSound、WavCaps、JamendoMaxCaps 等数据集的音频塔预训练阶段注入。这种「按数据集分工获取不同音频能力」的模式，正是 SpeakerVid-5M 作为垂直语料在生态中的定位。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。无语音/音效/音乐的分类与分别处理策略。阶跃星辰的语音侧能力封装在独立的 Step-Audio 模型中，与本条目的视频数据 pipeline 无交集。[不确定]
@@ -1424,6 +1660,44 @@ UniTalking 对三类音频采取的是「只要语音、其余淘汰」的极端
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 语音（speech）是唯一被作为训练与控制核心的音频类型：显式提取语音成分、做 VAD/ASD/说话人归属分类，并以语音作为流式生成的实时控制信号。音乐与歌唱被视为噪声源，通过语音能量占比启发式规则系统性剔除。音效与背景音乐不参与专门建模，但在结构化 caption 中保留为独立描述字段（sound effects、background music）。产品端支持用户选择不同音色（voice tones），推测音频侧接入了 TTS/音色控制，但论文未展开 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 系对音频类型的分治策略清晰，且经历了一次显著的战略反转。
+【第一阶段（Wan 2.1，2025.02）——三类分治且排除语音】
+- 环境音（ambient sound）：保留，caption 中单列一段刻画；
+- 背景音乐（background music）：保留，caption 中单列一段按风格/节奏/旋律/配器四属性分析；
+- 语音与人声演唱（speech / vocal music）：整条视频直接从 V2A 训练集剔除。
+这三类由 Qwen2-Audio 生成音频 caption 并归类，训练时对环境音与音乐两类 caption 施加随机掩码以强化视觉→音频的关联学习。报告直言此举导致模型无法生成笑声、哭声、说话声，并把语音生成列为未来工作。
+【第二阶段（Wan2.2-S2V，2025.08）——转向语音专用】整个模型围绕说话/唱歌场景构建，数据流水线以主动说话人检测为核心，是语音类数据能力的专项积累。
+【第三阶段（Wan 2.5 起，2025.09+）——三类统一并生】官方明确 2.6「画面与人声、音效、BGM 完美匹配」，即语音（人声/对白）、音效（foley）、背景音乐三类在同一模型内统一生成并与画面同步；不提供音频时自动生成「匹配的背景音乐或音效」，提供音频时则以其驱动口型与表演。
+【缺口】三类音频在 2.5+ 训练集中的配比、是否仍按类型分流处理（如分别的过滤规则、损失权重或专家路由）、静音样本的处理策略均未披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【AV-SyncBench 分类分治最明确】按 Voice / Music / Sound 三大类分流处理：语义扰动上，人声类走 OpenVoice V2 音色替换，乐器类走 DDSP 音色迁移，通用音效类不做语义扰动（故语义挑战样本仅 821 条，远少于时序挑战的 37,569 条）。这说明不同音频类型的可控编辑难度差异极大 —— 语音与音乐有成熟的音色解耦工具，通用 Foley 音效则缺乏，这一现实也约束了训练数据侧构造 Foley 负样本的可行性。十场景标签进一步细分为单声源与多声源（单人说话 vs 对话/群体发声、单乐器 vs 合奏）。
+【VABench 按类目施加差异化指标】唇同步指标仅施加于人声-语言性子集且需检测到 talking head；语音质量指标（DNSMOS、NISQAv2）仅对含语音样本有意义；Audio Realism 物理合理性打分明确排除虚拟世界类目。这种「指标按音频类型条件化施加」的机制，对应到训练数据侧即为分域设置不同质量门槛。
+【PhyAVBench 专攻 Foley 物理音效】其六大维度全部围绕非语音的物理发声机制展开，语音仅通过 WER 间接涉及；这填补了 Foley 类音效在物理正确性上的评测空白。
+【AVBench 专攻语音】10 维度中三项直接针对语音（内容准确率、真实度、唇同步），音乐与通用音效基本不覆盖，是纯人声场景基准。
+【Omni-Judge】未按音频类型分层分析[不确定]。
+综合：语音 / 音乐 / Foley 音效三类在评测指标、可控编辑工具、数据可得性上均高度异质，训练 pipeline 必须分类分治，不宜用统一阈值。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+语音 / 音效 / 音乐三类音频的分类与分别处理，是 AV captioner 生态最成熟的设计模式：
+【双模型分工（最普遍）】MOVA：Qwen3-Omni-Instruct 负责语音转写、Qwen3-Omni-Captioner 负责非语音声音与音乐描述，论文强调该分工「全面覆盖语言内容与声学特征，减少信息损失」。UniTalking：Whisper-V3 转写 + Qwen3-Omni-Captioner 描述声学环境 + Qwen3-Omni 做融合。SkyReels-V4：Qwen3-Omni 统一生成音频 caption，Whisper 转写语音与歌唱。
+【三字段固定 schema】Foley-Omni 的 speech / effects / music 三字段与 Bandit 的分离输出同构；AVSCap 的 Acoustic Completeness 准则同样按 Speech / SFX / Music 三分。
+【四模型协同（Movie Gen，最精细）】音频质量预测模型（1–10 分）+ AED 模型（判定 voice/singing 存在性与 music 后验概率）+ 通用音频 caption 模型（自由形式描述声音）+ 音乐 caption 模型（补充 mood 与 genre）。论文特别说明音乐 caption 模型主要在音乐样本上训练、无音乐时容易幻觉，因此**同时保留 AED 的音乐概率与音乐 caption 两路信号**，实测这种冗余组合可控性最好 —— 这是全生态关于「音频类型幻觉」的最有价值工程经验。
+【单模型通吃（激进路线）】UniVerse-1 用单个 Qwen2.5-Omni 一次性并列输出三路；Ovi 用同一个 MLLM 处理音视频语料与纯音频语料；CineDance 用 Qwen3-Omni-30B-A3B 同时做句级 ASR、镜头级音频 prompt（音乐/环境音/音效）、角色音色描述三项子任务。
+【能力现状（AVSCapBench 量化）】三类音频的描述能力差距极大且高度一致：Speech（40–80 分）≫ Music（4–40 分）> SFX（7–32 分）。SFX 是全行业最弱环节，最好的开源模型 AVSCap-7B 仅 30.82，Gemini-3-Flash 32.34 —— 这直接限制了 Foley 与环境音生成模型的训练数据上限，是 AV captioner 生态最亟待突破的方向。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+不适用。四个数据集均无语音/音效/音乐的分类与差异化处理策略
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文不涉及 [不确定]。横向：Movie Gen 是唯一在后训练阶段对音频类型做显式分治的工作——cinematic split（含画内音与画外环境/主题音乐、排除人声）与 high quality audio split（纯音乐 O(10)K 小时 + 纯音效 O(10)K 小时）分开构建，规模差两个数量级，说明其把「配乐/音效学习」与「视频-音频对应关系学习」当作两个可分离的目标。Foley-Omni 的三阶段课程（音效→音乐→完整配乐）亦是类型分治的课程形态，但止于监督训练。偏好学习层面无任何工作对语音/音效/音乐分别设计奖励 [不确定]——这是 AV 后训练最明确的待补空白：现有的音频奖励模型（AudioBox-Aesthetics）是通用美学分，无法区分「对白清晰度不够」与「音效与画面事件错位」两类完全不同的失效。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 

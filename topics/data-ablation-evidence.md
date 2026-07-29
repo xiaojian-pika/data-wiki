@@ -105,6 +105,11 @@ Data-Juicer Sandbox 的整个方法论就是围绕数据消融组织的——它
   (3) **提示词改写的影响（caption 风格类间接证据）**——用 GPT-4o 将 GenEval 短提示词扩写为保持语义的详细描述后，GenEval 分数达 0.76。这间接证明模型的性能高度依赖与训练期密集 caption 风格一致的长提示词，是「caption 密度/风格影响推理表现」的实证，但论文未将其组织为正式的 caption ablation。
 【明确缺失】没有过滤严格度的消融（如美学阈值 4.3 vs 更高/更低对 VBench 的影响）、没有 caption 密度与结构的对照实验（短 vs 长 caption）、没有分布均衡阶段的消融（均衡 vs 不均衡对各类目指标的影响）——尤其第三项的缺失最为可惜，因为分布均衡是 Goku 最独特的设计，却没有量化其收益。[部分不确定]
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全没有）。MiniMax 未发表任何论文或技术报告，因此不存在任何形式的数据消融实验——没有过滤严格度 ablation、没有 caption 密度/风格 ablation、没有数据配比 ablation，也没有对应的评测指标曲线。
+唯一接近「数据影响」的表述是 Hailuo 02 博客把「参数量3倍 + 训练数据4倍 + 质量与多样性提升」与代际能力跃升并列陈述，但这是多变量同时变化的产品迭代描述，无法分离出数据因素的独立贡献，不构成消融证据。
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
 【结论：完全没有数据侧消融】这是本工作实证层面最明显的短板。论文的消融实验（Tables 5-7）全部针对模型架构与训练策略，无一涉及数据：
@@ -320,6 +325,21 @@ Data-Juicer Sandbox 的整个方法论就是围绕数据消融组织的——它
 
 完全未披露。System Card 不含任何消融实验，无过滤严格度ablation、无caption密度/风格ablation、无数据配比ablation，也没有对应的评测指标对比表。OpenAI 未发布 Sora 2 在 VBench 等任何公开视频生成基准上的官方成绩。System Card 中唯一的量化表格是上述六类安全指标。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+论文的消融实验集中在模型架构组件，未做数据策略层面的消融——这是本条目在「效果对比」维度的主要局限：
+【已有的消融（Table 2，在 VidChatBench 上）】全部为架构组件消融：
+  - 条件基线（conditioned baseline）：FID = 56.82，FVD = 55.06
+  - 加入音频生成（配合 spatial transformer + noise injection）：FID = 38.53，FVD = 34.64
+  - 双人（dyadic）设定但不含上述组件：FID = 49.97，FVD = 47.23
+  - 完整双人配置（音频 + spatial transformer + noise injection）：FID = 32.35，FVD = 28.82
+  结论指向两点：noise injection 训练策略显著抑制了自回归生成中的误差累积；spatial transformer 带来了视觉指标上的实质提升。从 56.82 到 32.35 的 FID 降幅约 43%。
+【缺失的数据消融】以下三类数据策略消融均未开展：
+  - 过滤严格度消融：未对比「使用全量 8,743 小时」vs「仅使用 HQ 571K clips」的效果差异，因此 HQ 阈值组合（模糊 0.5/0.7、DOVER 0.6、运动分 2、ASR −1）的收益缺乏量化验证。
+  - caption 密度/风格消融：未对比结构化 JSON caption 与自然语言 caption、或不同 caption 字段组合对生成质量的影响。
+  - 数据配比消融：未对比四分支（single/listening/dialogue/multi-turn）不同配比的效果，也未验证 listening 分支与 multi-turn 分支的实际增益。
+【间接的规模证据】论文通过与 CelebV-HQ、HDTF、MultiTalk、OpenHumanVid 等既有数据集的对比（Table 1）论证其规模与标注优势，但这是数据集属性对比而非训练效果对比，不构成数据消融证据。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 技术报告未提供针对数据策略的受控消融实验——既无过滤严格度 ablation（如比较 6 个子集不同阈值档对最终指标的影响），也无 caption 密度/风格 ablation（如 short caption vs dense caption vs 原始标题三路的单独贡献），也无数据配比 ablation（如概念均衡开/关、图像视频混合比的对比）。这是本条目最主要的方法论短板：pipeline 描述工具级详尽，但每一步的必要性与收益缺乏量化归因。
@@ -377,6 +397,76 @@ Unison 的消融实验全部针对架构组件与训练策略，没有任何一�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。论文未做任何数据侧消融实验——没有过滤严格度 ablation、没有 caption 密度/风格 ablation、没有数据配比 ablation。所有实验都是端到端的方法对比（Vidu-StreamBench 人工偏好 A/B + HDTF 上 CSIM/Sync-D/DOVER 三指标对比）与推理效率验证。数据处理各项设计（omni 模型辅助过滤、双粒度 caption、dual-path 解耦标注、overlap 剔除、语音能量规则）均只给出定性动机说明，无量化收益证据。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 系没有做任何数据策略消融——没有过滤严格度 ablation、没有 caption 密度/风格 ablation、没有数据配比 ablation。这是其60页报告中数据章节最明显的短板。
+【报告中实际存在的消融（4.7.2节，全部为架构/组件级，在 1.3B 版本上做以便快速评估）】
+1) AdaLN 共享方式：对比 Full-shared-adaLN-1.3B、Half-shared-adaLN-1.5B、Full-shared-adaLN-1.5B（扩展到35层）、Non-shared-AdaLN-1.7B，均从零训练文生图20万步、global batch size 1536，以 latent 空间 L2 训练损失衡量。结论：同参数量下 Full-shared-1.5B（把参数用于加深层数）损失最低，参数更多的 Non-shared-1.7B 反而不敌，故采用全共享 AdaLN。
+2) 文本编码器：umT5(5.3B) vs Qwen2.5-7B-Instruct vs GLM-4-9B（后两者取倒数第二层特征，并按 HunyuanVideo 做法加双向 token refiner），umT5 训练损失与可视化均最优（归因于 umT5 的双向注意力更适配扩散模型，而 decoder-only LLM 是因果注意力）。另与 Qwen-VL-7B 对比 FID：umT5 43.01、Qwen-VL-7B 末层 43.72、倒数第二层 42.91——性能相当但模型更大，故选 umT5。
+3) 自编码器：VAE vs VAE-D（用扩散损失替代重建损失），FID 在10k步为 42.60 vs 44.21、15k步为 40.55 vs 41.16，VAE 更优。
+【唯一的数据类量化断言】合成图污染实验：报告称经验证据表明「即便 <10% 的生成图像污染也会显著劣化模型性能」，因此专门训练分类器剔除。这是 Wan 报告中唯一一条把数据纯净度与模型性能直接挂钩的量化结论，虽未给出对照曲线。
+【caption 侧的量化】slow-fast 编码使 caption 模型在 VideoMME 上从 67.6% 提升到 69.1%；caption 模型十维 F1 与 Gemini 1.5 Pro 的逐项对比。这些衡量的是 captioner 本身的质量，而非「caption 风格如何影响生成模型」。
+2.5/2.6/2.7 无任何消融。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者作为评测基准不做训练数据策略消融[不适用]，但提供了大量可用于指导数据策略的诊断性结论：
+【PhyAVBench 的模型能力剖面】17 个 SOTA 模型全面评测，最强的 Sora 2 的 CPRS 仅 0.4512（满分 1.0，0.5 即为随机正交水平），说明当前所有模型在音频物理正确性上基本处于「几乎无物理敏感性」状态；V2A 路线中 MMAudio 最优但也仅 0.4003。跨模型一致的弱项是流体动力学与声传播环境两个维度 —— 这直接指出训练数据中缺失的 domain：流水/气泡/粘度类流体声、混响/回声/遮挡/水下/固体传声类传播环境样本。这是最可执行的数据补充清单。
+【PhyAVBench 的指标可信度验证】CPRS 与人类判断的 Pearson 相关系数达 0.92，说明该自动指标可靠，可用作数据筛选的代理指标。
+【AV-SyncBench 的检测器能力剖面】ImageBind 语义强（0.859）时序弱、SparseSync 时序强语义弱、CAV-MAE 在抖动与变速上强、Synchformer 与 SparseSync 擅长偏移检测；50 ms 细粒度偏移下全体模型准确率跌至约 0.51。这等价于一次「过滤器选型消融」，结论是必须组合多个模型分工过滤。
+【AVBench 的对齐度验证】用 Pearson 相关系数验证自动打分与 4 名专家 2AFC 偏好的一致性；其硬负例设计（时间偏移 0.2–3.0s、音高/变速损坏、说话人错配、情绪反转、状态转换五类）经偏好学习后可检出细微跨模态不一致，间接证明「带受控降级的合成负例」这一数据构造策略有效。
+【Omni-Judge 的裁判能力消融】按维度逐项测量 Omni-LLM 与人类的相关性，得到清晰的能力分界：语义类维度可用（audio-text τ_b=0.292/ρ=0.345、audio-video-text 0.139/0.151），感知类维度不可用（video quality τ_b≈0.020、AV sync 0.142）；同时对比了 instruct 版与 reasoning 增强版的差异。这是对「用大模型做数据质检」这一策略最直接的量化消融。
+【VABench】15 维度 × 8 个模型/组合的横向对比，可读出端到端原生联合生成（Sora2/Veo3/Wan2.5）与级联 V+A 组合在各维度上的系统性差异[具体数值未在可获取内容中完整披露，不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+本字段汇总全生态关于「caption 质量/密度/风格如何影响下游生成」的量化证据，这是 captioner 生态存在价值的最终检验：
+
+【最强证据 · Movie Gen 的 caption 形态 A/B（人工净胜率 win%−lose%）】原生视频 captioner（LLaMa3-Video 8B）vs 抽帧改写方案（对首/中/尾三帧做图像 caption 再用 LLaMa 改写合并）：
+· caption 本身质量：人工 A/B 中视频 caption 被偏好 67%，逐帧改写方案仅 15%；
+· 对生成模型的影响：整体 prompt 对齐 +10.8%，其中绝大部分增益来自运动对齐 +10.7%，在要求高运动的 prompt 上更是 +16.1%。
+结论：原生视频 captioner 能准确描述更细粒度的运动细节，为训练提供更强的监督信号 —— 这是「为什么必须用视频 captioner 而非图像 captioner 拼接」的唯一定量答案。
+
+【结构化 caption 的收益 · Koala-36M】引入「指标条件（metric conditions）」结构化 caption 后，VBench 语义得分从 0.4504 提升到 0.5915（+14.1 个百分点）；用 Koala-all 训练相较 Panda-70M 训练，VBench 主体一致性 +1.1%、背景一致性 +2.4%（归因于更准的镜头切分）。VTSS 模型过滤优于人工多指标硬阈值组合。
+
+【蒸馏收益的完整量化 · Script-a-Video（本生态最完整的 caption 蒸馏 ablation）】Qwen3-Omni 原生 → 零样本 MTSS 提示 → MTSS 微调（教师为 Gemini-2.5-Pro）：
+· video-SALMONN-2 总错误率：0.5853 → 0.5156 → 0.3913（教师原生 0.3959，即微调后的开源模型已略优于教师）；
+· UGC-VideoCap 综合分：62.80 → 71.54 → 85.11（教师 93.97）；
+· Daily-Omni：0.1806 → 0.4117 → 0.5945（教师 0.6825）；
+· WorldSense：0.1569 → 0.3106 → 0.3875（教师 0.4332）。
+关键发现：MTSS 结构化提示对所有测试模型都有效（包括未微调的），是零成本增益。
+
+【打标器多样性的必要性 · Panda-70M】单个最好的打标器仅覆盖 30.8% 样本，31 个全上覆盖 84.7%，贪心选出的 8 个覆盖 76.8%；UMT 择优模型微调后 R@1 达 35.90%（预训练 UMT 仅 21.82%）；人类之间的 caption 偏好一致率仅 44.9%。
+
+【音视频 caption 的横向量化 · AVSCapBench】详见 audio_category_distribution 的完整表格。核心结论：AVSCap-7B overall 60.44 ≈ Gemini-3-Pro 60.97，Synergy 反超（57.70 vs 48.88），Speech 落后 10 点；裸 Qwen2.5-Omni 仅 21.53。
+
+【caption 模型自身能力的 ablation · Tarsier2】预训练数据 11M→40M + 细粒度时序对齐 SFT + DPO 三项升级，最终 DREAM-1K F1 超 GPT-4o 2.8%、超 Gemini-1.5-Pro 5.8%，人评 +8.6% / +24.9%，首个 DREAM-1K overall recall 突破 40%。AVSCap 的论断「RL 增益 > 扩 SFT 数据量」与之互补。
+
+【定性但重要的结论】
+· CogVideoX：主张「创新的视频打标模型显著提升了生成质量与语义对齐」，附录 H 用 Panda-70M 短 caption 与 CogVLM2-Caption 长 caption 对照展示密度差异，但未给 A/B 净胜率[量化缺失]。
+· Goku：用 GPT-4o 扩写 GenEval 短 prompt 后分数达 0.76，间接证明模型性能高度依赖与训练期密集 caption 一致的长 prompt（未组织为正式 caption ablation）。
+· Open-Sora Plan：明确论证训练 caption（密集长文）与用户 prompt（<10 词）分布错配会损害生成效果，据此构建 prompt refiner，但无开/关对照指标。
+· Open-Sora 2.0：高清阶段把 caption 模型从 LLaVA-Video 换成 Qwen2.5-Max，理由是「更准确、语义对齐更好」，无对照实验。
+
+【全生态最大缺口】绝大多数生成模型技术报告（HunyuanVideo、Allegro、LTX-2、LongCat-Video、MAGI-1、Mochi、Apollo、Foley-Omni、InstructAV2AV、CineDance）明确没有 caption 密度/风格 ablation。Movie Gen、Koala-36M、Script-a-Video 是仅有的三个提供扎实定量证据的工作 —— 这意味着行业对「caption 该多长、该多结构化」的选择基本靠直觉与成本，而非实证。[不确定]
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M（数据配比消融，统一采用“基线 vs 基线+本数据集”对照，覆盖六项下游任务）：①单目深度估计（MoGe，8个benchmark平均 Rel 指标提升幅度有限，约6.14量级）；②3D重建（VGGT，位姿 AUC15 由 83.4 提升至 83.8）；③4D重建（MonST3R，相机位姿 ATE 由 0.108 降至 0.099）；④2D点跟踪（CoTracker3，δ_avg^vis 由 76.6 提升至 77.4）；⑤3D点跟踪（SpatialTrackerV2，AJ 由 23.25 提升至 23.5）；⑥文本/位姿到视频生成（AC3D，FVD 由 38.20 降至 35.15、CLIP 由 28.62 升至 29.98）——生成任务的增益幅度显著大于感知任务，说明几何标注对相机可控视频生成的边际价值最高。SpatialVID（过滤严格度与分布消融）：与 Panda-70M 的分布对比构成核心证据——SpatialVID-HQ 在美学、亮度、运动三项上分布更紧凑，80%的clip具备弯曲/转向轨迹，而 Panda-70M 以静态内容为主且80%+无法被 MegaSaM 重建，量化说明面向几何用途时“运动过滤严格度”是决定数据可用性的第一因素。WildWorld（标注类型消融，基线 Wan2.2-TI2V-5B）：对比五种条件注入方式——CamCtrl（相机轨迹）、SkelCtrl（骨骼视频）、StateCtrl（离散+连续状态，Transformer实体建模）、StateCtrl-AR（自回归状态预测）；SkelCtrl 在 Action Following 与 State Alignment 上相对基线取得近100%的提升，但牺牲了美学质量，构成典型的“结构化条件 vs 画质”权衡；StateCtrl-AR 展示自回归潜力但存在误差累积。Action100M（caption密度与标注类型消融）：比较简要动作/详细动作/简要caption/详细caption 四类字段各自的监督效力，并与 PLM-3B 直接伪标注做对照，验证层级树+LLM聚合优于单模型伪标；另做 k-means 语义重采样（k=10³/10⁴/10⁵）的长尾缓解消融
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文的量化结果（仅两个数字，无逐组件消融）】在其内部视频生成模型上，RLHF 阶段在整体 GSB 指标上取得 31% 的提升，增益「最显著体现在视觉质量与运动质量两个维度，二者均有巨大增强」，而文本对齐的提升相对温和——作者归因于当前文本对齐奖励模型准确率有限，限制了语义正确性的优化空间。在此之上叠加 prompt enhancer 再带来 20% 的整体 GSB 提升，同样由视觉与运动质量驱动，且保持文本对齐不退化。此外提供了 Wan-2.1 上的 RLHF 效果可视化（图 2）。
+【方法学缺陷（必须标注）】论文未给出：基线模型名称、GSB 的分母定义（31% 是 Good 率还是 (G−B)/N）、标注样本量、标注员人数、置信区间、逐维度分数、与其他后训练方案的对比、SFT 单独的增益、AD 蒸馏前后的质量-速度权衡曲线。无任何数据侧消融（未做过滤严格度 ablation、caption 密度 ablation、数据配比 ablation），也未在 VBench 等公开基准上报告成绩。因此其「31%/20%」不具备跨工作可比性 [不确定]。
+【横向的可比消融证据】
+· Cosmos-Predict 2.5 提供了本主题最扎实的逐域 SFT 消融（人工胜率 SFT vs 预训练基线）：机器人操作 72.6% vs 8.3%、物体恒存 50.9% vs 27.7%、高运动 44.0% vs 34.7%、复杂场景 42.6% vs 35.4%、驾驶 47.9% vs 28.8%——直接量化了「按域精选 SFT 数据」的收益，且收益与域内数据量不成正比（730K 的机器人操作域收益最大，10.4M 的物体恒存域收益中等），说明域与基座能力的差距比数据量更决定 SFT 增益；
+· Cosmos 的 rCM 蒸馏消融：4 步生成的 PAI-Bench 分数与教师几乎持平（T2W 0.764 vs 0.768，I2W 0.816 vs 0.810，蒸馏版 I2W 甚至略高）；
+· AVSCap 的关键论断：RL 增益 > 扩 SFT 数据量——是「后训练投入优先于标注量扩张」的直接依据；
+· MOVA 的 prompt rewriter 消融：人类 Arena ELO 从 982.9 提升到 1025.3，独立量化了 PE 的价值（与锚论文 PE 带来 20% GSB 的定性结论方向一致）；
+· StreamChar 消融：单阶段蒸馏效果劣于两阶段（与锚论文 AD 分三子阶段的设计相互印证）；
+· video-SALMONN 2 的 MrDPO：7B 模型 caption 错误率相对基线降 28%；
+· LongCat-Video 的 HPSv3-percentile 设计（取分数最高前 30% 帧）与 Motion RM 输入灰度视频的设计，均是针对奖励信号污染的定向消融产物，但论文未给对照数字 [不确定]。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -459,6 +549,11 @@ Data-Juicer Sandbox 的 T2V 案例是本调研中「质量优于数量」证据�
 (4) **极严的 OCR 阈值（720p 档文字面积仅允许 1%）**——宁可大幅牺牲数据量也要保证画面纯净。
 (5) **联合训练消融**（Figure 5b）——加入高质量图像数据能提升视频生成质量，可视为「高质量样本的价值高于同等数量的同质视频样本」的侧面证据。
 以上均为设计取向证据，非受控实验证据。[部分不确定]
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（无直接证据，仅有方向性表述）。Hailuo 02 的官方措辞「训练数据扩大4倍，且质量与多样性提升（with improved quality and diversity）」同时强调了量与质，属于「又大又好」而非「小而精超越大而杂」的叙事，因此不能作为质量优先于数量的证据。MiniMax 未提供任何小规模高质量数据集超越大规模低质数据集的对照案例。
+可作为弱旁证的是 NCR 架构的定位：MiniMax 把代际提升的叙事重心放在架构效率（2.5倍训练/推理效率）与算力性价比上，而非数据规模竞赛，间接反映其技术路线偏向效率而非堆量，但这属于算力效率而非数据质量论证。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -618,6 +713,14 @@ SkyReels 系列提供了两条较明确的「宁缺毋滥」证据：
 
 完全未披露。无任何「小而精数据超越大而杂」的实验证据或论述。System Card 仅有「rigorous filtering to maintain data quality」这一句定性表态，隐含重视数据质量的立场，但无任何支撑证据。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+论文未提供「小而精超越大而杂」的直接量化证据，但其数据设计中隐含了对该理念的实践性采纳：
+【隐含的实践】把 571K clips / 1,368 小时的 HQ 子集从 8,743 小时中单独切出，并专门用于第三阶段的对话微调，同时让预训练只使用剩余的 7,375 小时——这一「互斥划分」的设计本身就体现了「高质量数据应留在最接近最终能力的训练阶段使用」的判断。HQ 阈值在每个维度上都比全量门槛严格数倍（模糊分 0.1 → 0.5/0.7，DOVER 0.25 → 0.6，新增运动分下限），说明团队认为后训练阶段的数据质量比数量更关键。
+【缺乏的验证】没有做「HQ 子集单独训练 vs 全量训练」的对照实验，因此无法回答「1,368 小时精选是否能超过 8,743 小时全量」这一问题。Table 2 的消融全部是架构组件消融，与数据量无关。
+【端到端保留率的间接印证】从 64,386 小时原始素材筛到 8,743 小时（约 13.6%），再筛到 1,368 小时 HQ（约 2.1%），这个近五十分之一的收敛比例是同类数据集中相当激进的，反映出团队在质量取舍上的倾向性。但激进的过滤本身不等于「质量胜过数量」的证据。
+【与同类的对比】MOVA 通过三阶段规模递减（61.5k → 37.6k → 11k 小时）配合各阶段指标提升，提供了课程层面的质量递增证据；SpeakerVid-5M 有相同形态的设计但未提供对应的量化验证。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 无严格的受控对照实验，但存在一条较强的间接证据与一条明确的反面案例：
@@ -659,6 +762,59 @@ Unison 未提供任何「小而精数据超越大而杂」的直接实验证据�
 ### [Vidu S1](../models/Vidu_S1.md)
 
 无直接量化证据，但整体设计路线明确是「质量与分布纯度优先于数量」：数据规模只字未提，而过滤条件极为严苛（单人、单镜头、镜头静止或慢速、必须有清晰动作、无水印字幕广告、无重叠人声、无低语音能量占比片段、3~60秒），最终数据分布高度垂直。论文的定性主张是「训练数据质量实质性地影响训练表现与模型泛化能力」，并强调严格过滤规则是保证训练数据质量的手段。间接旁证：Vidu S1 在 HDTF 上以 540p 实时模型的身份，CSIM(0.9192)、Sync-D(7.8470)、DOVER(0.5660) 三项全面超过 Wan2.2-S2V-14B、OmniAvatar、Hallo3、StableAvatar-1.3B 等离线开源模型及 HeyGen、LemonSlice、Kling Avatar 2.0 等商用系统。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+有若干方法论层面的体现和一条准量化证据，但缺少直接的「小而精 vs 大而杂」对照实验。
+【准量化证据（最有力）】合成图污染 <10% 即显著劣化模型性能——这直接说明数据纯净度的边际影响远大于数据量，是「少量脏数据可摧毁大量好数据收益」的典型论断，也是本条目最值得引用的一句。
+【方法论体现】
+1) 基础维度一步淘汰约50%的候选数据，宁可砍半也要先保证基础质量；
+2) 后训练只用专家分 top20% 的图像与质量分类器筛出的头部视频，规模从数十亿级骤降到百万级；
+3) V2A 从数十亿级视频母集严格过滤到 O(1) 千小时——为了音画可用性接受极端的规模压缩；
+4) 个性化数据从 O(100)M 筛到 O(10)M；
+5) caption 模型训练的最终阶段专门在「小规模高质量数据」上端到端训练，且人工标注 caption 被定义为最高质量数据只用于最终阶段。
+【反向平衡】需要指出的是，Wan 同时非常在意「不要因为追求质量而丢掉分布」——100簇配额采样防长尾、静态与相机运动类降采样而非删除、后训练强调类别均衡与人工补齐缺失概念，都是对「一味求精导致分布塌缩」的对冲。这种「高标准 + 保分布」的双重取向比单纯的质量优先更值得借鉴。
+无「全量 vs 精选」的对照实验与量化收益。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+【PhyAVBench 是最强证据】仅用 337 组配对提示词、11,605 条精心录制的视频（25.5 小时，量级极小），就把 17 个 SOTA 模型的 CPRS 全部压在 0.45 以下，暴露出用海量网络数据训练的商业大模型在基础音频物理上的系统性失败。其核心方法论主张是「新录制以保证零训练集重叠」—— 强调数据的纯净性与受控性优先于规模，且明确要求每组配对至少 N≥20 条真实样本取均值以抑制噪声，体现「少而精 + 多次重复采样」的思路。
+【AVBench 的 30K→300K 扩增思路】不是靠采集更多数据，而是对 30K 条高质量真实片段施加受控降级扩增到 300K 训练对，用合成负例的多样性替代真实数据的规模，是「小种子 + 可控合成」的质量优先路线。
+【AV-SyncBench】3,269 条经 Gemini 初筛 + 5 人交叉复核的干净视频，扩展出 38,390 条评测样本；其严格的 on-screen 声源要求意味着大量原始数据被剔除，换取标签的绝对可靠。
+【VABench】1,299 条样本覆盖 15 维度评测，靠类目体系的结构化设计而非样本量取胜。
+【Omni-Judge】仅 300 条提示词 / 600 条视频，即得出足以改变数据 pipeline 设计的结论（Omni-LLM 不可用于感知类判分）。
+共同启示：评测侧的「小而精」范式已被验证；映射到训练侧，对 domain 覆盖度与标签可靠性的投入回报可能高于单纯扩大数据量。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+【captioner 生态内部的质量胜量证据】
+· ShareGPT4Video 是最经典的样本：仅用 40K 条 GPT-4V 密集 caption 做 SFT，就训出能标注 480 万条视频的 ShareCaptioner-Video —— 极小的高质量种子集撬动百倍规模的产出。
+· AVSCap 的核心论断：「RL 带来的增益大于扩大 SFT 数据量」，即在 130K 数据规模下，投入 reward 设计比继续扩标注量更划算。
+· Script-a-Video：500K 条 Gemini-2.5-Pro 精标数据微调后，8B/30B 级开源模型在 video-SALMONN-2 总错误率上（0.3913）已略优于教师 Gemini-2.5-Pro 原生输出（0.3959）。
+· SkyCaptioner-V1：仅 200 万条概念均衡数据训出的 7B 模型，其影视专业字段准确率（平均 76.3%，镜头类型 93.7%）显著超过 Qwen2.5-VL-72B 等大 10 倍的通用模型 —— 「小模型 + 对口数据 > 大模型 + 通用数据」的直接证据。
+【下游数据集层面的质量胜量证据】
+· Koala-36M（3600 万条）vs Panda-70M（7000 万条）：规模仅一半，但 VBench 总分最高，主体一致性 +1.1%、背景一致性 +2.4%。核心差异在 caption 长度（202.3 词 vs 13.2 词）与切分准确度 —— 这是本生态最直接的「小而精超越大而杂」案例。
+· CineDance-1M 伪影不合规率 2.8% vs Koala-36M 37.4%（13.4× 改善），代表更新一代对质量的进一步收紧。
+· JavisDiT++ 的表述值得注意：不是简单的「质量优于数量」，而是「确保良好的数据质量是增加样本数量以提升训练效果的前提基础」——即质量不达标时单纯扩量无效甚至有害。
+· Movie Gen 音频 SFT vs PT：整体 +41.7±15.3、专业度 +43.0±14.7，论文评语「凸显了微调阶段高质量数据 curation 的重要性」。
+【反向警示】CogVideoX 报告了双向效果：去除字幕水印后视觉质量小幅提升，但语义能力轻微退化 —— 过度清洗会损失语义多样性，是「质量优先」的边界条件。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SpatialVID 提供最直接的证据链：主动用运动关键词检索的 21,789 小时定向素材，其可用性远超被动爬取的通用大库——Panda-70M 规模大得多但 80%+ 无法完成几何重建，说明对几何标注任务而言“大而杂”几乎无效；进一步地，0.37M 的 SpatialVID-HQ 子集通过美学/亮度/运动三维收紧与类别均衡，被定位为优于 2.71M 全量的训练选择。SceneScribe-1M 的证据在规模对比表：其100万clip/156.7M帧的体量小于 Koala-36M（3600万视频）与 SpatialVID（约200万clip/123.6M帧），但凭借“相机+深度+3D点轨迹+文本”的完整标注组合，在六项下游任务上均带来增益，体现标注深度对样本数量的替代性。WildWorld 以约1,800小时的单一游戏域数据，凭借帧级119列精确真值，使 SkelCtrl 在动作遵循上近乎翻倍——用标注精度换数据广度的极端案例。Action100M 反向说明规模仍有价值，但其去重（1.418亿重复实例）与语义重采样恰恰是“把大数据变精”的操作
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+本专题是「质量优于数量」命题在视频生成领域最集中的证据带：
+【最强的量化证据】
+· NAVA：从 15M 训练语料中经多算子协同过滤取 160K（1.07%）做 SFT，且该子集的 caption 由更贵的 Gemini-3-Pro 重新生成——「千分之一精选 + 标注升级」是本次调研中最激进的质量优先实践；
+· Allegro：500M → 2M（0.4%）；
+· Movie Gen：视频 SFT 训练只用 512 张 H100，相对其预训练规模是极小投入，却承担了美学与影视感的最终定型；
+· Cosmos-Predict 2.5：730K 条机器人操作数据的 SFT 带来 72.6% vs 8.3% 的人工胜率碾压，是「小数据集在目标域上超越大而杂预训练」的直接实证；
+· AVSCap 的「RL 增益 > 扩 SFT 数据量」论断，把命题从「小而精数据」推进到「优化范式 > 数据规模」；
+· ALIVE 的 SFT 只训 0.5 epoch，是「精选数据也不宜训透」的反向注脚——质量优先并不等于让模型完全拟合精选分布。
+【锚论文的立场】其核心论断「SFT as the foundation for RLHF」实际上是质量-数量命题的一个更进阶版本：SFT 的价值不在于直接提升主观质量（论文明确说「SFT is not intended to fully solve alignment or optimize subjective quality」），而在于提供一个稳定的参考策略并「扩大 RLHF 的探索空间」。也就是说，SFT 精选数据的最终价值要通过 RLHF 才能兑现——这把「小而精数据」从终点重新定位为中间件。这是本专题最值得记录的观点转变，尽管论文没有为它提供任何消融证据 [不确定]。
+【反向证据/警示】Apollo 明确采用人工精选高质量数据做 Stage III 质量精修但完全不做偏好对齐，其对齐能力全部来自数据质量与架构；Step-Video-T2V 则指出 DPO 的收益会在模型能轻易区分正负样本时饱和——两者共同说明「数据质量」与「偏好优化」的收益曲线形状不同，前者边际递减更早，后者需要持续更新的奖励信号才能维持梯度。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -756,6 +912,12 @@ Unison 未提供任何「小而精数据超越大而杂」的直接实验证据�
 【对齐关系】Goku 数据侧的 9 大类/86 子类语义体系（human、scenery、animals、food、urban life 等）与 VBench 的语义类目维度（object class、human action、scene、multiple objects 等）在概念空间上高度重合。分布均衡阶段「加权人物内容 + 子类均衡表征」的策略，直接对应 VBench 的语义得分表现：Goku-T2V 总分 84.85（Quality 85.60 / Semantic 81.87），其中 **human action 79.48**、**scene 85.72**、**object class 94.40** 均显著高于同期开源模型（如 HunyuanVideo human action 68.55、scene 68.68；CogVideoX-5B scene 66.35），尤其 scene 一项领先幅度最大——这与数据侧刻意保证 scenery/urban life 等场景类子类充分表征的策略吻合。可以认为分布均衡阶段是 Goku 在 VBench 语义类目上取得优势的重要来源。
 【图像侧】GenEval（0.76）与 DPG-Bench（83.65）考察物体计数、属性绑定、空间关系等组合语义，对应的是 6000 万内部高质量图像的精调，而非视频侧的类目均衡。
 【局限】论文未做「数据类目分布 → 对应 benchmark 子项得分」的逐项归因分析，上述对齐属于本次调研基于数据与结果的推断。[部分不确定]
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（无法建立对齐关系）。MiniMax 未发布配套评测基准，也未公开训练数据的 domain 类目体系，因此不存在训练数据分布与评测基准类目（如 VABench 七大类）之间的显式对齐关系可供分析。
+官方引用的评测证据仅为第三方榜单排名：Hailuo 02 发布时称在 Artificial Analysis Video Arena（一个基于人类成对偏好投票的第三方视频生成竞技场）上位列全球第二。该榜单是整体偏好 Elo 排名，不做细粒度类目拆分，因此也无法反推类目对齐。
+可观测的产品侧类目痕迹是海螺AI 提供的大量模板类目（舞蹈视频、变身特效、电影化生成等），这些模板反映了产品重点覆盖的场景，可视为一种事实上的应用类目体系，但与训练数据 domain 配比之间无任何公开的映射关系。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -934,6 +1096,21 @@ Cosmos 的九大类（自然动态 20%、手部操控 16%、空间导航 16%、�
 
 完全未披露。OpenAI 未公布 Sora 2 训练数据的domain类目体系，也未将其与任何评测基准（如 VABench 七大类、VBench 等）的类目做对齐说明。OpenAI 自建的唯一类目体系是安全政策类目（成人性内容/自残/暴力血腥/政治说服/极端主义仇恨，及是否涉及肖像的二分），该体系服务于安全评测，与训练数据domain分布无对应关系。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+SpeakerVid-5M 是本次调研中训练数据类目体系与评测基准对齐度最高的样本之一——因为二者由同一团队同源构建，VidChatBench 直接从数据集中切出：
+【构造同源性】VidChatBench 包含 500 组测试对（test pairs），使用未在训练中出现的说话人 ID（unseen speaker IDs），即测试集与训练集在身份维度上严格不重叠。它不是独立采集的外部基准，而是同一 pipeline 产出、同一标注体系下的留出集。
+【六维指标体系与数据标注的一一对应】VidChatBench 的每一维指标都能在数据集的标注字段中找到对应的构建依据：
+  1) 视频质量（FID、FVD、PSNR、SSIM）← 对应数据侧的 DOVER、clarity、luminance、blur 过滤。
+  2) 身份保持（ArcFace 余弦距离）← 对应数据侧用 ArcFace 做 ID 校正的同一工具与同一特征空间。
+  3) 对话连贯性（生成结果与 LLM 排序候选之间的 CLIP 距离）← 对应数据侧的 ASR 转写与 multi-turn 上下文聚合。
+  4) 音视频同步（SyncNet confidence）← 对应数据侧用 SyncNet 做音画绑定与同步标注的同一指标。
+  5) 情绪对齐（Deep3DFaceRecon 提取的表情 FID）← 对应数据侧 caption 中的面部表情概括字段。
+  6) 说话人身份/音色（SIM-o 音色相似度，基于 UniSpeech）← 对应数据侧 3D-Speaker 的声纹 ID 体系。
+【交互形态类目的对齐】数据集的四分支（talking / listening / dialogue / multi-turn）直接定义了下游任务的能力拆分，VidChatBench 的测试对以 dyadic 对话形态组织，与 dialogue 分支的组织方式一致。
+【与 VABench 式外部基准的差异】VABench 等基准以七大内容类目（人物、动物、自然、乐器等）划分，考察的是内容覆盖广度；VidChatBench 则以「能力维度」而非「内容类目」划分，因为 SpeakerVid-5M 的内容 domain 高度单一（全部为真人对话），广度对齐无从谈起，转而在深度维度上做细粒度对齐。
+【潜在风险】同源构造带来的高对齐度也意味着评测可能高估泛化能力——测试集与训练集共享同一套采集偏好、同一批清洗阈值、同一批标注模型的系统性偏差，跨数据集的外部有效性未被验证（论文未在 HDTF、CelebV-HQ 等外部基准上报告结果）。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 训练数据的类目体系与评测基准类目体系之间未做显式对齐说明，但两侧的类目信息都相对具体，可作对照分析：
@@ -986,6 +1163,59 @@ Unison 未发布公开评测基准，也未构建任何类目体系（taxonomy�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 存在较清晰的对齐：自建基准 Vidu-StreamBench 含 500 个样本，每个样本由「动作指令 + 参考首帧 + 音频片段」三元组构成，覆盖多样的动作指令、参考图风格、说话人属性、情绪与应用场景——这与训练数据的过滤维度（交互性/清晰动作、主体、情绪、多视觉风格、说话人语音）逐条呼应。人工评测的五个维度（Overall、Motion Dynamics、Identity Consistency、Audio-Video Sync、Subject Controllability）也分别对应训练数据侧的交互性过滤、单主体过滤+镜头稳定性、diarization 声画对应、以及 speech-aware chunk caption 带来的可控性。omni 模型打标的九个质量维度（editing/subject/action/emotion/face/speech/scene/shot/tone）可视为训练侧的类目体系，但论文未给出它与基准类目的显式映射表或各类目占比 [部分不确定]。公开基准侧只用了 HDTF（标准 audio-driven avatar 基准），论文指出 HDTF 等公开基准无法充分评估指令跟随与实时交互中的自然运动，这正是自建 Vidu-StreamBench 的动机。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 自建的 Wan-Bench 与其训练数据的类目体系存在清晰但非声明式的呼应，且在音画维度上存在明显缺口。
+【Wan-Bench 结构】三大核心维度、14项细粒度指标，为每个维度设计专门算法（简单任务用传统检测器，复杂任务用 MLLM）：
+1) 动态质量（dynamic quality）：大运动生成（RAFT 光流幅值归一化打分）、人体伪影（在2万张人工标注的 AI 生成图上训练的 YOLOv3 类模型，综合预测似然、包围盒与持续时长打分）、物理合理性与平滑度（Qwen2-VL 做视频问答，检测物体穿模、不真实碰撞、反重力运动等物理违例）、像素级稳定性（用光流识别静态区域再算帧间差异）、ID 一致性（人/动物/物体三个子维度，DINO 帧级特征相似度）；
+2) 画面质量（image quality）：综合画质（MANIQA 保真度 + LAION 美学预测器 + MUSIQ 三者平均）、场景生成质量（帧间 CLIP 相似度衡量一致性 + 帧-文 CLIP 相似度衡量对齐）、风格化（Qwen2-VL 帧级问答）；
+3) 指令遵循（instruction following）：单物体/多物体/空间位置（Qwen2-VL 预测类别、数量、空间关系，按帧命中率打分）、相机控制（平移/升降/推拉/航拍/跟拍五类，130条定制 prompt，前三类用 RAFT 光流分析、后两类用 Qwen2-VL 问答）、动作指令遵循（人/动物/物体三类运动，给 Qwen2-VL 关键帧，查询动作对齐度、动作完成度与伪影）。
+最终以人类反馈引导的加权策略合成综合分。
+【与训练数据的对应关系】动态质量 ↔ 运动质量六档分级与光流运动分；画面质量 ↔ 美学打分器与 LAION 分类器（评测直接复用 LAION 美学预测器，与训练侧同源）；ID 一致性 ↔ ArcFace/SigLIP 一致性筛选；相机控制 ↔ 人工标注的相机角度与运动数据集及专家扩标；物体/计数/空间关系 ↔ caption 模型的计数、细粒度类别、空间关系三个自建数据集。可以说 Wan-Bench 的类目几乎是其数据构建维度的镜像——但报告从未把这种对应关系表述为一项设计原则。
+【关键缺口】Wan-Bench 三大维度14项指标中完全没有音视频同步类目，音频维度整体缺席；2.5 起主打的「声画同步」「多镜头叙事」「角色扮演」三项能力在 Wan-Bench 中都没有对应类目。音画同步的评测只在 Wan2.2-S2V 论文中以 EMTD 数据集 + Sync-C 单项指标出现。未涉及 VABench 七大类等外部类目化音视频基准。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+本字段是本次调研的核心产出 —— 五个基准的类目体系可直接反向作为训练数据 domain 分布的标准坐标系，建议按三个正交轴组合使用：
+
+【轴一：内容 domain 轴 —— 采用 VABench 七大类目】动物 / 人声（语言性·非语言性）/ 音乐 / 环境音（自然·城市·室内）/ 同步物理声 / 复杂场景（复杂声景·主观感受·世界知识·符号联想·画外声源）/ 虚拟世界。这是最完整的内容侧分类学，可直接作为训练数据配比表的一级行标签。两个关键设计需一并移植：① 人声必须区分语言性与非语言性（前者需唇同步与 ASR 标注，后者不需要）；② 虚拟世界类目应豁免物理合理性质量门槛，与写实类目分开设定过滤标准。
+
+【轴二：音频类型与同步难度轴 —— 采用 AV-SyncBench 三分法 + 十场景】Voice / Music / Sound 三大类下设动作、动物声、物体声、环境声、群体发声、单人说话、对话、演唱、单乐器、合奏十场景。该体系按同步难度而非主题切分，其单声源 vs 多声源的区分（单人说话 vs 对话/群体发声、单乐器 vs 合奏）直接对应训练数据中多声源混叠样本的配比需求，也决定了同步过滤器的选型（多声源场景下 Synchformer 类模型可靠性下降）。
+
+【轴三：物理正确性覆盖轴 —— 采用 PhyAVBench 六维 41 测试点】声源力学 / 机械结构 / 流体与空气动力学 / 声传播环境 / 观察者物理 / 时间与因果（及复杂耦合与极端物理）。这是一份可勾选的 checklist，用于审计训练数据在物理声学上的覆盖盲区。评测实证已指明当前全行业的共同盲区是流体动力学与声传播环境两项，可作为优先补数据的方向。
+
+【正交约束层 —— 采用 AVBench 的配额均衡机制】Hard Quota-Based Greedy Sampling 强制任一单属性占比 ≤50%，以及 Normal : Hard ≈ 3:1 的难度分层。这两条可直接移植为训练数据采样时的概念均衡策略与难例配比锚点。
+
+【真实分布校准 —— 采用 Omni-Judge 的 VidProM 提示词分布】前四轴均为专家设计的理想分类，容易与真实用户需求脱节；Omni-Judge 直接采样 VidProM 真实用户提示词，提供了「用户实际想生成什么」的经验分布，可用于校准前述类目体系的权重，避免长尾类目过度投入。
+
+【落地建议】构建一张三维配比矩阵（内容 domain × 音频类型 × 物理测试点覆盖），以 VidProM 真实分布定权重、以 AVBench 配额规则约束单属性占比、以 PhyAVBench checklist 审计盲区、以 AV-SyncBench 场景标签驱动同步过滤器分域选型。同时注意五个基准的共同空白 —— 多镜头长叙事、多语种口音、跨镜头音轨连续性目前均无基准可对标，这些 domain 的训练数据投入暂时无法用公开基准验证效果。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+【caption 专用基准的类目体系】
+· VDC（AuroraCap 配套）：结构化 caption 分 camera / short / background / main object / detailed 五字段，配 VDCScore（分治式转化为多个短问答对由 LLM 判定）。这五字段实际上定义了后续大量工作的 caption schema。
+· AVSCapBench（2026-07，最新最细）：1226 条人工标注视频（30–120 秒，来自 YouTube / TikTok / Video-MME），按 Visual / Speech / Music / SFX / Synergy 五维做细粒度 event recall，设计上防止「靠单模态刷分」。这五维与 AV 生成模型的训练数据 domain 需求高度对应。
+· Omni-Cloze（阿里，2026-03）：2000 clip / 7 万道细粒度完形填空题 / 9 大领域 47 子类，用完形填空规避 LLM-judge 噪声。是类目体系最完整的公开基准。
+· UGC-VideoCap（2025-07）：1000 条 TikTok 视频 + 4000 QA，三阶段 human-in-the-loop 分别标注 audio-only / visual-only / joint AV 语义 —— 类目按「模态可得性」划分而非内容主题。
+· OmniCap-IF（2026-06）：首个音视频 caption 指令跟随基准，50 类约束覆盖纯视觉/纯音频/音视频，含 Temporal Grounding，双维度评分（format correctness + content correctness）。这一维度对生产 pipeline 至关重要 —— 打标器必须能按你的 schema 输出。
+· DREAM-1K（Tarsier 配套）：以动态动作的 event recall 为核心，Tarsier2 是首个 overall recall 突破 40% 的模型。
+· VidCapBench（2025-02）：明确面向可控 T2V 的视频 caption 评测，是少数把「caption 质量」与「生成可控性」显式挂钩的基准。
+· video-SALMONN 2 testset：以 error rate（missing + hallucination）为导向，与前述 recall 导向基准互补。
+【与生成侧评测体系的对齐关系】
+· caption 基准的维度（camera / background / main object / motion）与 VBench 的评测维度（主体一致性、背景一致性、运动平滑度、语义得分）存在明显对应，Koala-36M 的结构化 caption 使 VBench 语义得分 +14.1 个百分点即是这一对应的直接体现。
+· AVSCapBench 的 Speech / Music / SFX 三分与 VABench 等 AV 评测基准的音频类目、以及 Foley-Omni 的三字段 schema 完全同构 —— 说明「打标 schema、评测类目、生成能力维度」三者正在收敛为同一套本体。
+【方法论警示】AVSCap 既是 AVSCapBench 作者又是榜首（60.44），benchmark-model 同源存在过拟合风险；论文发布仅两周（2026-07-14），无第三方复现，选型时须用 UGC-VideoCap、Omni-Cloze 等第三方基准交叉验证。Panda-70M 报告的人类一致率仅 44.9%，为所有 caption 基准的可靠性设定了天花板。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SceneScribe-1M 的对齐关系最系统：数据标注的四个维度（文本、相机参数、深度、3D点轨迹）与其建立的六项评测任务一一对应——深度标注对应单目深度估计基准、相机参数对应3D/4D重建（VGGT/MonST3R）基准、3D点轨迹对应2D/3D点跟踪（CoTracker3/SpatialTrackerV2）基准、文本+相机对应文本/位姿到视频生成（AC3D）基准，形成“标注即任务”的闭环设计。WildWorld 与 WildBench 的对齐是显式设计的：数据侧的动作ID对应基准的 Action Following 维度、骨骼与世界状态对应 State Alignment 维度（按4/8/16/32像素多阈值评测）、相机内外参对应 ATE/RPE 相机控制维度（用ViPE tracker做SfM）、画质由VBench四项（运动平滑度、动态程度、美学质量、图像质量）覆盖；作者明确指出VBench类通用指标在交互式任务上已“饱和”，正是数据标注体系倒逼评测体系扩展的例证。SpatialVID 的结构化标签体系（天气/时段/人群密度/光照/场景类型）为按类目切分评测提供了基础，但论文未建立与之对齐的固定评测类目体系[不确定]。Action100M 的动作层级标注对应其16个下游基准的两大族——动作识别（SSv2、EPIC-KITCHENS-100、EgoExo4D Keysteps、Kinetics-400、COIN、CrossTask 等8个）与文本-视频检索（MSR-VTT、ActivityNet、DiDeMo、MSVD、YouCook2、PVD-Bench、Dream-1K、VDC-1K 等8个），分别对应动作字段与caption字段的监督效力
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】其评测类目体系为三维：视觉质量（整体外观、锐利度、无伪影）、运动质量（时序连贯性、平滑性、运动模式合理性）、文本对齐（生成视频与输入 prompt 语义的一致性）——与其四个奖励模型中的三个（视频美学/图像美学合并为视觉质量、运动质量、文本-视频对齐）严格一一对应。这种「奖励维度 = 评测维度」的设计是后训练工作的通行做法，其优点是训练目标与评测口径完全一致，缺点是天然存在自证嫌疑：用 RM 优化的模型再用同维度的人评来验证，无法排除 reward hacking 只是没被这套维度捕捉到。论文未在 VBench、EvalCrafter 等外部基准上报告成绩（尽管引用了它们并批评其「evaluation signals are often noisy」）[不确定]。
+【三维体系的行业收敛】VQ/MQ/TA 三维已成为视频生成后训练的事实标准类目：VideoReward（VQ/MQ/TA 三维分别标注）、LongCat-Video（VQ/MQ/TA 三奖励模型）、锚论文（三维 GSB）、HunyuanVideo 1.5（美学吸引力/清晰度/运动流畅性）、Seedance 1.0（Foundational/Motion/Aesthetic 三 RM）——这套三维体系正是训练数据 SFT 筛选标准（美学 + 运动 + 图文一致）的镜像，即筛选维度、奖励维度、评测维度三者已高度对齐。
+【AV 维度的缺位】VABench 七大类等音视频评测体系与后训练奖励维度尚未打通：三维体系全为视觉维度，音频保真、唇同步、事件对齐、音色一致性均不在其中。JavisDiT++ 的六奖励（音频质量/文本-音频/视频质量/文本-视频/跨模态相似/时序同步）是唯一把评测类目扩展到 AV 全维的后训练体系，可视为 AV 时代三维体系的候选继任者。Movie Gen 音频侧的 MOS-Q/S/T、Unison 的 11 项客观指标（VA/ID/PQ/CU/WER/TA/TV/AV/LSE-C/LSE-D/DS）、UniVerse-1 的 Verse-Bench（MS/AS/ID/FD/KL/CLAP/LSE-C/AV-A/WER）等 AV 评测类目均未被任何后训练工作用作奖励维度 [不确定]。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 

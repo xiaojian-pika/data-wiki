@@ -44,6 +44,10 @@ Foley-Omni（配套评测基准 V2ST-Bench）。论文全称《Foley-Omni: A Uni
 
 Goku（《Goku: Flow Based Video Generative Foundation Models》，含 Goku-T2I / Goku-T2V / Goku-I2V 系列；arXiv:2502.04896，CVPR 2025 Highlight）
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+Hailuo / MiniMax Video（海螺AI视频）。这是一个产品线而非单一模型，历代模型ID包括：video-01（2024年9月，初代，别名 Hailuo）、video-01-live（Live2D/动漫特化）、video-01-director（镜头运动控制）、S2V-01（Subject-Reference 主体参考）、MiniMax-Hailuo-02（2025年6月）、MiniMax-Hailuo-2.3 / 2.3-Fast（2025年10月，截至2026年7月仍为官方文档中的最新在线版本）
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
 HunyuanVideo-Foley（混元视频音效模型，全称《HunyuanVideo-Foley: Multimodal Diffusion with Representation Alignment for High-Fidelity Foley Audio Generation》）
@@ -126,6 +130,10 @@ SkyReels 系列（本条目覆盖 SkyReels-V2《SkyReels-V2: Infinite-length Fil
 
 Sora 2（含 Sora 2 Pro）
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+SpeakerVid-5M（论文全称：SpeakerVid-5M: A Large-Scale High-Quality Dataset for Audio-Visual Dyadic Interactive Human Generation）
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 Step-Video-T2V（阶跃视频，30B 文生视频基础模型）及其衍生 Step-Video-T2V-Turbo、Step-Video-TI2V
@@ -150,9 +158,25 @@ Veo 3 / Veo 3.1（含 Veo 3.1 Lite）
 
 Vidu S1（技术报告《Vidu S1: A Real-Time Interactive Video Generation Model》，arXiv:2607.03118v2；产品名 Vidu Stream，https://vidu.com/vidu-stream）
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md)
+
+Wan 2.5 / 2.6 / 2.7（通义万相，Wan 系列闭源商用版本）——含其开源前代 Wan 2.1（arXiv:2503.20314）、Wan 2.2（Apache 2.0）及同团队旁证模型 Wan2.2-S2V（arXiv:2508.18621）、Wan2.2-Animate、Wan-Dancer（arXiv:2607.09581）
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+音视频生成评测基准合集（VABench / AVBench / AV-SyncBench / PhyAVBench / Omni-Judge）
+
 ### [视频 Caption 模型生态](../models/caption_models.md)
 
 视频 Caption 模型生态（Video Captioner Ecosystem）——合并调研条目，覆盖 ShareGPT4Video / ShareCaptioner-Video、Tarsier & Tarsier2 系列、CogVLM2-Caption、SkyCaptioner-V1、AVoCaDO、AVSCap、video-SALMONN 2、Qwen3-Omni-Captioner / Qwen3.5-Omni、AuroraCap、Panda-70M 多教师 captioner、LLaVA-Video / PLLaVA、Aria、Tag2Text 等，并归纳它们在视频生成数据 pipeline 中的实际应用方式。本条目不是单一模型/数据集，而是「打标器」这一 pipeline 组件的横向生态图谱。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+几何/结构化标注数据集合集（SceneScribe-1M / SpatialVID / WildWorld / Action100M）
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+视频生成后训练数据策略（跨模型横向专题）——以《A Systematic Post-Train Framework for Video Generation》(arXiv:2604.25427) 为锚，横向汇总各模型的 SFT 精选集规模/筛选标准与偏好对标注方式
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -193,6 +217,10 @@ NVIDIA（论文署名即 NVIDIA，含 88 位贡献者的大型协作团队，作
 ### [Goku](../models/Goku.md)
 
 字节跳动（ByteDance）与香港大学（HKU）联合。论文署名 22 位作者，一作 Shoufa Chen（HKU），通讯/资深作者含 Ping Luo（HKU）、Yi Jiang、Zehuan Yuan、Bingyue Peng、Xiaobing Liu（字节跳动）。团队与字节 Seed / 视觉生成线高度重叠，项目代号来源于《龙珠》悟空（Saiyan-World 组织名）。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+MiniMax（稀宇科技 / 上海稀宇极智科技有限公司），中国上海。同一公司的其他产品线包括 MiniMax-01/M1/M2/M2.5/M2.7/M3 系列大语言模型、MiniMax Speech 语音、MiniMax Music 音乐、MiniMax Code。视频产品对外品牌为「海螺AI」（Hailuo AI，hailuoai.video / hailuoai.com）
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -284,6 +312,10 @@ Character AI（主体，作者 Chetwin Low、Weimin Wang，Weimin Wang 为 Proje
 
 OpenAI
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+清华大学（深圳国际研究生院，Tsinghua University）联合 StepFun（阶跃星辰）与香港科技大学（HKUST，含广州校区）。作者列表：Youliang Zhang、Zhaoyang Li、Duomin Wang、Jiahe Zhang、Deyu Zhou、Zixin Yin、Xili Dai、Gang Yu、Xiu Li。项目负责人（Project Lead）为 Duomin Wang（王多民，StepFun），通讯作者为李秀（Xiu Li，清华大学）。Gang Yu（于刚）为 StepFun 视觉团队负责人。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 阶跃星辰（StepFun，Step-Video Team / 上海阶跃星辰智能科技有限公司）
@@ -315,12 +347,33 @@ Google DeepMind（Google）
 
 生数科技（Shengshu Technology）联合清华大学（Tsinghua University）。作者含 Jintao Zhang、Kai Jiang、Jintao Chen 等27人，顾问为 Zhijie Deng、Fan Bao（鲍凡）、Jianfei Chen、Jun Zhu（朱军）
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md)
+
+阿里巴巴集团 · 阿里云通义实验室（Tongyi Lab，Wan / 万相团队；人物类模型 S2V、Animate、Dancer 由 HumanAIGC 组主导）。服务载体为阿里云百炼（Model Studio / DashScope）与万相官网 wan.video、tongyi.aliyun.com/wan。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+多家机构，五个基准分属不同团队：
+【VABench】北京大学（Wentao Zhang 组，含 Bohan Zeng、Hao Liang、Junbo Niu 等）+ 蚂蚁集团 Ant Group（Quanqing Xu）+ 中国科学院自动化研究所 + 华中科技大学。第一作者 Daili Hua、Xizhi Wang。
+【AVBench】清华大学（Wenming Yang 组，第一作者 Jialiang Yang，含 Bin Xia、Ruihang Chu 等）+ 香港中文大学（Dingdong Wang 等）。
+【AV-SyncBench】阿里巴巴集团（Jun Song、Bo Zheng 等，通讯 jsong.sj@alibaba-inc.com）+ 清华大学（第一作者 Tianhong Zhou，zth24@mails.tsinghua.edu.cn）+ 复旦大学。
+【PhyAVBench】香港科技大学（广州）HKUST(GZ)（通讯作者 Li Liu，第一作者 Tianxin Xie）+ 腾讯 Tencent + 上海交通大学 + 慕尼黑工业大学 TUM；作者 29+ 人，4 位 core contributor。
+【Omni-Judge】罗切斯特大学 University of Rochester（第一作者 Susan Liang，通讯 Chenliang Xu）+ 密歇根大学安娜堡分校（Filippos Bellos、Jason J. Corso）。
+
 ### [视频 Caption 模型生态](../models/caption_models.md)
 
 多家，按阵营归类：
 【学术/开源社区】ShareGPT4Video & ShareCaptioner-Video（中科大 + 上海 AI Lab + 香港中文大学，Lin Chen、Xilin Wei、Jinsong Li 等 15 位作者，NeurIPS 2024 Datasets & Benchmarks Track）；AuroraCap（UC Santa Barbara / 多校合作，ICLR 2025）；Panda-70M（Snap Research + UC Merced，CVPR 2024）。
 【中国大厂】字节跳动 Tarsier / Tarsier2 / Tarsier2-Recap（bytedance/tarsier），并与清华电子系合作 video-SALMONN 2 / video-SALMONN-o1；智谱 AI（zai-org / 原 THUDM）CogVLM2-Caption；阿里通义 Qwen 系列（Qwen2-VL / Qwen2.5-VL / Qwen3-VL / Qwen2.5-Omni / Qwen3-Omni-Captioner / Qwen3.5-Omni，配套 Omni-Captioner + Omni-Detective + Omni-Cloze，ICLR 2026）；昆仑万维 SkyWork SkyCaptioner-V1；快手可灵团队 AVoCaDO（联合中科院自动化所、国科大、北大、南大）与 Koala-36M 的 LLaVA 微调 captioner；南京大学 NJU-LINK + 快手 Kling AVSCap；小米 MiMo-VL（被 MOVA 用作视觉标注器）。
 【海外大厂/闭源】OpenAI（Sora 的 highly descriptive captioner、Whisper ASR）；Meta（Movie Gen 的 LLaMa3-Video 8B/70B）；Google（Gemini 系列作为通用打标器，Veo 3 使用「多个 Gemini 模型」）；Lightricks（LTX-Video / LTX-2 的内部自研音视频 captioner）；Rhymes AI（Aria，被 Allegro 用作细粒度打标器）。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+多家机构：SceneScribe-1M——上海交通大学 + 蚂蚁集团 + 牛津大学视觉几何组(VGG) + 东方理工宁波数字孪生研究院（浙江省工业智能与数字孪生重点实验室）；SpatialVID——南京大学（NJU-3DV）+ 中国科学院自动化研究所；WildWorld——盛大AI（ShandaAI）+ 上海人工智能实验室 + 北京理工大学（作者含 Zhen Li、Kaipeng Zhang 等）；Action100M——Meta AI（FAIR，代码托管于 facebookresearch）+ 香港科技大学（Pascale Fung 团队）+ 阿姆斯特丹大学 + 索邦大学
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+多家。锚论文为香港大学（HKU，Zeyue Xue、Mengzhao Chen、Ping Luo）+ 京东探索研究院（JD Explore Academy，Siming Fu、Jie Huang、Shuai Lu、Haoran Li、Haoyang Huang、Nan Duan 等）+ 清华大学 + 北京大学 + 浙江大学的联合工作（Zeyue Xue 亦是 DanceGRPO 一作，Nan Duan 为通讯层作者）。横向覆盖对象包括：字节跳动 Seed（Seedance 1.0 / 1.5 pro）、腾讯混元（HunyuanVideo / HunyuanVideo 1.5）、快手可灵（Kling 3.0 Omni）、美团（LongCat-Video）、阶跃星辰（Step-Video-T2V）、昆仑万维（SkyReels-V2 / V4）、NVIDIA（Cosmos-Predict 2.5）、Meta（Movie Gen）、智谱（CogVideoX）、Rhymes AI（Allegro）、字节（Goku）、Moonshot/Motif（Motif-Video 2B）、Sand AI（MAGI-1）、Genmo（Mochi 1）、Lightricks（LTX-2）、OpenAI（Sora 2）、Google DeepMind（Veo 3/3.1）、生数（Vidu S1）、HPC-AI Tech（Open-Sora 2.0）、PKU-YuanGroup（Open-Sora Plan）、以及学术侧 JavisDiT++、NAVA、ALIVE 等。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -366,6 +419,16 @@ arXiv v1 提交于 2025年10月28日（arXiv:2511.00062v1），v2 修订于 2026
 ### [Goku](../models/Goku.md)
 
 2025年2月7日首次提交至 arXiv（v1），2025年2月10日更新 v2；后被 CVPR 2025 接收为 Highlight。项目主页 saiyan-world.github.io/goku 与 GitHub 仓库 Saiyan-World/goku 同期上线。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+无技术报告或论文，只有产品发布博客，时间线如下：
+- 2024年9月：video-01（初代海螺视频，6秒，1280x720，25fps）
+- 2025年1月：S2V-01（主体参考/人物一致性）
+- 2025年6月18日：MiniMax Hailuo 02（提出 NCR 架构，原生1080p）
+- 2025年10月28日：MiniMax Hailuo 2.3 / 2.3 Fast，同步将 Video Agent 升级为 Media Agent
+- 2025年12月15日：开源 VTP 视觉 tokenizer（arXiv:2512.13687），属同团队生成式基础组件，非视频生成模型本体
+截至调研时点（2026年7月29日），MiniMax 官网 news 页与 platform 文档中最新的视频模型仍为 Hailuo 2.3，未见 2026 年发布的新一代视频模型公告。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -460,6 +523,10 @@ SkyReels-V1：2025年2月18日开源（人物中心视频基座模型）。SkyRe
 
 2025年9月30日发布模型与 System Card（同日上线 sora.com 与独立 iOS Sora 应用）；2025年10月上旬开放 API（sora-2 / sora-2-pro）并将时长上限从10秒扩展到15秒（Pro 网页版25秒）；2025年12月与迪士尼达成三年授权协议；2026年3月OpenAI宣布关停Sora消费级应用（应用于2026年4月26日下线，API于2026年9月24日停用），迪士尼10亿美元投资与授权协议随之终止。注意：OpenAI 从未发布 Sora 2 的技术报告或论文，仅有一份7页的 System Card。
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+2025年7月14日首次提交 arXiv（arXiv:2507.09862，cs.CV）。配套资源随后陆续开放：HuggingFace 数据集仓库 dorni/SpeakerVid-5M-Dataset 创建于 2025年7月18日，最后更新于 2025年8月4日；GitHub 数据清洗代码库 Dorniwang/SpeakerVid-5M-Code 与项目主页 https://dorniwang.github.io/SpeakerVid-5M/ 同期上线。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 2025年2月17日同步开源推理代码与权重、2025年2月17日发布技术报告《Step-Video-T2V Technical Report: The Practice, Challenges, and Future of Video Foundation Model》（arXiv:2502.10248，后有 v2/v3 修订）；2025年2月18日官方对外正式宣布（与语音模型 Step-Audio 同批开源）。衍生模型 Step-Video-TI2V（图生视频）于 2025年3月17日开源，技术报告 arXiv:2503.11251。
@@ -485,6 +552,27 @@ Veo 3 于 2025 年 5 月 20 日在 Google I/O 发布，官方 Model Card 首次�
 
 2026年7月：2026年7月6日于全球数字经济大会由生数科技创始人朱军正式发布产品；arXiv 预印本 2607.03118，v2 版本时间为 2026年7月21日（cs.CV，13页）
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+系列时间线（均为官方一手可查）：
+- Wan 2.1：2025年2月25日开源（1.3B/14B），技术报告《Wan: Open and Advanced Large-Scale Video Generative Models》arXiv:2503.20314 于2025年3月26日发布，60页33图，第3章为完整数据处理章节——这是整个 Wan 系列唯一详细披露数据方法的一手文档。
+- Wan 2.2：2025年7月28日开源（T2V-A14B / I2V-A14B MoE、TI2V-5B），Apache 2.0。
+- Wan2.2-S2V-14B（音频驱动人物视频）：论文 arXiv:2508.18621 于2025年8月26日提交，权重2025年9月17日上 Hugging Face。
+- Wan2.2-Animate-14B：2025年11月上旬开源。
+- Wan 2.5-preview：2025年9月下旬（云栖大会期间）以 API 预览版上线，模型名 wan2.5-t2v-preview / wan2.5-i2v-preview；官方文档示例素材日期戳为 2025-09-23 / 2025-09-25，可作时间旁证。系列首次实现「声画同步」。[不确定：具体到日]
+- Wan 2.6：2025年12月16日万相官网发布、12月17日阿里云开发者社区正式发布公告；模型名 wan2.6-t2v / wan2.6-i2v / wan2.6-i2v-flash / wan2.6-t2v-us。
+- Wan 2.7：2026年6月，官方 API 模型名直接带日期戳 wan2.7-t2v-2026-06-12 与 wan2.7-i2v，为目前推荐主力版本。
+- Wan-Dancer-14B（音乐驱动长时舞蹈视频）：2026年7月开源，论文 arXiv:2607.09581。
+注：2.5/2.6/2.7 三个版本均无技术报告、无论文、无权重，因此其数据方法只能由 2.1/2.2/S2V 的一手披露与 API 文档能力反推。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【VABench】arXiv:2512.09299，v1 于 2025年12月10日提交，v2 于 2026年4月6日更新（24页/25图，cs.CV + cs.SD，CC BY 4.0）。调研任务描述其为 CVPR 2026 论文，但 arXiv comments 字段未标注录用信息[不确定]。
+【AVBench】arXiv:2605.24652，2026年5月发布；项目页图表命名指向 ECCV 投稿[不确定]。
+【AV-SyncBench】arXiv:2607.00726，2026年7月发布；已被 Interspeech 2026 接收。
+【PhyAVBench】arXiv:2512.23994，v1 于 2025年12月发布（当时为纯 benchmark 设计报告，模型评测留待后续），后续版本补齐 17 个模型的完整评测结果。
+【Omni-Judge】arXiv:2602.01623，2026年2月发布。
+
 ### [视频 Caption 模型生态](../models/caption_models.md)
 
 生态演进时间线（以公开发布/arXiv 提交为准）：
@@ -504,6 +592,14 @@ Veo 3 于 2025 年 5 月 20 日在 Google I/O 发布，官方 Model Card 首次�
 · 2026-03：Qwen3.5-Omni（arXiv 2604.15804）把「剧本级结构化音视频 caption」列为一等能力，Omni-Cloze benchmark 发布。
 · 2026-06：OmniCap-IF（arXiv 2606.08572），首个音视频 caption 指令跟随基准。
 · 2026-07-14：AVSCap + AVSCapBench（arXiv 2607.12820），最新的音视频联合 caption 模型与专用基准。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：arXiv 2604.07990，2026年4月9日提交、4月26日修订，已被 CVPR 2026 接收；SpatialVID：arXiv 2509.09676，2025年9月11日 v1、2025年12月18日 v2；WildWorld：arXiv 2603.23497，2026年3月24日提交；Action100M：arXiv 2601.10592，2026年1月15日提交
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+锚论文 arXiv:2604.25427v1 提交于 2026年4月28日（cs.CV，CC BY 4.0）。横向对象覆盖 2024年8月（CogVideoX）至 2026年上半年（Seedance 1.5 pro、Kling 3.0 Omni、SkyReels-V4、Cosmos-Predict 2.5、HunyuanVideo 1.5、LongCat-Video 等）。作为方法论支撑的关键论文时间线：ImageReward(2023)→VideoReward/Improving Video Generation with Human Feedback(2025-01, arXiv:2501.13918)→DanceGRPO(2025-05, arXiv:2505.07818)→Flow-GRPO(2025-05)→MixGRPO(2025-07)→HPSv3(ICCV 2025, arXiv:2508.03789)→Self-Forcing(2025-06)→OmniForcing(2026-03)、Causal Forcing(2026-02)、Astrolabe(2026-03)。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -552,6 +648,10 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 ### [Goku](../models/Goku.md)
 
 模型（联合图像与视频生成基础模型族，基于 rectified flow 的 Transformer/DiT）。论文同时详细披露了一条五阶段数据处理流水线（可视为工具链方法论描述，但流水线代码与数据本身未开源）。非数据集、非评测基准。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+模型（闭源商用视频生成模型/产品线，覆盖文生视频 T2V、图生视频 I2V、首尾帧 First-and-Last-Frame、主体参考 Subject-Reference 等模式）。不是数据集，不是工具链，不是评测基准；MiniMax 也未发布配套的视频评测基准。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -653,6 +753,10 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 
 闭源商业模型（原生音视频联合生成的视频生成基础模型 + 消费级社交应用 + API 服务）。非数据集、非工具链、非评测基准。
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+数据集（大规模音视频双人交互人体生成数据集）为主体，同时附带两项衍生产出：(1) 一个自回归式 video chat 基线模型（0.8B 可训练参数）；(2) 一个配套评测基准 VidChatBench（500 组测试对，含六维指标体系）。此外开源了完整的数据清洗（data curation）代码库，因此也兼具工具链属性。它不是生成模型本身，而是 MOVA 等音视频联合生成模型的上游数据供给方之一。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 模型（开源文生视频基础模型，30B 参数 DiT + 自研深度压缩 Video-VAE），同时附带评测基准 Step-Video-T2V-Eval（128 条中文 prompt、11 个类目）与开源推理代码。不是数据集、不是数据工具链——训练数据与数据处理代码均未发布。
@@ -681,12 +785,34 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 
 模型（实时交互式流式音视频联合生成模型，语音驱动数字人/虚拟角色）。同时自建了配套评测基准 Vidu-StreamBench（500样本，内部基准，未见开源）
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md)
+
+模型（视频生成基础模型系列）。2.5/2.6/2.7 为闭源商用 API 模型；同族另有开源模型（Wan2.1/2.2/S2V/Animate/Dancer）、开源推理与微调工具链（GitHub Wan-Video 组织、ComfyUI/Diffusers 集成、Wan-skills Agent 技能包），以及自研评测基准 Wan-Bench（3大维度14项细粒度指标）。非数据集条目。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+评测基准（benchmark）。五者均为音视频联合生成（Audio-Video Generation）方向的评测体系，但侧重不同：
+- VABench：综合型全维度基准（T2AV / I2AV / 立体声 AV 三类任务，七大内容类目 + 15 项评测维度）；
+- AVBench：人类对齐的自动化评测基准 + 可训练的专用评测器（10 维度，附带 300K 偏好训练数据，评测器本身可复用为数据过滤器与 RLHF reward）；
+- AV-SyncBench：专项同步性基准（时序同步与语义同步解耦），同时也是一个带扰动标注的数据集；
+- PhyAVBench：物理常识专项基准，附带自录真实数据集 PhyAV-Sound-11K（11,605 条视频 / 25.5 小时）；
+- Omni-Judge：评测方法学研究（探究 Omni-LLM 能否充当人类对齐的裁判），属于 meta-evaluation。
+其中 AVBench、AV-SyncBench、PhyAVBench 同时具备「数据集」属性。
+
 ### [视频 Caption 模型生态](../models/caption_models.md)
 
 模型 + 工具链 + 评测基准的复合生态。三层结构：
 (1) 打标模型（captioner）本体——通用 VLM（Qwen-VL / InternVL / LLaVA 系）、专用 captioner（ShareCaptioner-Video、Tarsier2、CogVLM2-Caption、SkyCaptioner-V1、AuroraCap、AVoCaDO、AVSCap）、全模态 captioner（Qwen3-Omni-Captioner、video-SALMONN 2、Qwen3.5-Omni）；
 (2) 由打标器产出的数据集（ShareGPT4Video-40K / 4.8M、Tarsier2-Recap-585K、Panda-70M、Koala-36M、AVoCaDO-SFT-107K、AVSCap-130K）——打标模型与数据集互为因果，是本生态的核心特征；
 (3) 评测基准（DREAM-1K、VDC/VDCScore、VidCapBench、AVSCapBench、UGC-VideoCap、Omni-Cloze、OmniCap-IF、video-SALMONN 2 testset）。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+数据集（四者均为大规模视频数据集，附带自建标注流水线；WildWorld 同时发布 WildBench 评测基准，Action100M 同时发布 VL-JEPA 预训练模型，SpatialVID 发布完整标注 pipeline 代码）
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+专题综述条目（cross-cutting topic），非单一模型/数据集/工具链/评测基准。锚论文本身类型为「方法论技术报告」（a practical blueprint / systematic framework），不发布模型权重、不发布数据集，属于四阶段后训练流水线的工程蓝图；其余横向对象则分属模型（多数）、数据集（HPDv3、VideoReward 偏好集）与奖励模型（HPSv3、VideoAlign/VideoReward、RewardDance、VisionReward）。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -765,6 +891,16 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 【未开源】模型权重（HuggingFace 上无官方 Goku 权重发布）、训练数据、数据处理流水线代码、内部视频分类模型、内部美学评分模型。仓库亦未见 LICENSE 文件。
 【结论】权重：否；代码：部分/不完整；数据：否；pipeline：仅论文文字描述，代码未开源。
 注：社区中大量以「Goku AI」命名的第三方网站/产品为蹭名，非官方发布。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+完全闭源，是本次调研中数据披露最少的对象之一：
+- 模型权重：未开源，仅通过海螺AI网页/App、MiniMax 开放平台 API，以及 Replicate、fal.ai 等第三方托管平台提供推理服务；
+- 训练/推理代码：未开源；
+- 训练数据：未开源、未描述；
+- 数据处理 pipeline：未开源、未描述；
+- 技术报告/论文：完全没有。历代模型均只有产品发布博客（minimax.io/news），内容以能力演示与定价为主，几乎不含技术细节；NCR 架构也只有一句名词性说明，无论文支撑。
+对比之下 MiniMax 在语言模型侧开源程度很高（MiniMax-01、M1、M2/M2.1/M2.5/M2.7、M3 均在 HuggingFace 发布权重与技术报告），视频侧则是刻意的完全封闭。唯一与视觉生成相关的开源物是 2025年12月15日发布的 VTP（Visual Tokenizer Pre-training）系列视觉 tokenizer（Small 0.2B / Base 0.3B / Large 0.7B，Modified MIT 许可，arXiv:2512.13687），但其定位是图像 tokenizer 基础组件，模型卡未说明其与 Hailuo 视频模型的直接关系，其训练数据构成同样未在模型卡中明确列出。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -909,6 +1045,15 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 
 全封闭。权重不开源、代码不开源、训练数据不开源、数据处理pipeline不开源。唯一公开材料为2025年9月30日的《Sora 2 System Card》（共7页），其中关于数据的内容仅第2节「Model Data & Data Filtering」一个自然段（约5句话）。没有技术报告、没有论文、没有架构细节、没有任何数据统计数字。相比之下前代 Sora 1 至少有一篇技术博客《Video generation models as world simulators》披露了时空patch、原生分辨率训练、重打标等方法论。曾以API形式（sora-2、sora-2-pro）商业开放，2026年9月API也已停用。
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+属于「元数据+标注全开、原始视频不托管」的典型学术数据集开放模式：
+【数据（标注与索引）】开源。HuggingFace dorni/SpeakerVid-5M-Dataset 提供 all_data_list.json（YouTube 视频 ID + 切分后 clip 名称，clip 名即定位标注的唯一键）与 SFT_set.json（高质量子集清单），以及五类标注文件夹：merge_anno（clip 级元数据：时间戳、空间 bbox、clear/DOVER 质量分）、asr（Whisper 转写与置信度）、l_score（人脸/手部清晰度即模糊分）、anno（Qwen-VL 生成的 MLLM 结构化 caption）、dwpose（因体积过大未上传实际骨架序列，仅提供计算代码）。
+【数据（原始视频）】不托管。需用户依据 YouTube video ID 自行用 yt-dlp 下载，存在链接失效（link rot）导致的可复现性衰减风险。
+【数据处理 pipeline 代码】开源，这是本条目最有价值的部分之一。GitHub Dorniwang/SpeakerVid-5M-Code 发布了六段式完整清洗流程代码：base annotation（音视频同步抽取 + 单人检测）、DWpose 骨架标注、ASR 标注、blur score 计算、luminance 计算、scene detection + speaker diarization（部分预计算，可选）。
+【基线模型权重】论文与代码库均未见权重开源的明确说明。[不确定]
+【许可】明确限定为「non-commercial, scientific research, and educational purposes only」（仅限非商业的科研与教育用途），显式禁止商业使用；内容源自公开互联网，版权归原创作者所有，并提供 takedown 政策供版权方申请下架。未采用 Apache/CC 等标准 SPDX 许可证。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 属于「权重+代码+评测基准开源，数据与数据 pipeline 代码不开源」模式，但开源程度在同期国产模型中较高：
@@ -955,6 +1100,23 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 
 闭源。技术报告仅公开架构与训练框架思路，未开源模型权重、推理/训练代码、数据、数据处理 pipeline；自研加速与服务组件 TurboDiffusion、TurboServe 亦未开源。自建基准 Vidu-StreamBench 未公开发布。仅通过官网 https://vidu.com/vidu-stream 提供可交互在线 demo。论文以 CC-BY 4.0 许可发布。
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md)
+
+呈现「前代全开、当代全闭」的断层式格局，且数据侧自始至终封闭。
+【Wan 2.5 / 2.6 / 2.7】完全闭源：无权重、无代码、无技术报告、无论文。仅通过阿里云百炼 DashScope API（北京/新加坡/弗吉尼亚多地域）与万相官网/通义 App 提供服务，按分辨率档位与秒数计费。截至2026年7月，Hugging Face 的 Wan-AI 组织与 GitHub 的 Wan-Video 组织中均不存在 Wan2.5/2.6/2.7 任何仓库或权重——GitHub 仅有 Wan2.1、Wan2.2、Wan-Dancer、Wan-skills、diffusers 分支5个仓库。
+【Wan 2.1】权重+推理代码开源（Apache 2.0），并发布60页技术报告含详细数据章节；训练数据、清洗 pipeline 代码、内部 caption 模型、各类专家分类器均未开源。
+【Wan 2.2】权重+推理/微调代码开源（Apache 2.0），README 披露相对 2.1 的数据增量比例与「电影美学标签体系」，但无独立技术报告，数据细节远少于 2.1。
+【Wan2.2-S2V / Animate / Dancer】权重+代码开源，论文含数据处理章节（S2V 的第2章是 Wan 系唯一明确写出音画同步数据过滤方法的文档）。
+【结论】要研究 Wan 2.5+ 的数据方法，只能以 Wan 2.1 报告为主干、Wan 2.2 README 与 S2V/Dancer 论文为增量旁证，其余靠 API 行为反推。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【VABench】论文 CC BY 4.0；代码仓库 https://github.com/tanABCC/VABench；未明确声明数据集许可证。提示词、VQA/AQA 问答对与评测脚本为主要开源产出，生成视频依赖各家 API 自行复现。
+【AVBench】开源程度最高：GitHub https://github.com/YaJialiang/AVBench，评测器权重发布于 HuggingFace（iiiiii123/AVBench_model），并托管 HuggingFace Leaderboard（spaces/iiiiii123/AVBenchLB）。数据、代码、模型三者均释出；具体许可证未标注[不确定]。
+【AV-SyncBench】数据集已上线 ModelScope（coming245/AVSyncBench）与 HuggingFace（coming245/AV-SyncBench），代码仓库 https://github.com/fgt7t6g/AV-SyncBench（截至调研时 README 标注评测代码 coming soon）；论文采用 arXiv perpetual non-exclusive license。
+【PhyAVBench】项目页 https://imxtx.github.io/PhyAVBench/ 与 https://phyavbench.pages.dev/；公开释出提示词、自录 ground-truth 视频与各模型生成样本，并承诺与训练集零重叠；论文 arXiv 许可证。
+【Omni-Judge】仅有项目页 liangsusan-git.github.io/project/omni_judge/，论文未明确声明代码/数据开源[不确定]。
+
 ### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
 
 开源度呈明显的「学术全开 / 大厂半开 / 生成侧闭源」三档分化：
@@ -962,6 +1124,20 @@ Panda-70M：2024年2月29日 arXiv 首发（arXiv:2402.19479），CVPR 2024；20
 【半开】AVSCap：代码 + AVSCapBench 已开放，AVSCap-130K 训练集 README 明示「will release as soon as possible」，截至调研时未发布；AVSCap-7B 权重可用性存疑（GitHub 同时出现 HF 链接与「待发布」表述）[不确定]。Qwen3-Omni-Captioner（音频版）开源，但 Qwen3.5-Omni 的音视频 caption 能力仅 API 可用，未作为独立打标工具开源。
 【闭源】生成侧团队自研 captioner 几乎全部不开源：OpenAI Sora 的 highly descriptive captioner、Meta 的 LLaMa3-Video captioning 微调版、Google 用于 Veo 3 的 Gemini 打标变体、Lightricks LTX-2 的音视频 captioner、腾讯混元的三个自研 caption 模型、阶跃星辰 Step-Video 的 in-house VLM、字节 Seedance 1.5/2.0 的字幕系统、快手 Kling 3.0 Omni 的视频描述增强模块——均只披露「用了什么」，不披露参数量、基座与权重。
 【一个反常识的结构性事实】打标器的开源度显著高于生成模型的数据 pipeline 开源度：多数闭源生成模型的技术报告愿意点名自己用了 Tarsier2 / Qwen3-Omni / LLaVA-Video，因为打标器被视为「工具」而非「壁垒」；真正被视为壁垒的是打标 prompt 原文、字段 schema 与阈值表，这部分几乎全行业不公开。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+均为学术开源数据集，权重非主要产物。SceneScribe-1M：论文明确表述开源，项目页 https://wangyunnan.github.io/SceneScribe-1M ，数据/标注对外发布，具体许可以官方仓库为准[不确定]；SpatialVID：开源程度最高，HuggingFace 发布 SpatialVID（271万clip）与 SpatialVID-HQ（37万clip）两个版本，约3.53TB，采用 CC-BY-NC-SA 4.0 许可（仅限非商用），标注流水线代码同步开源；WildWorld：GitHub 仓库 https://github.com/ShandaAI/WildWorld ，论文与基准开放，数据源自商业游戏《怪物猎人：荒野》，再分发条款未明确说明[不确定]；Action100M：GitHub 仓库 https://github.com/facebookresearch/Action100M ，标注体量约205GB（仅标注，视频依赖 HowTo100M 原始源），标注开源
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文（2604.25427）：论文开源（CC BY 4.0）、代码与权重均未开源、基座为「an internal video generation model」（内部模型）、SFT 数据集与 RLHF prompt 集均未开源，仅在图 2 用公开的 Wan-2.1 做 RLHF 效果可视化。整体属「方法开源、数据与模型封闭」。
+横向的后训练数据开放度梯度（从高到低）：
+① 偏好数据完全开源：HPDv3（108万文本-图像对、117万成对比较标注）、VideoReward 偏好集（1.6万 prompt / 10.8万视频 / 18.2万标注三元组，含 VideoGen-RewardBench）——这两者是目前视频/图像生成后训练最重要的公开偏好资产；
+② 偏好数据「准备发布」：JavisDiT++ 的约 2.5 万条音视频偏好对（截至调研时尚未公开）[不确定]；
+③ 方法与流程公开、数据不公开：SkyReels-V2（3万人工样本对 + 三阶段各 2万共约 6万 DPO 数据）、Step-Video-T2V（Video-DPO 流程全公开、数量未公开）、HunyuanVideo 1.5（RLHF prompt 集构造与 GSB 标注协议公开、规模未公开）、LongCat-Video（GRPO 三奖励配置公开、SFT 集规模与 RM 标注量未公开）、Cosmos-Predict 2.5（五域 SFT 规模逐条公开、GRPO 配置公开，数据不开源但发布 RL 后 EMA 权重）；
+④ 仅有一句话或完全空白：Sora 2、Veo 3/3.1、LTX-2、Kling 3.0 Omni（仅说用了 DPO）、Seedance 1.5 pro（仅说用了 RLHF + 多维 RM）。
+奖励模型侧开源程度显著优于生成模型侧：HPSv3、VideoAlign/VideoReward、VisionReward、Unified Reward Model 均开源权重，构成了「开源 RM + 闭源生成器」的事实标准组合。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1025,6 +1201,15 @@ CogVideoX 模型本体不支持音视频同时生成，为纯视觉的文生视�
 ### [Goku](../models/Goku.md)
 
 不支持。Goku 是纯视觉的图像+视频联合生成模型（T2I / T2V / I2V），论文全文未涉及音频生成、音轨建模、语音或音效。其「联合生成」指的是图像与视频两种视觉模态在同一 rectified flow Transformer 中的联合建模（图像视为单帧视频，经 3D 联合图文 VAE 编码后与视频 token 在全注意力中统一交互），而非音视频联合。因此本条目在音视频维度上不适用，其价值主要体现在纯视频侧的数据分布均衡方法论。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+不支持音视频同时生成（截至 Hailuo 2.3 / 2026年7月）。
+- MiniMax 开放平台视频生成 API 文档中不含任何音频/声音参数，输出为无声视频；
+- Replicate 上托管的全部 7 个 Hailuo/video-01 系列模型，均未描述任何随视频同时产出音轨的能力；
+- MiniMax 的音频能力由完全独立的产品线承担：MiniMax Speech（语音合成，2.8 版）与 MiniMax Music（音乐生成，3.0 版），海螺AI 网站上「Audio」是与视频并列的独立入口；
+- 若从产品体验层面看，海螺AI 的 Media Agent（2025年10月随 2.3 上线）可一键串联文本→视频→语音/音乐，属于产品编排层的级联（cascade），而非模型层的原生联合生成（native joint）或 MoE 融合。
+因此本条目在「音视频联合生成」这一调研主线上属于反例/对照组：它代表了在 Veo 3、Sora 2、Kling 3.0 Omni、LTX-2 等已转向原生 AV 联合生成之后，仍停留在纯视觉生成范式的头部商用模型。相应地，本调研中所有 AV 相关字段对该对象均无实质内容。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -1174,6 +1359,12 @@ SkyReels-V2 不支持音频生成（纯视频模型）。SkyReels-V4 支持音�
 
 支持，且为原生联合生成（native joint generation），这是 Sora 2 相对 Sora 1 的核心升级点。System Card 明确将其定位为「video and audio generation model」，新增能力包括「synchronized audio」。音频不是后处理级联的video-to-audio模块，而是与视频在同一生成管线内联合去噪产出：视频与音频分别经各自编码器压缩到latent，再由同一个transformer扩散主干对两路latent同时去噪。可生成对白（含唇形同步）、音效/foley、环境音与背景音乐，音量与空间定位随物体与镜头距离变化。注意：上述架构描述（双编码器+共享扩散主干、3D RoPE、音频backbone与GPT-4o多模态系统同源）均来自第三方技术解读与二手报道，OpenAI 官方从未确认，属于推测性信息。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+数据集层面：原生音视频成对（每个 clip 都自带与画面同步的原生音轨，无音轨或音视频不同步的样本在清洗阶段即被剔除），因此它是「音视频联合生成」训练的合格语料，也是当前少数以双人对话交互（dyadic interaction）为核心组织形态的音视频数据集。
+基线模型层面：支持音视频同时生成，实现方式为原生联合的自回归框架，而非级联。具体构成为 Qwen2.5-Omni 作多模态理解主干 → 同时预测视频 token 与音频 token；视频侧用 3D VAE（时间 stride 4、空间 stride 8）编码，音频侧用 CosyVoice2 audio tokenizer；再接 spatial transformer 做逐帧精修、diffusion MLP 做视觉细节增强。可训练参数 0.8B。训练中引入 noise injection 策略缓解自回归的误差累积。
+该数据集被下游多个音视频联合生成模型直接采用为训练语料，典型如 MOVA 将 SpeakerVid-5M 列为其 Phase 1 数据来源之一，并称其为唇同步（lip-sync）能力的核心来源。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 不支持。Step-Video-T2V 与 Step-Video-TI2V 均为纯视觉视频生成模型，输出无音轨；技术报告全文不涉及音频模态，数据 pipeline 中也不含任何音轨处理环节（切分后仅保留视觉帧）。
@@ -1225,6 +1416,26 @@ SkyReels-V2 不支持音频生成（纯视频模型）。SkyReels-V4 支持音�
 
 支持，且为原生联合生成（native joint）。模型将第 i 帧的干净视频表示 v_0^i 与音频表示 a_0^i 沿模态维度拼接为联合状态 x_0^i = [v_0^i; a_0^i]，在同一扩散去噪模型中对视频-音频联合潜在序列统一去噪，非级联、非 MoE。统一条件接口 c 同时包含语音（speech）、文本提示、参考首帧图像——即语音既是条件控制信号（用户实时语音指令控制角色行为），联合状态中又包含音频轨道的生成。整体为自回归 + 扩散（AR+Diffusion）的因果流式生成范式，滑动窗口解码支持无限长生成。
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+支持，且是 2.5 版本的分水岭能力。官方口径为「原生音画同步」，但缺少论文级证据。
+【能力演进】
+- Wan 2.1（2025.02）：音频为独立的级联 V2A 模块（技术报告 5.7 节），先生成视频再配音；且明确只产环境音与背景音乐，显式排除语音/人声演唱。
+- Wan2.2-S2V（2025.08）：音频驱动人物动画的专用模型（audio→video），属条件生成而非联合生成。
+- Wan 2.5-preview（2025.09）：官方能力标签首次出现「有声视频 / 声画同步」，T2V 与 I2V 均可在不给音频时自动配音（生成匹配的背景音乐或音效），也可通过 input.audio_url 传入音频驱动生成。唇同步能力自此成为系列卖点。
+- Wan 2.6（2025.12）：能力标签升级为「多镜头叙事 + 声画同步」，官方称「原生音画同步，画面与人声、音效、BGM 完美匹配」，并新增「声音驱动」模式（音频直接驱动角色口型与表演）与「角色扮演」（上传个人视频复刻形象与声音）。官方自称「国内首个支持角色扮演的视频生成模型」「全球功能最全的视频生成模型」。
+- Wan 2.7（2026.06）：延续「多镜头叙事 + 声画同步」，音频作为一等输入模态（input.audio_url，wav/mp3，2～30秒，≤15MB），I2V 侧输入模态扩展为「文本+图像+音频+视频」（支持首帧、首尾帧、视频续写、续写+尾帧控制）。这与调研 note 中「2.7 加入 native audio conditioning」的说法一致——音频从「输出侧配音」变为「输入侧条件」。
+【实现方式】官方宣传语为「阿里自研的原生多模态架构」，指向原生联合生成而非级联；但无任何论文、架构图或参数披露可证实，也无法判断是否采用 MoE 融合（Wan 2.2 的 MoE 是高噪/低噪双专家的去噪阶段划分，与模态无关）。[不确定：具体融合机制]
+【输出规格】wan2.5-*-preview：480P/720P/1080P，5s 或 10s；wan2.6-*：720P/1080P，2–15s 整数；wan2.7-*：720P/1080P，2–15s 整数，ratio 支持 16:9/9:16/1:1/4:3/3:4（如 1080P 16:9 = 1920×1080，4:3 = 1648×1248）；全系固定 30fps、MP4/H.264。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+五者本身均不生成音视频，而是评测音视频联合生成能力。它们覆盖的被测系统形态恰好构成了当前 AV 生成的三条技术路线，评测设计上明确区分：
+1) 原生联合生成（端到端 T2AV/I2AV）：Sora 2、Veo 3 / Veo 3.1 / Veo3-Fast、Wan 2.5 Preview / Wan 2.6、Kling 2.5 Turbo / Kling v2.6、Seedance 1.5 Pro，开源侧 Ovi、LTX、MOVA、UniVerse-1、JavisDiT / JavisDiT++；
+2) 级联组合（V+A，先生成视频再配音）：视频端 Seedance-1.0-Lite / Wan2.2-TI2V / Kling2.5 Turbo，音频端 MMAudio、ThinkSound(-Light)、HunyuanVideo-Foley、FoleyCrafter；
+3) 表征/判别模型（AV-SyncBench 的被测对象）：Synchformer、SparseSync、ImageBind、CAV-MAE、CAV-MAE-Sync。
+VABench 额外引入「立体声音视频生成」这一路线，用 116 条显式指定左右声道方位的提示词考察空间音频生成能力，是目前少见的立体声 AV 评测维度。
+
 ### [视频 Caption 模型生态](../models/caption_models.md)
 
 captioner 本身不做生成，此字段在本条目按「是否支持音视频双模态输入并输出联合描述」重新诠释，这是 2025–2026 年该生态最关键的能力分水岭：
@@ -1232,6 +1443,17 @@ captioner 本身不做生成，此字段在本条目按「是否支持音视频�
 【级联式音视频标注（多模型分工后由 LLM 融合）】主流工程做法，代表：MOVA = MiMo-VL-7B-RL（视觉）+ Qwen3-Omni-Instruct（ASR）+ Qwen3-Omni-Captioner（非语音）+ GPT-OSS-120B（融合与一致性校验）；Movie Gen 音频侧 = 音频质量预测 + AED + 通用音频 caption + 音乐 caption 四模型协同；UniTalking = Qwen3-VL + Whisper-V3 + Qwen3-Omni-Captioner + Qwen3-Omni；Kling-Foley = 音频分类 + 音频理解大模型 + LLM 融合三段式。
 【原生联合音视频 captioner（单模型同时看+听）】2025Q4 起成型的新范式：AVoCaDO（Qwen2.5-Omni-7B 基座，~9B 全栈）、AVSCap-7B（同基座）、video-SALMONN 2（LLaVA-OneVision + 音频 LoRA，3B/7B/72B）、Qwen3-Omni / Qwen3.5-Omni、以及 Lightricks 为 LTX-2 自研的未具名系统。UniVerse-1 更极端，用单个 Qwen2.5-Omni 一次性并列输出语音内容/视频 caption/环境音 caption 三路。
 【关键实证】裸 Qwen2.5-Omni 的零样本打标能力很差（AVSCapBench overall 仅 21.53、Speech 13.92），必须经 caption 专项 SFT+RL 才能当打标器用（AVoCaDO 49.31、AVSCap 60.44）——「有 omni 基座 ≠ 能当 omni 打标器」是本生态最重要的工程教训。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+均不支持音视频同时生成，也不涉及音频模态。四者是纯视觉几何/结构化标注范式：SceneScribe-1M 与 SpatialVID 面向相机可控视频生成与3D/4D感知，WildWorld 面向动作条件世界模型，Action100M 面向动作理解与视频-文本表征学习。Action100M 源自 HowTo100M（含旁白ASR），但ASR仅用于文本监督辅助，不做音频生成
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+本专题不是模型本身，但覆盖的对象含大量音视频联合生成模型，其后训练呈现明显分层：
+【已把 AV 纳入后训练奖励的】Seedance 1.5 pro——明确采用「专为音视频场景定制的 RLHF 算法」与多维奖励模型，同时优化运动质量、视觉美学与音频保真度，并对 RLHF 流水线做基础设施优化带来近 3 倍训练加速；Kling 3.0 Omni——对同一 MVL（多模态视觉语言）条件采样多个视频变体，由人类评估者比较形成偏好对做 DPO（但音频维度是否作为独立打分项未披露）；JavisDiT++ 的 AV-DPO——六个奖励模型分工，其中时序同步性由 Synchformer 承担、音频质量由 AudioBox-Aesthetics 承担、文本-音频与跨模态相似度由 ImageBind 承担，是目前唯一完整披露 AV 偏好对构造细节的工作。
+【锚论文的 AV 处理】仅在自回归蒸馏阶段涉及：对具备音视频生成能力的模型，遵循 OmniForcing（arXiv:2603.11647）为模型配备「非对称块因果对齐（asymmetric block-causal alignment）」与「音频 sink token」。即 AV 只体现在蒸馏架构层面，其 SFT 与 GRPO 的四个奖励模型（视频美学/图像美学/运动质量/文本-视频对齐）全部是纯视觉维度，不含任何音频或音视频同步奖励——这是该框架在 AV 时代的显著缺口。
+【完全空白的】HunyuanVideo-Foley、Ovi（初版）、UniVerse-1、UniTalking、Unison、Foley-Omni、InstructAV2AV 等学术 AV 工作全部无偏好对齐后训练。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1327,6 +1549,18 @@ captioner 本身不做生成，此字段在本条目按「是否支持音视频�
 4. 【官方一手】https://saiyan-world.github.io/goku/ — 项目主页，生成样例可视化。
 5. 【第三方聚合】https://huggingface.co/papers/2502.04896 — HuggingFace Papers 页面，社区讨论与投票。
 6. 【第三方报道】https://www.etcentric.org/bytedances-goku-video-model-is-latest-in-chinese-ai-streak/ 、https://stable-learn.com/en/goku-video-model-introduction/ 、https://www.analyticsvidhya.com/blog/2025/02/goku-ai/ — 媒体解读，用于交叉印证模型规模与定位，数据细节不以其为准。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+调研时点：2026年7月29日。本对象无论文、无技术报告，全部信息来自产品博客、API 文档与第三方托管平台，数据侧披露极其有限。
+1) 官方一手：MiniMax Hailuo 02 发布公告 https://www.minimax.io/news/minimax-hailuo-02 （2025年6月18日；本调研中唯一提及训练数据规模的来源——参数量3倍、训练数据4倍、质量与多样性提升；NCR 架构效率2.5倍；原生1080p；768p-6s/768p-10s/1080p-6s 三档；Artificial Analysis Video Arena 全球第二）
+2) 官方一手：MiniMax Hailuo 2.3 / 2.3 Fast 发布公告 https://www.minimax.io/news/minimax-hailuo-23 （2025年10月28日；肢体运动、风格化含水墨与游戏CG、微表情、运动指令响应；Video Agent 升级为 Media Agent；2.3 Fast 批量成本降低最多50%；明确不含分辨率、时长、音频、训练数据与架构细节）
+3) 官方一手：MiniMax 开放平台视频生成文档 https://platform.minimax.io/docs/guides/video-generation （模型ID：MiniMax-Hailuo-2.3 支持 T2V/I2V、MiniMax-Hailuo-02 支持首尾帧、S2V-01 支持主体参考；1080P/6秒示例；API 无任何音频参数）
+4) 官方一手：海螺AI 产品站 https://hailuoai.video/ （视频/图像/音频为并列独立入口，佐证音频与视频非同一模型；模板类目；AI生成内容合规提示）
+5) 官方一手/同团队旁证：MiniMax HuggingFace 组织页 https://huggingface.co/MiniMaxAI （截至2026年7月开源模型为 MiniMax-M3(427B)、M3-MXFP8、M2.7/M2.5/M2.1/M2(229B)、M1-40k-hf(456B) 等语言模型及 VTP 系列视觉tokenizer；无任何视频生成模型开源，是「视频线完全闭源」的关键佐证）
+6) 同团队旁证：VTP 视觉 tokenizer 模型卡 https://huggingface.co/MiniMaxAI/VTP-Large-f16d64 与论文《Towards Scalable Pre-training of Visual Tokenizers for Generation》 https://arxiv.org/abs/2512.13687 （2025年12月15日，Modified MIT；图文对比+自监督+重建三损失联合优化的视觉tokenizer；模型卡未说明与 Hailuo 视频模型的直接关系，训练数据亦未明确列出）
+7) 第三方托管平台：Replicate MiniMax 模型列表 https://replicate.com/minimax （列出 hailuo-2.3、hailuo-2.3-fast、hailuo-02、hailuo-02-fast、video-01、video-01-live、video-01-director 共7个视频模型及运行量；关键佐证：全部模型均未描述随视频产出音轨的能力）
+注：本次调研的 WebSearch 配额在会话中已耗尽，上述信息全部通过对已知官方 URL 的直接抓取（WebFetch）获得，未能覆盖 Reddit、知乎、CSDN 等社区侧的非官方爆料与逆向分析，也未能穷尽检索 2026 年上半年可能存在的新版本公告。若后续需补充，建议优先检索方向：MiniMax 是否在 2026 年发布带原生音频的视频模型、NCR 架构是否有论文公开、以及中文社区（知乎/机器之心/量子位）对海螺视频数据来源的报道。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -1598,6 +1832,15 @@ captioner 本身不做生成，此字段在本条目按「是否支持音视频�
 - Sora 2 API on Replicate (规格与定价): https://replicate.com/openai/sora-2
 - Getty Images/OpenAI 授权合作报道 (2026-06): https://finance.yahoo.com/markets/stocks/articles/getty-images-openai-deal-gives-154500732.html
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+- 【官方一手】arXiv:2507.09862《SpeakerVid-5M: A Large-Scale High-Quality Dataset for Audio-Visual Dyadic Interactive Human Generation》（2025年7月14日提交，cs.CV）：https://arxiv.org/abs/2507.09862 ，全文 HTML https://arxiv.org/html/2507.09862v1 —— 本条目绝大多数字段的直接来源，特别是第3节数据构建 pipeline、质量过滤阈值、四分支组织、Table 1 数据集对比与 Table 2 消融结果。
+- 【官方一手】项目主页 https://dorniwang.github.io/SpeakerVid-5M/ —— 作者所属机构（清华大学、StepFun、香港科技大学/广州）、项目负责人 Duomin Wang 与通讯作者 Xiu Li、资源发布状态与各链接入口。
+- 【官方一手】GitHub 数据清洗代码库 https://github.com/Dorniwang/SpeakerVid-5M-Code —— 六段式 curation pipeline 代码清单、依赖工具栈（3D-Speaker/YOLO/DWpose/Whisper/SceneDetect/SyncNet/ArcFace/Deepface/UniSpeech/Deep3DFaceRecon/yt-dlp）、以及「仅限非商业科研教育用途、版权归原作者、提供 takedown 政策」的许可条款。
+- 【官方一手】GitHub 项目页仓库 https://github.com/Dorniwang/SpeakerVid-5M —— 项目主页源。
+- 【官方一手】HuggingFace 数据集 https://huggingface.co/datasets/dorni/SpeakerVid-5M-Dataset （创建于 2025-07-18，最后更新 2025-08-04，约 1021 次下载，18 likes）—— 实际发布内容清单：all_data_list.json、SFT_set.json 与 merge_anno / dwpose / asr / l_score / anno 五类标注文件夹；确认原始视频不托管、需按 YouTube ID 自行下载；确认 dwpose 骨架数据因体积未上传。
+- 【同团队旁证】arXiv:2602.08794《MOVA: Towards Scalable and Synchronized Video–Audio Generation》—— 非同团队，但为下游使用方，其第3节将 SpeakerVid-5M 列为 Phase 1 训练数据来源并明确定位为唇同步能力的核心来源，用于交叉印证本数据集的语种重心与音频类别属性（属旁证，非 SpeakerVid-5M 官方表述）。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 - 【官方一手】Step-Video-T2V Technical Report: The Practice, Challenges, and Future of Video Foundation Model, Step-Video Team（阶跃星辰）, arXiv:2502.10248, 2025-02（含 Section 7 Data：视频切分/质量评估/运动评估/打标/概念均衡/视频文本对齐六阶段，Figure 11 分层过滤示意，训练阶段配置表）: https://arxiv.org/abs/2502.10248
@@ -1667,6 +1910,58 @@ captioner 本身不做生成，此字段在本条目按「是否支持音视频�
 4) 第三方报道：雷峰网 https://www.leiphone.com/category/industrynews/6GlFzI5hMwcfRoGZ.html ；爱范儿 https://www.ifanr.com/digest/1670950 （发布时间、AR+Diffusion 架构、540P/25-42FPS 等产品参数）
 5) 第三方整理：AI 科技深度解读 Vidu S1 词条 https://www.ai-all.info/ai-models/vidu-s1 （TurboDiffusion/TurboServe、消费级 GPU RTX 3060 起、端到端延迟<200ms 等，属二手信息）
 
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md)
+
+- 【官方一手·核心】Wan: Open and Advanced Large-Scale Video Generative Models（Wan Team, 阿里通义实验室）, arXiv:2503.20314, 2025-03-26, 60页33图。第3章「Data Processing Pipeline」为全系列数据方法的唯一详细一手来源：3.1 预训练数据（四步清洗、9项基础过滤器、约50%淘汰率、100簇配额采样、六档运动分级、视觉文字合成）、3.2 后训练数据（top20%、12大类、百万级）、3.3 密集视频caption（LLaVA式架构、slow-fast编码、10维F1对标Gemini 1.5 Pro）；4.2.2/4.2.3 训练课程；4.6 Wan-Bench；4.7.2 架构消融；5.7 音频生成（V2A的1D-VAE、三段式音视频caption、O(1)千小时子集、排除语音）: https://arxiv.org/abs/2503.20314
+- 【官方一手】Wan 2.1 技术报告 PDF（本调研的数据章节原文均引自此PDF）: https://arxiv.org/pdf/2503.20314
+- 【官方一手】Wan-S2V: Audio-Driven Cinematic Video Generation, arXiv:2508.18621, 2025-08-26。第2章「Data Processing Pipeline」是Wan系唯一写出音画同步数据过滤方法的文档：Light-ASD主动说话人检测两条排除规则、VitPose/DWPose姿态跟踪、Dover/UniMatch/Laplacian/美学/OCR五项质量指标、QwenVL2.5-72B打标规范；表1含Sync-C等定量对比: https://arxiv.org/abs/2508.18621
+- 【官方一手】Wan2.2 GitHub 仓库 README（数据增量「图像+65.6%、视频+83.2%」、电影美学标签体系含光影/构图/对比度/色调、MoE双专家去噪、Wan2.2-VAE 16×16×4压缩、S2V与Animate、Apache 2.0）: https://github.com/Wan-Video/Wan2.2
+- 【官方一手】Wan2.1 GitHub 仓库: https://github.com/Wan-Video/Wan2.1
+- 【官方一手】Wan-Video GitHub 组织页（截至2026-07仅有 Wan2.1/Wan2.2/Wan-Dancer/Wan-skills/diffusers 五个仓库，无 Wan2.5/2.6/2.7 —— 闭源的直接证据）: https://github.com/Wan-Video
+- 【官方一手】Hugging Face Wan-AI 组织页（最新权重止于 Wan2.2 系列与 Wan-Dancer-14B，无 2.5/2.6/2.7）: https://huggingface.co/Wan-AI
+- 【官方一手·能力矩阵】阿里云百炼「视频生成」模型总览文档（wan2.7/2.6/2.5/2.2/2.1 全版本能力标签、输入模态、分辨率档位、时长、fps、地域部署；明确 2.5=「有声视频·声画同步」、2.6/2.7=「有声视频·多镜头叙事·声画同步」，2.7-i2v 输入模态含文本/图像/音频/视频）: https://help.aliyun.com/zh/model-studio/video-generation
+- 【官方一手·API】万相2.7-文生视频 API 参考（模型名 wan2.7-t2v-2026-06-12 含发布日期戳、audio_url 音频条件输入、自动配音、时间戳分镜脚本示例、duration [2,15]、ratio 与分辨率对照表、prompt 上限5000字符、watermark 参数）: https://help.aliyun.com/zh/model-studio/text-to-video-api-reference
+- 【官方一手·API】万相-图生视频-基于首帧 API 参考（2.1–2.6）（wan2.6 的 shot_type:"multi" 多镜头叙事、wan2.5/2.6 的 audio_url 与自动配音、音频3–30秒/wav/mp3/≤15MB 约束与截断规则、各版本分辨率与时长枚举、prompt 字符上限差异）: https://help.aliyun.com/zh/model-studio/image-to-video-api-reference
+- 【官方一手·发布公告】《全新万相2.6系列模型，正式发布！》, 阿里云开发者社区, 2025-12-17（国内首个支持角色扮演的视频生成模型、音画同步、多镜头生成、声音驱动、单次最长15秒、分镜控制与跨镜头一致性建模、万相家族已支持10余种视觉创作能力）: https://developer.aliyun.com/article/1693622
+- 【官方一手·发布公告】《万相 Wan2.6 全新升级发布！人人都能当导演的时代来了》, 阿里云开发者社区, 2025-12-16: https://developer.aliyun.com/article/1693451
+- 【官方一手·同团队旁证】Wan-Dancer（音乐驱动分钟级舞蹈视频生成）, arXiv:2607.09581, 2026-07。数据侧：自建约200小时≥720p/30fps专有数据集、五个舞种近似均匀分布以缓解类别不均衡、5秒clip且50%重叠的切分策略、Librosa音频特征、SEA-RAFT光流mask入损失: https://arxiv.org/abs/2607.09581
+- 【官方一手】Wan-Dancer GitHub 仓库 README: https://github.com/Wan-Video/Wan-Dancer
+- 【官方一手】万相官网（Wan 2.5/2.6/2.7 产品页与在线体验入口）: https://wan.video/
+- 【官方一手】通义万相官网入口: https://tongyi.aliyun.com/wan/
+- 【第三方整理】万相2.6 产品说明页（「2025.12.16 重磅发布」、原生音画同步、多镜头叙事、首创视频角色扮演、音频驱动模式、15秒/1080P、相较 Wan 2.5 的10秒提升）: https://wan2.video/zh/wan2.6
+- 【第三方整理】万相2.7 产品说明页（1080P/15秒上限、首尾帧控制、角色克隆、指令编辑、单图多镜头叙事、原生音画同步）: https://wan2.video/zh/wan2.7
+- 【第三方报道】《通义万相Wan2.6发布：从「随机生成」迈向「精确执导」》, 腾讯新闻, 2025-12-17: https://news.qq.com/rain/a/20251217A031VN00
+- 【第三方报道】《阿里通义万相 Wan 2.6 发布，从「生成一段视频」到「帮你把戏拍出来」》, 知乎专栏: https://zhuanlan.zhihu.com/p/1984672026435294934
+- 【第三方报道】《阿里通义万相Wan2.6正式发布！如何使用？》, 知乎专栏: https://zhuanlan.zhihu.com/p/1986838016199766019
+- 【相关工作对照】LTX-2: Efficient Joint Audio-Visual Foundation Model, arXiv:2601.03233（音频信息量筛选与全音景双轨caption，与Wan的三段式V2A caption构成对照）: https://arxiv.org/abs/2601.03233
+- 【方法引用·第三方】Light-ASD: A Light Weight Model for Active Speaker Detection, Liao et al., CVPR 2023（Wan2.2-S2V 音画同步过滤所用模型）: https://openaccess.thecvf.com/content/CVPR2023/html/Liao_A_Light_Weight_Model_for_Active_Speaker_Detection_CVPR_2023_paper.html
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+- https://arxiv.org/abs/2512.09299 —— VABench: A Comprehensive Benchmark for Audio-Video Generation，arXiv 摘要页（官方一手）。作者 Daili Hua、Xizhi Wang、Bohan Zeng、Xinyi Huang、Hao Liang、Junbo Niu、Xinlong Chen、Quanqing Xu、Wentao Zhang；v1 2025-12-10，v2 2026-04-06；24页25图；cs.CV + cs.SD；CC BY 4.0。
+- https://arxiv.org/html/2512.09299v1 —— VABench 论文 HTML 全文（官方一手）。提取七大类目体系、15 项评测维度与两大模块、T2AV/I2AV 双路数据策展流程、778/521/116 样本量、立体声 9 项声学指标、被测模型清单与作者机构（北京大学 / 蚂蚁集团 / 中科院自动化所 / 华中科技大学）。
+- https://github.com/tanABCC/VABench —— VABench 官方代码仓库（官方一手）。
+- https://arxiv.org/abs/2605.24652 —— AVBench: Human-Aligned and Automated Evaluation Benchmark for Audio-Video Generative Models，arXiv 摘要页（官方一手）。作者 Jialiang Yang、Bin Xia、Ruihang Chu、Dingdong Wang、Wanke Xia、Zhun Mou、Tianyang Zhong、Yiting Zhao、Wenming Yang。
+- https://arxiv.org/html/2605.24652v1 —— AVBench 论文 HTML 全文（官方一手）。提取 10 项评测维度、470 条评测提示词与 Normal/Hard 分层、30K→300K 硬负例合成配方、Qwen2.5-Omni 7B 与 Qwen2-Audio 7B 评测器架构、4 名专家 2AFC 标注协议、可用作数据过滤与 RLHF reward 的论述、作者机构（清华大学 / 香港中文大学）。
+- https://yajialiang.github.io/AVBench-site/ —— AVBench 官方项目页（官方一手）。含 GitHub、HuggingFace 模型与 Leaderboard 链接。
+- https://github.com/YaJialiang/AVBench —— AVBench 官方代码仓库（官方一手）。
+- https://huggingface.co/iiiiii123/AVBench_model —— AVBench 评测器权重（官方一手）。
+- https://huggingface.co/spaces/iiiiii123/AVBenchLB —— AVBench 在线排行榜（官方一手）。
+- https://arxiv.org/abs/2607.00726 —— AV-SyncBench: Decoupled Benchmarking of Temporal and Semantic Audio-Visual Synchronization，arXiv 摘要页（官方一手）。作者 Tianhong Zhou、Mingyang Han、Boyu Li、Yuxuan Jiang、Jiaxin Ye、Dongxiao Wang、Haoxiang Shi、Kunpeng Wang、Jun Song、Cheng Yu、Bo Zheng；已被 Interspeech 2026 接收；3,269 视频 / 38,390 样本。
+- https://arxiv.org/html/2607.00726v1 —— AV-SyncBench 论文 HTML 全文（官方一手）。提取 10 场景与 5 挑战任务清单、0.64 秒 chunk 对角线相似度评测协议、Gemini 3 Flash 自动过滤 + 5 名标注员 ≥3 人交叉复核流程、扰动参数谱（偏移 50–500ms 五档 / 抖动 30–700ms 三档 / 变速 0.8×–1.25× 十档）、OpenVoice V2 与 DDSP 语义扰动工具、5 个基线模型实测结论、作者机构（阿里巴巴集团 / 清华大学 / 复旦大学）。
+- https://fgt7t6g.github.io/AV-SyncBench —— AV-SyncBench 官方项目页（官方一手）。含 ModelScope / HuggingFace / GitHub 数据集与代码链接。
+- https://github.com/fgt7t6g/AV-SyncBench —— AV-SyncBench 官方代码仓库（官方一手），调研时评测代码标注 coming soon。
+- https://huggingface.co/datasets/coming245/AV-SyncBench —— AV-SyncBench 数据集（官方一手）。
+- https://modelscope.cn/datasets/coming245/AVSyncBench —— AV-SyncBench 数据集 ModelScope 镜像（官方一手）。
+- https://arxiv.org/abs/2512.23994 —— PhyAVBench: A Challenging Audio Physics-Sensitivity Benchmark for Physically Grounded Text-to-Audio-Video Generation，arXiv 摘要页（官方一手）。第一作者 Tianxin Xie，29+ 位合作者；25.5 小时 / 11,605 条视频 / 337 组配对提示词 / 6 维度 41 测试点 / 17 个模型评测。
+- https://arxiv.org/html/2512.23994v1 —— PhyAVBench v1 论文 HTML（官方一手）。提取五阶段策展流程、物理维度与测试点明细、CPRS 与 FGAS 指标定义、作者机构（HKUST(GZ) / 腾讯 / 上海交通大学 / 慕尼黑工业大学，通讯作者 Li Liu）。注意 v1 为纯 benchmark 设计报告（描述 1,000 组提示词、50 测试点、模型评测留待后续），与后续版本的 337 组 / 41 测试点数据存在版本差异，正文以后续版本为准。
+- https://arxiv.org/html/2512.23994v3 —— PhyAVBench 最新版论文 HTML（官方一手）。提取 PhyAV-Sound-11K 数据集规格（11,605 条 / 25.5 小时 / 184 名参与者 / 平均 17 条 GT 每组）、CPRS 改用 CLAP 嵌入、PVR-MOS 74 名评分员、17 个被测模型完整清单与 Sora 2 CPRS 0.4512 等结果、CPRS 与人类判断 Pearson 0.92。
+- https://imxtx.github.io/PhyAVBench/ —— PhyAVBench 官方项目页（官方一手）。
+- https://phyavbench.pages.dev/ —— PhyAVBench 官方项目页镜像（官方一手）。
+- https://arxiv.org/abs/2602.01623 —— Omni-Judge: Can Omni-LLMs Serve as Human-Aligned Judges for Text-Conditioned Audio-Video Generation?，arXiv 摘要页（官方一手）。第一作者 Susan Liang，含 Jason J. Corso、Chenliang Xu 等 9 位合作者。
+- https://arxiv.org/html/2602.01623v1 —— Omni-Judge 论文 HTML 全文（官方一手）。提取 Qwen3-Omni（30B/3B 激活）裁判模型、9 项评测维度、300 条 VidProM 提示词 + Sora 2/Veo 3 各生成 600 条视频、6 名博士生 1–5 分标注协议、逐维度 Kendall τ_b 与 Spearman ρ 相关性结果、作者机构（罗切斯特大学 / 密歇根大学安娜堡分校）。
+- https://liangsusan-git.github.io/project/omni_judge/ —— Omni-Judge 官方项目页（官方一手）。
+
 ### [视频 Caption 模型生态](../models/caption_models.md)
 
 - https://arxiv.org/abs/2406.04325 — ShareGPT4Video 论文（官方一手，NeurIPS 2024 D&B Track，CC BY 4.0；40K GPT4V 密集 caption + 4.8M ShareCaptioner-Video 标注 + DiffSW 方法）
@@ -1695,6 +1990,49 @@ captioner 本身不做生成，此字段在本条目按「是否支持音视频�
 - https://arxiv.org/html/2412.09283v1 — InstanceCap（第三方/学术；实例感知结构化 caption 提升 T2V）
 - https://www.marktechpost.com/2025/01/15/bytedance-researchers-introduce-tarsier2-a-large-vision-language-model-lvlm-with-7b-parameters-designed-to-address-the-core-challenges-of-video-understanding/ — Tarsier2 报道（第三方报道）
 - 本仓库同批调研的 30 份生成模型条目（Movie_Gen.json / HunyuanVideo.json / Seedance_20_Seedance_15_pro.json / Open-Sora.json / SkyReels.json / MOVA.json / LTX-2.json / CogVideoX.json / Allegro.json / Goku.json / LongCat-Video.json / Step-Video-T2V.json / Sora_2.json / Veo_3_Veo_31.json / pretraining_datasets.json 等）的 caption_model 与 data_ablation 字段 — 生成侧对 captioner 选型的一手技术报告转述（同项目旁证）
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+- url: https://arxiv.org/abs/2604.07990 | title: SceneScribe-1M: A Large-Scale Video Dataset with Comprehensive Geometric and Semantic Annotations（CVPR 2026接收） | nature: 官方一手（论文摘要页）
+- url: https://arxiv.org/html/2604.07990v2 | title: SceneScribe-1M 论文全文HTML版（含数据源、过滤规格、MegaSaM/TAPIP3D 标注方法、六项下游消融表） | nature: 官方一手（论文正文）
+- url: https://wangyunnan.github.io/SceneScribe-1M | title: SceneScribe-1M 官方项目主页 | nature: 官方一手（项目页）
+- url: https://arxiv.org/abs/2509.09676 | title: SpatialVID: A Large-Scale Video Dataset with Spatial Annotations（arXiv v1 2025-09-11, v2 2025-12-18） | nature: 官方一手（论文摘要页）
+- url: https://arxiv.org/html/2509.09676v2 | title: SpatialVID 论文全文HTML版（含四维过滤阈值、MegaSaM+UniDepth v2+Depth Anything v2、SAM2动态掩膜、双阶段caption、HQ子集统计） | nature: 官方一手（论文正文）
+- url: https://huggingface.co/datasets/SpatialVID/SpatialVID-HQ | title: SpatialVID-HQ HuggingFace 数据集页（CC-BY-NC-SA 4.0，3.53TB，74分组，标注字段清单） | nature: 官方一手（数据集发布页）
+- url: https://arxiv.org/abs/2603.23497 | title: WildWorld: A Large-Scale Dataset for Dynamic World Modeling with Actions and Explicit State toward Generative ARPG | nature: 官方一手（论文摘要页）
+- url: https://arxiv.org/html/2603.23497v1 | title: WildWorld 论文全文HTML版（含采集平台、119列逐帧标注、动作三元组统计、WildBench四维评测、五种条件方法消融） | nature: 官方一手（论文正文）
+- url: https://github.com/ShandaAI/WildWorld | title: WildWorld 官方 GitHub 仓库（盛大AI） | nature: 官方一手（代码仓库）
+- url: https://arxiv.org/abs/2601.10592 | title: Action100M: A Large-scale Video Action Dataset | nature: 官方一手（论文摘要页）
+- url: https://arxiv.org/html/2601.10592v1 | title: Action100M 论文全文HTML版（含V-JEPA 2分割、Tree-of-Captions五字段、三模型caption链、GPT-OSS-120B Self-Refine、GPU小时成本、16个下游基准） | nature: 官方一手（论文正文）
+- url: https://github.com/facebookresearch/Action100M | title: Action100M 官方 GitHub 仓库（Meta FAIR） | nature: 官方一手（代码仓库）
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+- [官方一手] A Systematic Post-Train Framework for Video Generation, arXiv:2604.25427v1, 2026-04-28（本条目锚论文，HKU + JD Explore Academy + 清华 + 北大 + 浙大）: https://arxiv.org/abs/2604.25427
+- [官方一手] 同上 HTML 全文（含 GRPO 公式、等时分组、Temporal Gradient Rectification、四奖励模型定义、GSB 结果 31%/20%）: https://arxiv.org/html/2604.25427v1
+- [官方一手] DanceGRPO: Unleashing GRPO on Visual Generation, arXiv:2505.07818（锚论文 GRPO 基础，同一一作 Zeyue Xue）: https://arxiv.org/abs/2505.07818
+- [官方一手] Improving Video Generation with Human Feedback (VideoReward/VideoAlign), arXiv:2501.13918（1.6万prompt/10.8万视频/18.2万三元组/12个T2V模型/BTT带平局建模/Flow-DPO/Flow-RWR/Flow-NRG）: https://arxiv.org/abs/2501.13918
+- [官方一手] HPSv3: Towards Wide-Spectrum Human Preference Score, ICCV 2025, arXiv:2508.03789（HPDv3：108万文本-图像对、117万成对比较标注）: https://arxiv.org/abs/2508.03789
+- [官方一手] Flow-GRPO: Training Flow Matching Models via Online RL, arXiv:2505.05470: https://arxiv.org/abs/2505.05470
+- [官方一手] MixGRPO: Unlocking Flow-based GRPO Efficiency with Mixed ODE-SDE, arXiv:2507.21802: https://arxiv.org/abs/2507.21802
+- [官方一手] RePrompt: Reasoning-Augmented Reprompting for T2I via RL, arXiv:2505.17540（锚论文 Prompt Enhancer 所遵循的范式）: https://arxiv.org/abs/2505.17540
+- [官方一手] Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion, arXiv:2506.08009（锚论文 AD 阶段基础）: https://arxiv.org/abs/2506.08009
+- [同团队旁证] OmniForcing: Unleashing Real-Time Joint Audio-Visual Generation, arXiv:2603.11647（锚论文 AV 蒸馏所遵循，作者与锚论文高度重合）: https://arxiv.org/abs/2603.11647
+- [同团队旁证] Astrolabe: Steering Forward-Process RL for Distilled Autoregressive Video Models, arXiv:2603.17051（同团队，Zeyue Xue/Siming Fu/Nan Duan 等）: https://arxiv.org/abs/2603.17051
+- [官方一手] Causal Forcing: Autoregressive Diffusion Distillation Done Right, arXiv:2602.02214: https://arxiv.org/abs/2602.02214
+- [官方一手] BranchGRPO: Stable and Efficient GRPO with Structured Branching in Diffusion Models, arXiv:2509.06040: https://arxiv.org/abs/2509.06040
+- [官方一手] E-GRPO: High Entropy Steps Drive Effective RL for Flow Models, arXiv:2601.00423: https://arxiv.org/abs/2601.00423
+- [官方一手] TempFlow-GRPO: When Timing Matters for GRPO in Flow Models, arXiv:2508.04324: https://arxiv.org/abs/2508.04324
+- [官方一手] Coefficients-Preserving Sampling for RL with Flow Matching (Flow-CPS), arXiv:2509.05952: https://arxiv.org/abs/2509.05952
+- [官方一手] RewardDance: Reward Scaling in Visual Generation, arXiv:2509.08826: https://arxiv.org/abs/2509.08826
+- [官方一手] VisionReward: Fine-grained Multi-dimensional Human Preference Learning, AAAI 2026: https://arxiv.org/abs/2412.21059
+- [官方一手] Seedance 1.0: Exploring the Boundaries of Video Generation Models, arXiv:2506.09113（SFT 数百类目定向采集 + model merging；RLHF 多维标注协议；三个专用 RM）: https://arxiv.org/abs/2506.09113
+- [官方一手] HunyuanVideo: A Systematic Framework for Large Video Generative Models, arXiv:2412.03603（100万人工精选 SFT，美学四项 + 运动三项 rubric）: https://arxiv.org/abs/2412.03603
+- [官方一手] Kling-Omni Technical Report, arXiv:2512.16776（同 MVL 条件多变体 + 人类比较形成偏好对做 DPO）: https://arxiv.org/abs/2512.16776
+- [官方一手] Wan: Open and Advanced Large-Scale Video Generative Models, arXiv:2503.20314: https://arxiv.org/abs/2503.20314
+- [官方一手] VBench: Comprehensive Benchmark Suite for Video Generative Models, CVPR 2024: https://arxiv.org/abs/2311.17982
+- [官方一手] Qwen3-VL Technical Report, arXiv:2511.21631（锚论文奖励模型主干「Qwen3.5」的引文指向）: https://arxiv.org/abs/2511.21631
+- [本项目内部调研结果，二次汇总] 本条目的横向数字（Allegro/Apollo/CogVideoX/Cosmos-Predict25/Goku/HunyuanVideo/JavisDiT_baselines/Kling_30_Omni/LongCat-Video/Movie_Gen/Motif/Open-Sora/Seedance/SkyReels/Step-Video-T2V/Sora_2/Veo_3/caption_models/JAVG_2026_misc 等）均取自 /Users/jan/wangxj/data_survey/video-gen-data-processing/results/ 目录下各条目的 post_training_data 字段，其原始出处见各条目自身的 sources 列表
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 

@@ -92,6 +92,15 @@ Data-Juicer 本身不训练模型，因此无「训练数据量级」；相关�
 【图生视频 I2V 后训练】约 450 万（4.5M）「文本-图像-视频」三元组。
 【未披露】总视频小时数、token 数、原始采集量（因此无法反推整体保留率）。
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（仅有唯一一条相对量披露，无任何绝对数值）。MiniMax 官方 Hailuo 02 发布博客（2025年6月18日）是全部公开材料中唯一提及训练数据规模的地方，原文表述为：相比前代模型，参数量提升约 3 倍（3x parameters），训练数据量扩大约 4 倍（4-fold expansion of training data），且质量与多样性同步提升。除此之外：
+- 从未公布任何视频条数、总时长（小时数）、token 数；
+- 从未区分预训练与 SFT/后训练的数据量；
+- 前代 video-01 的基数同样未公开，因此「4倍」是一个无法锚定到绝对值的相对数；
+- Hailuo 2.3 发布公告完全未提及数据规模，只描述能力提升（肢体运动、风格化、微表情、指令跟随）。
+这是典型的「产品营销式披露」：给出增长倍数以传达投入力度，但不给出任何可核验的基数。
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
 【最终产出】约 10 万小时（~100k hours）的文本-视频-音频三元组（TV2A）数据，这是论文摘要中作为第一大贡献点提出的核心数字（"a scalable data pipeline curating 100k-hour multimodal datasets through automated annotation"）。
@@ -267,6 +276,16 @@ SFT 阶段与 RLHF 阶段的精确样本数 1.5 报告未给出具体数字（�
 
 完全未披露。System Card 未给出任何视频条数、总小时数、token/patch 数量，未区分预训练与SFT规模，也未披露算力预算。OpenAI 对外亦无任何官方数据规模口径。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+论文以「clip 条数 + 小时数 + 说话人 ID 数」三口径给出，未给出 token 数：
+【原始采集】153K 条音视频视频，共 64,386 小时原始素材。
+【最终数据集总量】超过 5.2M（520万）视频 clip，超过 8,743 小时。
+【单人分支（single branch，含 talking 与 listening）】5.2M clips / 8.7K 小时 / 83K 个唯一说话人 ID。
+【对话分支（dialogue branch）】770K 组 clip pair / 1.8K 小时 / 16K 个唯一说话人 ID。
+【高质量 SFT 子集】571K clips / 1,368 小时。
+【预训练与 SFT 的拆分】基线模型预训练使用 7,375 小时（即 8,743 − 1,368，为剔除 HQ 子集后的剩余大规模数据），SFT/微调使用 571K clips / 1,368 小时的高质量子集。这是一个明确的「大规模预训练 + 小而精后训练」两段式规模设计，HQ 子集约占总时长的 15.6%。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 【预训练总量】技术报告明确给出：构建了包含 20 亿（2B）视频-文本对 与 38 亿（3.8B）图文对 的大规模数据集。这是本条目最硬的定量披露之一。
@@ -319,6 +338,69 @@ SFT 阶段与 RLHF 阶段的精确样本数 1.5 报告未给出具体数字（�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。技术报告完全未披露训练数据的绝对规模（未给出视频条数、小时数、token 数），也未区分预训练与后训练的数据量。仅定性描述为「高质量、多样、强交互性的单人单镜头视频语料（a corpus of high-quality, diverse, and highly interactive single-person, single-shot video）」。三阶段训练（双向教师训练 / 因果自回归适配 / DMD 蒸馏）各阶段用量同样未公开。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+2.5/2.6/2.7 完全未披露。可用的量级信息全部来自前代与同族：
+- Wan 2.1：候选池为「数十亿级（billions of）视频与图像」，经基础维度过滤后即淘汰约50%；未给出小时数、token 数，也未区分预训练与 SFT 的绝对量。
+- Wan 2.2：README 明确给出相对增量——较 Wan 2.1「图像 +65.6%、视频 +83.2%」，这是 Wan 系唯一的跨版本数据规模量化对比，官方称该增量显著提升了运动、语义与美学的泛化。
+- Wan 2.1 后训练集：精选图像「数百万（millions）」量级；视频侧分别选出「数百万条简单运动」与「数百万条复杂运动」。
+- Wan 2.1 V2A 音频子集：从视频生成数据集中严格过滤后仅剩 O(1) 千小时（thousand hours）——这是 Wan 系唯一的音频侧规模数字，说明音画可用数据相对视频数据是极小的子集。
+- Wan 2.1 人物个性化子集：用内部人像分类器先筛出约 O(100)M 视频，最终构造出约 O(10)M 个性化视频（平均每条附5张分割人脸），另合成 O(1)M 条换脸视频。
+- Wan-Dancer（2026.07）：自建约200小时高质量舞蹈视频（≥720p/30fps）。
+2.5 起因新增语音、唇同步、多镜头叙事、角色扮演能力，音画与多镜头数据量必然大幅扩张，但无任何数字。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+五者均为评测/元评测规模，量级远小于训练集，但 AVBench 与 PhyAVBench 附带了可观的数据资产：
+【VABench】共 1,299+ 条测试用例：T2AV 778 条提示词、I2AV 521 条（含配对图像）、其中立体声专项 116 条；每条样本附 3–7 个音频问答对（AQA）与 3–7 个视觉问答对（VQA）。
+【AVBench】评测集 470 条 ≥720p 高清提示词（Normal 子集 350 条，1–2 说话人；Hard 子集 120 条，3–4 说话人 + 语音重叠 + 噪声背景）。评测器训练集规模显著更大：自 OpenHumanVid 抽取 30K 真实片段，按维度扩展为每维度 100K 对，三类一致性维度合计 300K 条监督样本（全部为带硬负例的偏好对）。
+【AV-SyncBench】3,269 条 in-the-wild 视频，扩展为 38,390 条评测样本（时序挑战 37,569 样本 / 2,717 视频；语义挑战 821 样本 / 552 视频；其中人声音色替换 592、乐器音色迁移 229）。
+【PhyAVBench】数据集 PhyAV-Sound-11K：11,605 条全新录制视频，累计 25.5 小时；337 组受控配对提示词；184 名参与者出镜/操作；每组配对提示词平均配备约 17 条 ground-truth 真实录制视频（论文要求 N≥20 用于均值降噪，实际平均 17）。
+【Omni-Judge】300 条提示词（取自 VidProM 真实用户提示词库），由 Sora 2 与 Veo 3 各生成 1 条，合计 600 条生成视频，配套 600×9 维度的人工评分。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+此处指「captioner 自身的训练数据规模」与「captioner 产出的标注规模」两个量，二者需严格区分：
+【captioner 训练数据（预训练/SFT 分列）】
+· Tarsier2-7B：预训练 40M video-text pairs（从 Tarsier1 的 11M 扩张 3.6 倍）；SFT 阶段做细粒度时序对齐（论文称 150K 级人工精标，含事件时间戳）[规模数字部分不确定]；再叠加 model-based sampling 自动构造的偏好对 + DPO。
+· ShareCaptioner-Video：SFT 数据 = 40K 条 GPT-4V 标注的密集 caption（DiffSW 格式），基座 InternLM-XComposer2-4KHD。以极小的 SFT 量换取大规模推理能力，是「少量高质量教师数据蒸馏」的典型样本。
+· AuroraCap：三阶段训练，累计超过 2000 万条高质量图/视频-文本对。
+· SkyCaptioner-V1：约 200 万条概念均衡视频（从 1000 万条精选，保留率 20%），32 张 A800，全局 batch 512。
+· AVoCaDO：AVoCaDO-SFT 107K（TikTok-10M 24K + ShortVideo 18K + Shot2Story 20K + FineVideo 29K + YouTube-Commons 11K + CinePile 5K），后接 GRPO。
+· AVSCap：AVSCap-130K = 4 万条视频 × 3 份标注（visual / audio / synergistic omni-modal），后接 GRPO；论文明确论断「RL 带来的增益大于扩大 SFT 数据量」。
+· CogVLM2-Caption：教师链产出的稠密 caption 数据（其中 GPT-4 摘要样本 5 万条用于微调 LLaMA2 摘要器）；student 端总量未披露[不确定]。
+· video-SALMONN 2：未披露具体条数[不确定]，模型档位 3B/7B/72B。
+【captioner 产出的标注规模（下游可用量）】
+· ShareCaptioner-Video → 480 万条（4.8M）高质量美学视频标注，是开源社区最大的单模型产出之一。
+· Tarsier2 → 对 100 万条公开数据集视频做 recaption，发布其中 585K（Tarsier2-Recap-585K）。
+· Panda-70M → 7000 万条 clip 的 caption，但 caption 极短（均 13.2 词）。
+· Koala-36M → 3600 万条 clip，caption 均长 202.3 词（比 Panda-70M 长约 15 倍）。
+· 生成侧的隐性产出量级更大：Movie Gen 全量 clip 由 LLaMa3-Video 标注（70% 来自 8B、30% 来自 70B）；Apollo/Klear 对 8100 万条样本做多模型标注（含 Gemini-2.5-Pro 调用）；Harmony 用 Gemini 标注 400 万条音视频片段。
+【生态级观察】caption 长度跨度达 60 倍——从 Panda-70M 的 13.2 词到最长的 824.2 词（详见 pretraining_datasets 条目），打标模型选择直接决定 caption 长度，进而决定下游 T2V 模型对 prompt 长度的敏感区间。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：约100万条视频clip，156.7M帧，总时长4000+小时；SpatialVID：原始33,443条YouTube长视频（21,789小时），产出271万clip、127.60M帧、7,089小时动态内容，高质量子集 SpatialVID-HQ 为0.37M clip、20.63M帧；WildWorld：超过1.08亿帧，约1,800小时（30FPS折算），每帧119列标注；Action100M：源自120万条（1,199,096）教学视频、约14.6年时长（其中72%即10.6年有可用ASR），产出1.47亿个时序定位片段、约213亿英文词标注。四者均为单一数据集，不区分预训练与SFT划分（Action100M 提供语义重采样子集用于缓解长尾）
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】未披露任何数字：正文 4.1 节 Dataset 全文仅两句——「First, we constructed a high-quality text-video dataset for SFT. Subsequently, we curated the prompt set as described in the experimental settings.」SFT 集条数、RLHF prompt 集条数、group size N、训练步数、GPU 规模全部缺失。这是本条目最需要指出的一点：一篇以「后训练系统框架」为标题的报告，在数据规模维度上是零披露的。
+【横向 SFT 精选集规模谱系（可对标的公开数字）】
+· Step-Video-T2V：约 3000 万（30M）条高质量视频；
+· Cosmos-Predict 2.5：按五域拆分——物体恒存 10.4M、驾驶 3.1M、复杂场景 1.6M、高运动 1.0M、机器人操作 730K，另 4K 冷却数据 388K，另驾驶多视图 1.5M 段 7 相机 20 秒 30FPS clip；
+· SkyReels-V4：SFT 两阶段 500 万条带多模态条件视频（3 epoch）→ 100 万条人工精选（3 epoch）；
+· ALIVE：Continue-Training 4.3M → SFT 5M（0.5 epoch）→ 1080p Refiner 0.7M → 角色专项 0.8M；
+· Open-Sora 2.0：阶段三 5M 高分辨率精选；Open-Sora 1.2：2M 片段 / 5k 小时；Open-Sora Plan：I2V 阶段二 15M；
+· Goku：I2V 微调 4.5M 文本-图像-视频三元组（占 36M 视频池 12.5%）；
+· Allegro：约 2M（占 500M 原始片段 0.4%）；
+· HunyuanVideo 原版：约 100 万人工精选；HunyuanVideo 1.5：CT 每任务 100 万，SFT 规模未公开；
+· CogVideoX：预训练数据中质量最高的 20% 子集，10k 步；
+· NAVA：从 15M 中精选 160K（保留率约 1.07%），且用更贵的 Gemini-3-Pro 对该子集重打 caption；
+· Movie Gen：视频 SFT 集规模未披露但「训练只用 512 张 H100」，PT2V SFT 集 O(1000) 条，音频 SFT 集 cinematic split O(100)K 样本 / O(1)K 小时 + high-quality audio split O(1,000)K 样本 / O(10)K 小时；
+· Motif-Video 2B：两次 SFT（480p Stage 7、720p Stage 10），规模未给。
+【偏好数据规模谱系】HPDv3 108 万文本-图像对 / 117 万成对比较；VideoReward 1.6 万 prompt / 10.8 万视频 / 18.2 万标注三元组（其中 1.3 万三元组作 held-out 验证集，其 prompt 不出现在训练集）；SkyReels-V2 3 万人工样本对训练 Bradley-Terry 奖励模型 + 每阶段 2 万 × 3 阶段共约 6 万条 DPO 数据；JavisDiT++ 约 2.5 万条音视频偏好对（prompt 池 3 万条、1 epoch、LoRA 121M 可训参数）；HunyuanVideo 1.5 T2V 侧 RLHF prompt 集为 O(10K) 万级。
+【量级规律】SFT 精选集的典型量级为 10^6–10^7 条、占预训练池 0.4%–20%；偏好数据的典型量级为 10^4–10^5 对，比 SFT 集小 2–3 个数量级——这与 LLM 后训练的比例结构一致。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -398,6 +480,14 @@ SFT 阶段与 RLHF 阶段的精确样本数 1.5 报告未给出具体数字（�
 (3) 网络爬取——未显式声明，但公开数据集本身（LAION、Panda-70M、InternVid）均为网络爬取来源。
 (4) 合成数据——论文未使用合成视频数据；仅在评测环节用 GPT-4o 改写 GenEval 短提示词（属评测侧，非训练数据合成）。
 整体呈现「公开数据打底 + 内部高质量数据精调」的经典字节系配方。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]。MiniMax 从未公开 Hailuo 视频模型的数据来源构成，未说明自有数据、公开数据集、网络爬取、授权采购、合成数据各自的占比或有无。可作为间接推测的旁证（均非官方声明，可信度低）：
+- Hailuo 02 博客称训练数据在「质量与多样性」上提升，暗示存在数据源扩充与筛选环节，但未点名任何来源；
+- Hailuo 2.3 明确扩展了水墨画（ink wash painting）、游戏CG、动漫、插画等风格支持，且早期就有 video-01-live 这一 Live2D/动漫特化模型，说明训练数据中包含相当比例的二次元/动漫/游戏素材，这在中国厂商中较为普遍；
+- 模型在真人微表情与实拍面部表演上的强调，说明含大量真人影视/口播素材。
+以上仅为从能力反推数据分布的推断，无一手依据。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -548,6 +638,15 @@ Seedance 1.5 pro 仅表述为「大规模混合模态数据集」，未拆解来
 
 仅有一句极高层级的定性描述，System Card 原文：「Sora 2 was trained on diverse datasets, including information that is publicly available on the internet, information that we partner with third parties to access, and information that our users or human trainers and researchers provide or generate.」即三类来源：(1) 互联网公开可得数据（网络爬取）；(2) 通过第三方合作/授权获取的数据；(3) 用户、人类训练师与研究员提供或生成的数据。未给出任何来源的占比、具体数据集名称、爬取范围、合作方名单。合成数据是否使用未明确说明（「generate」一词可能暗示包含人类训练师生成内容，但不等于模型合成数据）。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+单一来源：YouTube 网络爬取，无自有拍摄数据、无授权采购、无合成数据。
+【采集方式】人工筛选（manually collected）高质量的双人对话类 YouTube 视频，覆盖 2006 年至 2025 年 6 月（论文写作时的当下）近二十年跨度。
+【体裁构成】访谈（interviews）、新闻报道（news reports）、研讨会/讲座（seminars）、电视节目（television programs）、综艺（variety shows）、辩论（debates）、教育类视频（educational videos）。
+【YouTube 频道类目构成】娱乐（entertainment）、人物与博客（people and blogs）、喜剧（comedy）、新闻与政治（news and politics）、教育（education）、科学（science）。
+【与公开数据集的关系】不复用 CelebV-HQ、HDTF、MultiTalk、OpenHumanVid 等已有数据集，是完全独立采集的新语料。论文 Table 1 将其与上述数据集对比：相比 OpenHumanVid 的 13.4M clips / 16.7K 小时，SpeakerVid-5M 在总量上不占优，但在「双人交互配对」「说话人 ID 规模」「1080P 占比」「结构化身体构图标注」等维度是独有的。
+【合成数据】无。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 报告未说明来源构成。仅表述为「将原始视频（raw videos）经完整 pipeline 转化为适合预训练的高质量视频-文本对」，未区分自有素材库、公开数据集、网络爬取、授权采购或合成数据的比例；也未列举任何具体数据源名称。从 pipeline 设计可反推的间接线索：(1) 明确保留并使用了视频的「原始标题（Original Title）」作为一路 caption 来源，说明大量数据来自带有标题元数据的网络视频平台内容；(2) 使用 EfficientNet 水印分类器与 PaddleOCR 字幕检测，说明原始池中含大量带台标/字幕的二次传播内容，符合网络爬取特征；(3) 衍生模型 Step-Video-TI2V 的训练数据中超过 80% 为动漫风格视频，说明团队有大规模动漫内容来源。图文侧 3.8B 的来源同样未披露。[不确定]
@@ -603,6 +702,47 @@ Seedance 1.5 pro 仅表述为「大规模混合模态数据集」，未拆解来
 (1) 直播与口播/说话人头部视频（livestream or talking-head videos）——主要用于学习面部表情、身体动作、唇形同步等细粒度特征；
 (2) 影视剧高质量素材（high-quality footage from films and television dramas）——用于提升模型在不同镜头角度、场景与视觉风格上的泛化性与一致性。
 未提及使用公开数据集、授权采购或合成数据。评测端使用了公开基准 HDTF 作为参考。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+2.5/2.6/2.7 未披露。Wan 2.1 报告的原文表述为：候选数据集「sourced from both internal copyrighted sources and publicly accessible data」——即「内部版权数据 + 公开可获取数据」两条腿，阿里自有生态（淘宝/优酷等）未被点名但属合理推测[不确定]。
+构成细分（据 2.1 报告与同族论文）：
+1) 内部版权来源（internal copyrighted sources）：占比未披露；
+2) 公开可获取数据（publicly accessible data）：Wan2.2-S2V 明确说明从开源视频数据集采集并做 caption 关键词粗筛，另由人工从公开可访问来源精选含复杂人体活动（说话、唱歌、跳舞）的视频；
+3) 合成数据：Wan 2.1 为提升中文字形渲染，在纯白背景上渲染中文字符合成「数亿张（hundreds of millions）」含文字图像；个性化数据用 InstantID 合成 O(1)M 条换脸视频；
+4) 授权采购：报告未提及任何具名的素材库授权合作（与 Lightricks 采购 Shutterstock/Getty 的路线不同）。
+无各来源占比数字。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+【VABench】T2AV 侧为 LLM + 专家模板批量合成的提示词（无真实视频来源）；I2AV 侧为人工精选并做隐私筛查的高质量图像，再由多模态大模型生成统一音视描述。属于「合成提示词 + 人工策展图像」构成。
+【AVBench】评测提示词来自独立提示词池（≥720p 高清真实人物场景）；评测器训练数据来自公开数据集 OpenHumanVid（真实人物视频），负例由 LLM 驱动的扰动与算法性错配合成 —— 即「公开数据集真实正例 + 程序化合成硬负例」。
+【AV-SyncBench】全部为公开网络平台抓取的 in-the-wild 视频（未指明具体平台）；扰动样本由算法与语音/乐器转换模型合成。
+【PhyAVBench】最具特色 —— 全部视频为「全新录制或采集」，明确目的是避免数据泄漏（zero training-set overlap），在可控环境下拍摄，并跨不同个体、演示者与录制设备采集多样本。不使用任何现成公开数据集。
+【Omni-Judge】提示词来自 VidProM（真实用户提示词画廊），视频为 Sora 2 与 Veo 3 现场生成。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+captioner 训练/评测数据的来源构成：
+【教师蒸馏为绝对主流（2024–2026 不变的范式）】GPT-4V → ShareGPT4Video-40K、Koala-36M 种子 caption、MiraData 结构化 caption；GPT-4 → CogVideoX 的摘要环节；Gemini-2.5-Pro → AVoCaDO-SFT、Script-a-Video 的 500K MTSS 标注、Harmony 的 400 万条；Gemini-3 系列 → 2026 年新工作的默认教师。学生模型普遍为 7B 级开源基座（InternLM-XComposer2、Qwen2.5-VL-7B、Qwen2.5-Omni-7B、LLaVA-Video、LLaMA2/LLaMA3）。
+【公开数据集复用】Tarsier2-Recap-585K 全部来自公开数据集（VATEX、TGIF、LSMDC 等）；AVoCaDO-SFT 来自 Shot2Story、FineVideo、YouTube-Commons、CinePile 等公开源 + TikTok/短视频；AVSCap-130K 来自 AVoCaDO-107K、ASID-1M、FineVideo、TimeChatCap-40K、Movie101 —— 呈现明显的「数据集叠数据集」的滚雪球式复用。
+【网络爬取】ShareGPT4Video 的 4.8M 美学视频、Koala-36M、Panda-70M（HD-VILA-100M 衍生）主要为 YouTube 等公开网络视频。
+【人工精标（少量但关键）】SkyCaptioner-V1 的相机运动子专家用 9.3 万条高置信度人工标注 + 1.6 万条运动轴均衡合成数据；Movie Gen 后训练阶段 caption 由人工在模型输出上精修；ALIVE 的 caption 模型训练数据为「MLLM 生成后人工修订」。
+【合成/自举】video-SALMONN 2 明确用自身产出的高质量 caption 语料再做后续 SFT（自举式数据生产）；Tarsier2 用 model-based sampling 自动构造偏好对。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：混合复用已有公开数据集 + 网络素材——HD-VILA-100M（多类目大规模视频）、Panda-70M（视频-caption对）、Koala-36M（精确时序切分）、Pexels-Video（通过 OpenVideo 工具箱采集的66.8万条高质量Pexels视频）；SpatialVID：自行爬取 YouTube，以运动相关关键词检索（walk / tour / drone 等）以保证相机轨迹多样性；WildWorld：完全合成/引擎采集——自建游戏数据采集平台，从 AAA 写实动作角色扮演游戏《Monster Hunter: Wilds》引擎实时录制，非爬取非真人拍摄；Action100M：复用 HowTo100M（YouTube 教学视频，已做人脸模糊处理的1,199,096条版本），属公开数据集二次标注
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】仅称 SFT 用「high-quality text-video dataset」、RLHF 用「curated prompt set」，来源构成完全未说明；基座为内部模型，故 SFT 数据大概率来自其预训练语料的高分子集，但无文字依据 [不确定]。
+【横向的后训练数据来源四类范式】
+① 预训练池内的高分子集（最普遍）：CogVideoX（top 20%）、Allegro（500M→2M）、Motif、Open-Sora、MAGI-1（最后阶段用更严过滤数据）、NAVA（15M→160K）——本质是「同源提纯」；
+② 定向采集/独立采购的精品集：Seedance 1.0 按视觉风格/运动类型等属性定义「数百个类别」做定向采集；Movie Gen 人工挑「影视感（cinematic）」素材并重写 caption；LongCat-Video 额外并入相机运动与视觉风格专项数据集；
+③ 模型自生成数据（RLHF/DPO 的候选来源）：Step-Video-T2V 对每条 prompt 用不同随机种子生成多个视频；Kling 3.0 Omni 对同一 MVL 条件采样多个变体；JavisDiT++ 每 prompt 生成 N=3 个候选加 1 条真值共 4 个；Seedance 1.0 的偏好数据「涵盖模型不同阶段生成的合成视频等多来源素材」；StreamChar 蒸馏 Stage II 直接用学生模型的在线 rollout；
+④ 线上真实用户 prompt 回流：Seedance 1.0 明确「从训练集与线上用户收集 prompt，做数据均衡与信息过滤以剔除重复与含糊 prompt」——这是闭源商业模型相对学术工作的结构性优势。
+【prompt 集与 SFT 集去重的必要性】JavisDiT++ 明确其 3 万条 DPO prompt 池「与 SFT 训练数据不重叠（apart from the SFT training data）」；VideoReward 保留 1.3 万 prompt 从不出现在训练集的三元组作验证集。二者共同说明后训练阶段 prompt 泄漏是一个被明确防范的风险点。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -660,6 +800,10 @@ Seedance 1.5 pro 仅表述为「大规模混合模态数据集」，未拆解来
 ### [Goku](../models/Goku.md) ⚠️
 
 [不确定]。论文完全未讨论数据版权、授权比例、rights-cleared 数据集、C2PA/内容来源标注、水印溯源等合规议题，也未提及数据卡（datasheet）或使用条款。可确认的仅有：公开部分依赖 LAION、Panda-70M、InternVid、OpenVid-1M、Pexels 等既有学术/免版税数据集（其中 Pexels 为免版税素材站，LAION 为 CC 抓取的图文对索引，本身已知存在版权争议）；内部 2500 万视频片段与 6000 万图像的授权状态、来源合规性均未披露。这在 2025 年初的中国厂商论文中较为典型，与 Movie Gen / Veo 等强调授权与 C2PA 的做法形成对比。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]。MiniMax 未就 Hailuo 视频模型发布过任何数据合规声明：未披露授权数据占比，未提及 rights-cleared 数据集，未提及 C2PA 或任何内容溯源/来源凭证标准。海螺AI 网页端仅有一句通用免责提示「内容由 AI 生成，请合法、友好地使用该功能」，属于用户侧使用规范而非训练数据溯源承诺。输出视频是否带有可见或不可见水印、是否嵌入 C2PA 元数据，官方文档中亦未说明。这与 Adobe Firefly、OpenAI Sora 2（C2PA + 可见水印）、Google Veo（SynthID）等在合规披露上的做法形成明显反差。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -775,6 +919,13 @@ NeMo Curator 框架层面未提供数据溯源与授权管理能力：官方文�
 【训练侧】未披露授权数据占比，未公布任何 rights-cleared 数据集清单，未说明授权采购方。唯一明确的合规声明是儿童安全相关：「responsibly sourcing datasets to exclude CSAM」（负责任地筛选数据源以排除儿童性虐待材料），并与美国失踪与受虐儿童中心（NCMEC）合作。版权方面：Sora 2 上线时采取「opt-out」（版权方需主动要求排除）策略，引发SpongeBob、South Park、Scooby-Doo 等IP大规模被生成的争议；2025年10月3日（上线仅3天后）Sam Altman 发博客改为「opt-in」并承诺给版权方更细粒度控制与收益分成。美国电影协会（MPA）公开施压，日本政府亦正式要求 OpenAI 避免侵权。关键点：opt-in 政策仅约束「生成」环节，OpenAI 从未澄清该政策是否回溯适用于「训练数据」，即已被训练进模型的受版权内容并未被移除。后续 OpenAI 与迪士尼（2025年12月，三年授权、覆盖200+迪士尼/漫威/皮克斯/星战角色）、与 Getty Images（2026年6月，Getty 与 Shutterstock 37亿美元合并后的多年期合作）达成授权协议，但这些均为「生成侧IP授权/展示合作」，未明确为 Sora 2 的训练语料授权。
 【输出侧】所有一方产品资产带 C2PA 元数据（行业标准可验证来源）；从 sora.com 与 Sora App 下载的视频带可见移动水印；OpenAI 保有内部检测工具判定某视频/音频是否由其产品生成。OpenAI 自承「provenance 不存在单一解法」。
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+披露不完整，属于典型的学术数据集合规姿态：
+【已声明】(1) 明确限定非商业的科研与教育用途，显式禁止商业使用；(2) 声明内容来自公开互联网，版权归原始创作者所有；(3) 提供 takedown 政策，版权方可申请移除；(4) 不托管原始视频，仅发布 YouTube video ID 与标注，将版权风险转移给使用方自行下载——这是规避直接分发版权内容的常见做法。
+【未涉及】未给出授权数据占比（实际为 0%，全部为爬取）；未使用任何 rights-cleared 商用数据集；未提及 C2PA、内容溯源水印或来源可信标记；未讨论出镜人物的肖像权与知情同意问题（数据全部为真人面部与身体，含 83K 个可识别说话人身份，且带 ArcFace 人脸特征做 ID 关联，隐私敏感度实际很高，但论文未作任何隐私影响评估）。
+【下游影响】由于许可限定非商业，任何将 SpeakerVid-5M 用于商用模型训练的行为都与其条款冲突——这一点对将其列为训练数据来源的下游模型（如 MOVA 采用 Apache-2.0 允许商用）构成潜在的许可传导矛盾，但论文与下游工作均未讨论。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 未披露。技术报告全文未涉及授权数据占比、rights-cleared 数据集、版权清算流程、C2PA 等内容溯源标准，也未提及生成内容水印/标识。数据合规维度上唯一可见的痕迹是 pipeline 中的 NSFW 打分（LAION CLIP-based NSFW 检测器）与水印检测（用于剔除带水印素材，动机更接近画面清洁与规避明显版权标记，而非系统性版权合规）。模型侧采用 MIT 协议开源，不含数据溯源承诺。作为中国境内发布的产品，实际生产必然存在内容安全与合规审核，但训练数据侧的合规方法零披露。[不确定]
@@ -809,6 +960,45 @@ NeMo Curator 框架层面未提供数据溯源与授权管理能力：官方文�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。报告未提及任何数据授权、版权合规、rights-cleared 数据集比例、C2PA/水印溯源等信息。仅在清洗环节提到内容安全过滤（NSFW 及其他不当内容剔除）与画面干净度过滤（去除含水印、字幕、贴片广告的片段），后者更多是画质动机而非版权动机。考虑到数据来源包含影视剧素材，版权来源披露缺失是明显空白。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+披露极少，是 Wan 系最弱的一环。
+- 报告仅以「internal copyrighted sources」一词带过版权来源，未给出授权数据占比、未列 rights-cleared 数据集清单、未提及 C2PA 或任何输出侧内容溯源标准。
+- 唯一可见的溯源机制在推理侧：API 提供 watermark 布尔参数，开启后在视频右下角添加固定文案「AI 生成」的显式水印（wan2.7-t2v 默认值为 false）。这对应中国《人工智能生成合成内容标识办法》（2025年9月1日施行）对显式/隐式标识的要求；隐式标识（元数据）是否写入未在文档中说明。[不确定]
+- 训练侧唯一明确的合规动作是内部 NSFW 安全评估模型对全量训练数据打分过滤，以及对水印/logo 的检测与训练时裁剪（既是质量动作也是权属动作）。
+- 未见任何关于人脸/肖像权、隐私脱敏、数据主体退出（opt-out）机制的说明。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+整体披露较弱，仅 PhyAVBench 做了系统性设计：
+【PhyAVBench】通过「全部自录 + 零训练集重叠保证」从根本上规避版权与数据泄漏问题，是五者中溯源最干净的；涉及 184 名出镜参与者，但论文未披露肖像授权与知情同意的具体流程[不确定]。
+【VABench】I2AV 图像明确经过隐私筛查（privacy-screened）后才纳入；未披露图像版权来源。
+【AV-SyncBench】数据来自公开网络平台，论文未讨论版权授权或 C2PA 等溯源机制[不确定]。
+【AVBench】训练数据基于公开数据集 OpenHumanVid，继承其许可证；评测提示词池来源未详述。
+【Omni-Judge】使用 VidProM 提示词（该数据集自身为 CC BY-NC 类许可），生成视频版权归属各商业模型服务条款约束。
+五者均未提及 C2PA / 内容水印溯源标准。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+该维度是本生态最薄弱的一环，绝大多数 captioner 论文完全不讨论：
+【模型许可清晰】AVoCaDO（Apache-2.0）、video-SALMONN 2（Apache-2.0）、Tarsier2-Recap-7b、CogVLM2-Caption、SkyCaptioner-V1、Aria（Apache-2.0）均给出明确权重许可；ShareGPT4Video 论文 CC BY 4.0。
+【数据来源合规几乎无披露】ShareGPT4Video 的 4.8M 网络视频、Koala-36M、Panda-70M 均未说明版权状态与授权来源；AVoCaDO-SFT 含 TikTok-10M 与 ShortVideo 子集，平台内容的再分发合规性未讨论；无任何 captioner 工作提及 C2PA、rights-cleared 数据集或授权采购占比。
+【一个结构性风险】教师蒸馏范式普遍违反商用 API 的服务条款（OpenAI / Google 均禁止用输出训练竞品模型），ShareGPT4Video、Koala-36M、AVoCaDO、Script-a-Video 等大量工作依赖 GPT-4V / Gemini 蒸馏，学术发布无碍但商用落地存在法律不确定性——这一点在所有论文中均未被提及。
+【生成侧相对谨慎】Movie Gen、Veo 3 等大厂技术报告在数据合规上着墨更多，但涉及 captioner 本身时只说「用了内部模型」，反而规避了这一问题。
+[不确定] 无任何公开的定量授权占比数据。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SpatialVID 合规性最明确：整库采用 CC-BY-NC-SA 4.0 非商用许可，人工初筛阶段剔除标题含不当词汇的视频，但 YouTube 素材本身的版权授权状态未逐条清理[不确定]；SceneScribe-1M 依赖上游数据集（HD-VILA/Panda-70M/Koala-36M）各自的许可继承，Pexels 部分为可免费商用素材，整体授权占比未披露[不确定]；WildWorld 数据由游戏引擎生成，不涉及真人肖像与网络版权，但游戏内容本身的著作权归发行商，学术再分发条款论文未明确[不确定]；Action100M 只发布标注（约205GB），视频需用户自行从 HowTo100M 获取，规避了视频再分发风险，源视频已做人脸模糊以保护隐私。四者均未提及 C2PA 等内容溯源水印机制
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文与绝大多数横向对象在后训练数据的版权与溯源维度均无任何披露 [不确定]。可记录的相关事实：
+· 后训练数据因规模小（10^4–10^7），理论上比预训练更容易做到 rights-cleared，Movie Gen 的「人工挑影视感素材 + 人工重写 caption」流程与 SkyReels-V4 的「100 万条人工精选」在成本结构上具备逐条授权审查的可行性，但均未声明；
+· 偏好数据的额外合规维度是「标注员劳动」——Step-Video-T2V 提到偏好标注「全程由质控人员监督一致性」，HunyuanVideo 1.5 用 GSB 标注，Seedance 1.0 用「在指定维度选最优/最差，同时保证最优者在其他维度不劣于最差者」的多维度标注协议，但均未披露标注团队规模、来源、报酬与培训方式；
+· 模型自生成的偏好候选（Seedance 1.0、Step-Video、Kling、JavisDiT++）规避了外部素材版权问题，但引入了「合成数据回灌」的分布风险；
+· 公开偏好数据集 HPDv3（1.08M 文本-图像对）与 VideoReward（10.8 万视频来自 12 个 T2V 模型：Gen2、SVD、Pika 1.0、Vega、PixVerse v1/v2、HiDream、Dreamina、Luma、Gen3、Kling 1.0/1.5）——后者的视频全部由商业模型生成，其再分发的许可状态是一个未被讨论的灰色地带。[不确定]
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -892,6 +1082,12 @@ NeMo Curator 框架层面未提供数据溯源与授权管理能力：官方文�
 因此训练片段时长严格落在 [4s, 10s] 区间，这也决定了 Goku 的生成能力集中在 10 秒以内短视频。
 【其他预处理约束】码率 ≥ 500 kbps；帧率 ≥ 24 FPS（电影标准）或 23.976 FPS（NTSC 标准），低帧率素材被剔除。
 【未披露】区间内的具体时长直方图、平均片段时长、各时长桶的采样权重。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（仅有输出侧规格，无训练数据侧分布）。
+输出侧：video-01 固定 6 秒；Hailuo 02 提供 768p-6s、768p-10s、1080p-6s 三种档位；Hailuo 02 Fast 提供 512p 下的 6s 与 10s；Hailuo 2.3 官方文档示例为 1080p / 6 秒。
+训练侧：训练片段的时长分布、平均片段长度、长视频切分为 clip 的策略，官方从未披露。仅能从 6s/10s 的输出档位推断训练 clip 大致落在 10 秒以内量级，但这是推断而非披露。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1020,6 +1216,15 @@ SFT视频时长限定10.6~16秒，其中50%为16秒、50%为10.6~16秒；16秒�
 
 训练数据的片段时长分布与切分策略完全未披露。仅知推理侧输出规格：初始10秒；2025年10月更新后所有用户15秒，ChatGPT Pro 网页版最长25秒；Sora 2 Pro API 支持 10s/15s/25s 档位。训练片段时长如何分桶、如何从长视频切分为训练clip，无任何信息。（前代 Sora 1 曾说明按原生时长训练、不做统一裁剪到固定帧数，Sora 2 是否延续未确认。）[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+采用变长切分，长度带被严格限定在一个窄区间：
+【切分策略】先用 PySceneDetect 做场景切分，再将 clip 修剪（trim）到 3 至 14 秒之间；短于 3 秒的过碎片段与长于 14 秒的过长片段被排除或截断。
+【平均时长推算】单人分支 8.7K 小时 / 5.2M clips ≈ 6.0 秒/clip；对话分支 1.8K 小时 / 770K pair ≈ 8.4 秒/pair（若按 pair 计双路则单路约 4.2 秒）。总体 8,743 小时 / 5.2M clips ≈ 6.05 秒，位于 3–14 秒区间偏下部。
+【与固定时长方案的对比】不同于 MOVA 的 8.05 秒定长窗口，SpeakerVid-5M 保留原始语义边界带来的变长特性，切分点由场景变化与说话轮次共同决定，更贴近「一个自然对话轮次（turn）」的粒度。
+【分布图】Figure 3 中给出了时长分布直方图，但论文正文未给出各时长桶的具体百分比。
+【多轮分支的时间跨度】multi-turn 分支在当前轮次时间戳 x 之前取长度为 T 的历史窗口 [x−T, x] 聚合历史轮次；相邻 clip 时间间隔小于阈值 δt 的被判定为连续对话，可拼接成更长更自然的对话序列，因此多轮分支的有效上下文时长可远超单 clip 的 14 秒上限。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 未给出时长直方图，但切分与分桶策略明确：
@@ -1059,6 +1264,40 @@ SFT视频时长限定10.6~16秒，其中50%为16秒、50%为10.6~16秒；16秒�
 ### [Vidu S1](../models/Vidu_S1.md)
 
 切分后训练片段时长为 3~60 秒的单镜头 clip。切分策略：先沿镜头边界（shot boundaries）分割保证单镜头连续性；长镜头进一步细分，且切点被约束为不得落在一句话语音的中间（cut points constrained so as not to fall in the middle of speech），以保护语音-唇形的完整性。未给出时长的具体分布直方图或平均时长。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+训练侧（Wan 2.1 一手）：
+- 硬性准入门槛：「video duration must exceed 4 seconds」——短于4秒的视频在基础维度阶段即被剔除。
+- 训练样本时长：图文视频联合训练三阶段全部使用 5 秒视频片段（阶段一 192px/16fps，阶段二 480px，阶段三 720px），后训练同样在 480px/720px 上以5秒片段进行。即 Wan 2.1 时代训练粒度固定为「5秒单镜头 clip」。
+- Wan-Dancer 的切分策略可作同团队旁证：原始长视频切为 5 秒 clip 且相邻 clip 有 50% 重叠，以增强短时运动动力学的学习。
+生成侧（2.5/2.6/2.7 官方规格）：wan2.5 为 5s/10s 二选一；wan2.6 与 wan2.7 放开为 [2,15] 秒任意整数（默认5秒），官方称15秒为「国内最高单次时长」。从固定 5s 到连续 2–15s，暗示训练数据切分已从定长 clip 转向变长片段与多镜头长片段，但切分方法（PySceneDetect / 自研 shot-aware 模型）全系从未披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【VABench】被测视频时长受各模型默认设置约束而非基准强制：Sora2 为 10 秒 @30FPS；Veo3-fast、Wan2.5、Seedance、Wan2.2、Kling 为 5–8 秒 @24FPS。Synchformer 的 Desync 指标仅取首尾各 4.8 秒窗口计算，这一 4.8s 窗口设定是其时序评测的关键切分策略。
+【AV-SyncBench】切分策略最细致：clip 时长 3–13 秒；评测时统一将视频与音频切成互不重叠的 0.64 秒 chunk，逐 chunk 提取视听嵌入后取对角线相似度均值 —— 0.64s 是其时序分辨率的基本单元。
+【PhyAVBench】11,605 条视频 / 25.5 小时，平均约 7.9 秒/条。
+【AVBench】评测提示词对应的生成时长未单独规定[不确定]；训练用的 OpenHumanVid 片段切分策略未披露[不确定]。
+【Omni-Judge】Sora 2 / Veo 3 默认输出时长（约 8–10 秒）[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+captioner 的输入时长处理与适配能力（这直接决定它能标注什么样的 clip）：
+【短片段（5–20 秒）为主流适配区间】绝大多数生成模型训练 clip 落在此区间，captioner 均按此优化。Koala-36M clip 均长 13.75 秒；Foley-Omni 固定 8 秒片段。
+【抽帧策略是核心工程参数，各家差异极大】Open-Sora 的 PLLaVA 均匀抽 4 帧；Ovi 抽 7 帧关键帧 + 完整音轨；MAGI-1 经实证选定「每片段 4–12 帧（依时长而定）」为描述准确度与算力的最优权衡；CogVideoX 教师链每 2 秒抽 1 帧做稠密图像 caption；Panda-70M 的 BLIP-2 分支从 0.3N–0.7N 帧区间随机取单帧；Aria 官方称可在 10 秒内为 256 帧视频生成 caption（吞吐优势是 Allegro 选它的关键）。
+【长视频专门方案】ShareCaptioner-Video 的 DiffSW 是唯一为任意长度视频设计的可扩展方案——先为首帧生成详细 caption，再以长度为 2 的滑窗按时间顺序处理后续帧，每步输入「前一帧 + 其差分 caption + 当前帧」，输出帧间变化（涵盖相机运动、物体运动、人物动作、场景转换）；其复杂度随帧数线性增长而非平方增长，并支持 clip summarization（对已处理片段快速摘要，无需重新处理帧）。AVoCaDO 输出长度最优区间为 2048–4096 token，超过 4096 由 ℛ_L 长度正则惩罚。AVSCapBench 视频时长为 30–120 秒，代表评测重心正向中长视频迁移。
+[不确定] 各 captioner 训练数据的时长分布直方图均未公开。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SceneScribe-1M：规格过滤要求时长在5秒至1分钟之间，对判定为“非连续”的视频用 TransNetV2 做镜头切分后再次过滤，最终clip平均约14.4秒（156.7M帧/100万clip，按fps折算的近似值）[不确定]；SpatialVID：用改造版 PySceneDetect 切分为 3–15 秒 clip，平均约9.4秒（127.6M帧/2.71M clip @约30fps推算）；WildWorld：训练样本固定为81帧片段（30FPS录制、推理按16FPS），按动作序列组织；Action100M：分层时序分割，丢弃短于0.5秒的片段，LLM 聚合阶段进一步剔除短于4秒的节点，形成从秒级到分钟级的多层级时间树
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】未披露 SFT 数据时长分布与切分策略 [不确定]。仅从自回归蒸馏（Self-Forcing + KV cache 逐帧 rollout）可推断其部署目标是流式长视频。
+【横向可对标数字】Movie Gen 视频 SFT 集时长 10.6–16 秒且 50% 为 16 秒（明显偏长、偏向完整叙事）；Allegro SFT 严格限定 6–16 秒；MAGI-1 最后阶段放宽到 ≤16s；LongCat-Video 的 SFT 与 GRPO 均为 93 帧；Cosmos-Predict 2.5 驾驶多视图 SFT 为 20 秒 30FPS。
+【规律】后训练阶段普遍把时长上限推到该模型能力的极限（16 秒左右）并偏好长片段，与预训练阶段偏好短片段（2–8 秒）相反——因为 SFT 要教的是「完整镜头的叙事与运动完整性」，而 RLHF 阶段则因 rollout 成本极高（锚论文明确「rollout generation is expensive」）反而倾向用较短片段。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1132,6 +1371,12 @@ SFT视频时长限定10.6~16秒，其中50%为16秒、50%为10.6~16秒；16秒�
 【分辨率分桶】按 480p / 720p / 1080p 三档分桶，且每档使用一套独立收紧的过滤阈值（论文 Table 4），高分辨率档位阈值更严格 → 数据量逐档收缩：480p 档 36M、720p 档 24M、1080p 档 7M。这套「分辨率越高、质量门槛越高、数据越少」的分桶设计直接服务于渐进式分辨率训练课程。
 【训练分辨率序列】288×512 → 480×864 → 720×1280，均为 16:9 横屏比例；I2V/高分辨率阶段涉及 1080p 数据。
 【宽高比】论文以固定 16:9 分辨率（288×512、480×864、720×1280）组织训练，未描述多宽高比（multi-aspect-ratio bucketing）分桶策略，也未给出竖屏/方屏数据占比。[不确定]（宽高比分布与是否支持任意比例训练）
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（同样只有输出侧规格）。
+输出侧：初代 video-01 为 1280x720 / 25fps；Hailuo 02 宣称「原生 1080p（native 1080p）」并提供 768p 与 1080p 两档；Hailuo 02 Fast 为 512p 低成本档；Hailuo 2.3 文档标注 1080P。
+训练侧：分辨率分布、宽高比（aspect ratio）分布、是否采用多分辨率/多宽高比分桶（bucketing）训练策略，官方完全未披露。「原生 1080p」这一措辞暗示高分辨率数据在训练集中占有实质比例（而非仅靠超分后处理），且很可能存在低清→高清的多分辨率课程，但无一手说明。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1255,6 +1500,14 @@ SFT视频时长限定10.6~16秒，其中50%为16秒、50%为10.6~16秒；16秒�
 
 训练侧分布与分桶策略未披露。推理侧规格：Sora 2 标准版 720p，Sora 2 Pro 支持 1024p 与原生 1080p（1920x1080），同时支持竖屏（1080x1920）与横屏输出。前代 Sora 1 技术博客明确采用「native size training」——不做resize/crop/trim到固定尺寸，因而可原生采样任意宽高比，推测 Sora 2 延续该策略（可变分辨率/宽高比patch打包），但 Sora 2 官方从未确认，亦无任何分桶比例数字。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+【原生分辨率】数据集保留源视频的原生分辨率，且分辨率档位极高：93% 的视频为 1080P 或更高，98% 超过 720P。这是其相对 CelebV-HQ、HDTF 等旧数据集的核心质量优势之一，Figure 3 给出了分辨率分布图。
+【裁剪策略】不做统一的分辨率归一化或黑边补齐，而是基于 YOLO 的人体检测与跟踪结果对每个说话人做时空裁剪（temporal and spatial cropping），即从原始画面中裁出以单个说话人为中心的子区域。因此实际 clip 的宽高比由人体框决定，而非固定 16:9 或 9:16。
+【身体构图分桶】论文以「身体构图」而非宽高比作为主要的画幅分桶维度，caption 中显式标注 half-body（半身）vs full-body（全身）、以及正面/侧面朝向（facing direction / body orientation），覆盖全身、半身、侧身多种取景，这是 Table 1 中相对以头部为主的 CelebV-HQ 等数据集的差异化标注项。
+【训练侧】基线模型训练与推理时统一将帧标准化为 480×768 分辨率（竖向 5:8 近似比例），3D VAE 时间 stride 4、空间 stride 8。即数据侧高清多样、训练侧统一降采样。
+【分桶策略】论文未描述基于宽高比的多桶训练（aspect-ratio bucketing）策略。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 【分辨率】作为课程主轴：图像阶段 256px → 视频阶段 192×320（192P）→ 544×992（540P）。最终发布模型输出 540P，未训练到 720P/1080P，这是其与同期混元/万相的显著取舍差异（团队把算力投在了 204 帧长序列与深度压缩 VAE 上）。
@@ -1290,6 +1543,44 @@ SFT视频时长限定10.6~16秒，其中50%为16秒、50%为10.6~16秒；16秒�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。训练侧仅在预过滤阶段以「帧率、分辨率」作为技术门槛剔除低帧率/低分辨率视频，未公布具体阈值、分辨率分布或分桶（bucketing）策略。推理/输出侧为 540p（960×540）、25 FPS 标准、最高 42 FPS（RTX 5090 实测），未提及多宽高比支持。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+无分布统计数字，但阶段化阈值策略明确。
+- Wan 2.1 基础维度过滤中「resolution thresholds are applied at different training stages to filter out low-quality data」——分辨率门槛不是一刀切，而是随训练阶段递增的动态阈值，这是其分桶思想的核心。
+- 分辨率课程：256px 文生图预训练 → 联合训练阶段一（图像256px + 视频192px）→ 阶段二（图像与视频同升480px）→ 阶段三（720px）→ 后训练在480px与720px上联合训练。
+- 黑边处理：启发式黑边检测并自动裁剪，以聚焦内容富集区域，等价于宽高比归一化动作。
+- 生成侧宽高比体系（wan2.7-t2v 官方表）：720P 档 16:9=1280×720、9:16=720×1280、1:1=960×960、4:3=1104×832、3:4=832×1104；1080P 档 16:9=1920×1080、9:16=1080×1920、1:1=1440×1440、4:3=1648×1248、3:4=1248×1648。I2V 侧则「视频宽高比尽量与输入图像保持一致」，说明训练中覆盖了连续的宽高比分布而非固定几档。
+各分辨率/宽高比的训练样本占比未披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【VABench】统一要求 720P（或最接近的宽高比档位），音频统一 48kHz 立体声抽取保留；帧率随模型默认 24–30 FPS，未做强制归一。
+【AVBench】评测提示词明确要求 ≥720p 高清（HD prompts），这是其「真实人物场景」定位的前置门槛。
+【AV-SyncBench】评测前统一归一化：视频解码为 25 FPS，音频重采样为 16 kHz；原始分辨率与宽高比分布未披露[不确定]。
+【PhyAVBench】录制分辨率与设备型号未在论文中给出具体分布[不确定]，仅说明跨多种录制设备采集以增加多样性。
+【Omni-Judge】沿用 Sora 2 / Veo 3 默认输出规格[不确定]。
+可反向借鉴的分桶启示：AV 评测普遍收敛到 720P + 5–10s + 48kHz（生成端）/ 16kHz + 25FPS（判别端）两套规格，训练数据分桶可对齐这两组锚点。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+[不确定] 该维度在 captioner 生态中普遍缺乏披露，仅有零散证据：
+· ShareCaptioner-Video 官方模型卡明确声称「支持各种时长、宽高比与分辨率的视频」，其基座 InternLM-XComposer2-4KHD 具备 4K 高分辨率理解能力，这是它相对同期 captioner 的差异化能力。
+· Koala-36M 的 clip 统一为 720p。
+· AuroraCap 用 token merging 压缩视觉 token 以应对长序列开销，间接说明高分辨率/长视频输入是主要成本来源。
+· Panda-70M 的 UMT 检索择优模型固定 12 帧 224×224。
+· 主流做法是 captioner 在低分辨率抽帧上运行（打标只需语义正确，无需像素级保真），因此分辨率对打标质量的影响远小于对生成训练的影响——这解释了为何该维度普遍不被讨论。
+· 未见任何 captioner 工作报告「分辨率/宽高比分桶策略」，这类分桶属于生成模型训练侧而非打标侧。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：规格过滤要求分辨率高于1080p、帧率≥10fps，以保留细粒度几何细节；SpatialVID：所有clip统一标准化为 1280×720、H.265 编码 MP4；WildWorld：2K全屏录制、子窗口720p，模型训练分辨率 544×960（约9:16竖向裁切比例的变体）；Action100M：沿用 HowTo100M 原始分辨率，无统一分桶策略，视觉编码走 V-JEPA 2 固定采样窗口。四者均未采用视频生成模型常见的多分辨率/宽高比分桶训练策略——因其定位是标注数据集而非训练配方
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】未披露 [不确定]。
+【横向】后训练阶段几乎一致地采用「分辨率阶梯的最后一级」：CogVideoX SFT 为 768×1360；Allegro SFT 要求 ≥1280×720；LongCat-Video SFT 与 GRPO 均为 480p+720p 混训；Motif-Video 2B 设 480p 与 720p 两次 SFT，且 720p 预训练从 480p SFT checkpoint 起步（而非从预训练 checkpoint 起步）——这是把 SFT 插进分辨率阶梯中间的非常规做法；SkyReels-V2 先做 540p 概念均衡 SFT 再做 720p 高质量 SFT；HunyuanVideo 1.5 的 CT 阶段为 480p/720p、24fps，另用 100 万条 1K–4K 片段单独训超分模块；ALIVE 用 0.7M high-clarity 样本训独立的 1080p Refiner。
+【规律】SFT 是分辨率课程的收尾环节，而 RLHF/GRPO 因 rollout 成本通常在比 SFT 更低或持平的分辨率上进行（LongCat 保持 480p+720p、Cosmos 用 8 rollout × 20 扩散步的极简配置）。宽高比分桶在后训练阶段普遍不再单独讨论。[不确定]
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1381,6 +1672,16 @@ Data-Juicer 在类别/domain 配比上的思路与生成模型团队根本不同
 【可视化】论文 Figure 3 以 (a) 一级类目、(b) 二级子类两张分布图展示均衡后的语义分布。
 【评价】该阶段体现了「概念均衡（concept balancing）」思路：过滤只保证单条样本质量，而分布均衡保证整个数据集在概念空间上的覆盖度与不偏斜，直接对应 VBench 中 human action、object class、scene 等多类目指标的表现（Goku 在 human action 得 79.48、scene 得 85.72，均显著高于同期开源模型）。
 【未披露】各类目的具体百分比数值（仅有图，无表）、降采样/过采样的具体倍率、分类模型的架构与准确率、是否使用 VLM 而非专用分类器。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（无任何定量配比披露）。官方从未公布人物/动作/场景/风格等类目的比例，也未提及概念均衡（concept balancing）或长尾类目补采策略。可从产品能力侧反推的定性 domain 覆盖（非官方数据披露，仅供参考）：
+(1) 真人写实：Hailuo 2.3 强调「实拍面部表演（live-action facial performances）」与微表情自然度，2.3 在 Replicate 上的描述为「针对写实人体运动、电影级 VFX、富表现力角色优化」，说明真人+电影素材是核心域；
+(2) 复杂人体运动与物理：Hailuo 02 强调物理规律渲染（如体操、跳水类高难动作演示广泛传播），2.3 强调「更复杂的角色肢体动作」，说明高动态人体动作是刻意加强的域；
+(3) 动漫/二次元：早在 video-01-live 即为 Live2D 与通用动画特化训练，2.3 明确扩展 anime、illustration；
+(4) 中式美术风格：2.3 特别点名水墨画（ink wash painting）与游戏 CG，是面向中文市场的定向域补强；
+(5) 镜头语言：video-01-director 为特定镜头运动（camera movements）单独训练，说明存在带镜头运动标注的子集。
+上述五类的相对比例、以及是否有显式的配比控制机制，均无任何披露。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1535,6 +1836,15 @@ domain 层面的披露停留在类目列举，无任何配比数字，也无概�
 
 完全未披露。System Card 未给出人物/动作/场景/风格等任何类别配比，未说明概念均衡（concept balancing）策略，未披露长尾概念处理方式。唯一可间接推断的线索来自能力描述：模型被强调在物理规律上表现更好（重力、动量、浮力、材料形变、碰撞动力学、物体恒存性），第三方解读称训练数据带有「物理标注」（physical annotations）覆盖这些概念，暗示可能存在面向物理交互的定向数据配比或标注体系——但该说法来自二手技术解读，非 OpenAI 官方表述，且无任何比例数字。此外从产品形态（cameo 真人出镜、社交feed）可推断人物/人脸类数据占比不低，但同样无官方依据。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+论文给出定性类目与分布图，但未提供任何比例数字：
+【交互形态维度（数据集的主组织轴）】这是 SpeakerVid-5M 最独特的 domain 划分方式——按交互角色而非视觉内容划分为四大分支：(1) dialogue 双人对话分支；(2) single 单人分支（monadic talking）；(3) listening 倾听分支（对话中的非说话侧反应行为）；(4) multi-turn 多轮分支。四分支同源于同一批原始视频，通过不同的组织与配对方式派生。这套「说 / 听 / 单向 / 多轮」的分类体系直接对应下游任务的能力拆分。
+【内容体裁维度】访谈、新闻报道、研讨会、电视节目、综艺、辩论、教育视频。
+【YouTube 频道类目维度】娱乐、人物与博客、喜剧、新闻与政治、教育、科学。Figure 3(c) 以图形展示了 topic 分布与年份分布（2006–2025），但正文未列百分比。
+【概念均衡机制】论文未描述任何显式的类目配比控制或概念均衡（concept balancing）策略，采集侧只有「人工筛选高质量双人对话视频」这一定性准则。
+【人物中心的强偏置】全部数据均为真人说话/倾听场景，不含物体运动、自然风景、动画等非人物 domain，是一个高度垂直的人物-对白数据集，而非通用视频生成数据集。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 报告未给出 domain 占比数字，但提供了一个在同期工作中相当有辨识度的概念均衡机制——「Video Concept Balancing（视频概念均衡）」：
@@ -1591,6 +1901,71 @@ UniTalking 是一个高度垂直的单 domain 数据集——目标 domain 极�
 (4) 风格覆盖：通过影视剧素材补充多角度、多场景、多视觉风格；产品端支持真人、动漫、宠物等多种自定义角色形象，暗示训练数据覆盖二次元与非人主体（论文提到人脸检测专家模型对夸张/高度风格化的2D动画主体泛化不佳，故引入 omni 模型补充）；
 (5) 语义标签维度：由 omni 模型沿 editing（剪辑）、subject（主体）、action（动作）、emotion（情绪）、face（人脸）、speech（语音）、scene（场景）、shot（镜头）、tone（影调）九个质量维度打标，这九个维度构成了事实上的 domain 描述体系，但论文未公布各维度的配比数值。
 两大来源（直播/口播 vs 影视剧）之间的比例同样未披露 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+这是 Wan 2.1 披露最有价值的部分之一，2.5+ 未披露。
+【聚类保长尾（核心设计）】视觉质量筛选被拆为「聚类 + 打分」两步。先把全量数据划分为 100 个簇（clusters），再从每个簇中各取一定量数据进入下一阶段。报告明确说明这样做的目的：防止长尾分布导致「小而重要的数据片段」在全局阈值过滤中被整体抹除，从而保持原始数据分布。这是「以聚类为单位配额采样」对抗质量过滤引入分布漂移的典型做法，与 LTX-2 用多标签网络约束配对采样的动机相同但手段不同。
+【运动质量六档分级与差异化采样率】把视频按运动质量分为六类并分别设定采样优先级：
+1) 最优运动（significant motion layout/perspective/amplitude，干净流畅）——最高优先；
+2) 中等质量运动（有明显运动但存在多主体或部分遮挡）——保留以保证运动多样性，帮助模型理解时空关系；
+3) 静态视频（主要是聊天/访谈类，运动信息少但画质高）——单独识别并「降低采样比例」；
+4) 相机主导运动（航拍等，主体几乎不动）——因近似静态图像而「大幅降低采样优先级」；
+5) 低质量运动（主体过多、严重遮挡、主体不清，如拥挤街景）——直接排除；
+6) 抖动镜头（业余手持、运动模糊、前后景难分）——系统性排除。
+【后训练类别均衡】视频后训练明确「emphasizes category balance and high diversity」，并从12大类中选数据，报告点名的类别包括：科技、动物、艺术、人物、车辆等（technology, animals, arts, humans, vehicles, etc.）；图像后训练除按分数取 top20% 外，还额外「考虑风格与类别因素以保证数据分布多样性」，并由人工补齐数据集中缺失的概念以增强泛化。
+【阶段化三维配比】报告 Fig.3「Data provisioning across different training phases」明确：对每个训练阶段，依据数据吞吐动态调整 motion（运动）、quality（质量）、category（类别）三个维度的数据比例。这是 Wan 数据方法论中最具可迁移性的一条——配比不是静态的，而是随阶段滚动调度。
+【同族旁证】Wan-Dancer 覆盖中国古典舞、K-Pop、拉丁、踢踏、街舞五个舞种，并「确保近似均匀的时长分布以缓解类别不均衡」。
+各类别的具体百分比、六档运动的具体采样权重、100个簇的配额数值均未公布。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+本项是本次调研对训练数据侧最有反向指导价值的字段 —— 五个基准的类目体系可直接作为训练数据 domain 配比的标准坐标系。
+
+【VABench 七大类目体系（最完整的内容侧分类学）】
+1. 动物（Animals）：物种特异性发声与视听行为一致性；
+2. 人声（Human Sounds）：细分为语言性（含语义内容，涉及唇同步）与非语言性（生理/动作类，如咳嗽、鼓掌、脚步）；
+3. 音乐（Music）：跨曲风的结构化音频，考察旋律与节奏连贯性；
+4. 环境音（Environmental Sounds）：再分自然、城市、室内三大声景；
+5. 同步物理声（Synchronous Physical Sounds）：即时/节律性物理交互声，要求严格遵循材质属性；
+6. 复杂场景（Complex Scenes）：高阶场景，含五个子维度 —— 复杂声景、主观感受、世界知识、符号联想、画外（不可见）声源；
+7. 虚拟世界（Virtual Worlds）：超越物理定律的非现实场景，仅用于 T2AV 任务。
+数据量分配：778 条 T2AV + 521 条 I2AV 按上述类目层级分布（论文以 sunburst 图呈现，未给出逐类目精确条数[不确定]）。注意第 7 类「虚拟世界」不参与 Audio Realism / Visual Realism 两项物理合理性打分 —— 这一「写实类目与风格化类目分离评分」的设计，同样适用于训练数据的分域质量门槛设定。
+
+【AV-SyncBench 十场景体系（同步性视角的正交切分）】
+动作（Action）、动物声（Animal Sound）、物体声（Object Sound）、环境声（Ambient Sound）、群体发声（Group Vocalization）、单人说话（Single Speaker）、对话（Dialogue）、演唱（Singing）、单乐器（Single Instrument）、合奏（Ensemble）。上层归并为 Voice / Music / Sound 三大音频类。该体系的价值在于按「同步难度」而非「内容主题」切分：单人说话与对话、单乐器与合奏的区分，直接对应训练数据中多声源混叠场景的配比需求。
+
+【PhyAVBench 六大物理维度 + 41 个细粒度测试点（物理正确性视角）】
+① 声源力学（材质硬度/阻尼、密度、表面纹理、物体几何尺寸/形状/厚度、接触动力学如撞击速度/接触面积/激励连续性）；② 流体与空气动力学（流速、液体撞击/飞溅、亥姆霍兹共振、容器材质、粘度、气泡、气动啸声）；③ 声传播环境（混响的空间体积与表面吸声、回声、空间切换、衍射、散射、水下声学、固体传声、真空、遮挡与隔声）；④ 观察者物理（距离平方反比律、空气吸收、多普勒效应的接近/远离与旋转声源、双耳水平/垂直定位）；⑤ 时间与因果（光声速差导致的远场延迟与近场同步、瞬态同步的起振与止声、周期/非周期运动的节奏一致性）；⑥ 复杂耦合与极端物理（相变如沸腾/结冰碎裂、爆炸与冲击波的超音速与非线性失真）。这套体系可直接作为训练数据「物理声学覆盖度」的 checklist。
+
+【AVBench 场景分层】以真实人物场景为核心，按说话人数量与声学难度分层：Normal（1–2 说话人）350 条 / Hard（3–4 说话人 + 语音重叠 + 噪声背景）120 条，并施加 Hard Quota-Based Greedy Sampling 采样约束，强制任一单属性占比 ≤50% —— 这是明确的概念均衡（concept balancing）机制，可直接移植为训练数据采样时的属性配额控制策略。
+
+【Omni-Judge】不设内容类目，其 300 条提示词直接取自 VidProM 真实用户分布，代表「真实用户意图分布」这一另类的 domain 基准。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+【概念均衡是打标器训练的显式设计目标（少数几个明确处理的工作）】
+· SkyCaptioner-V1：训练用「约 200 万条概念均衡（concept-balanced）视频，从 1000 万条精选」，这是本生态中最明确的类目均衡声明；其相机运动子专家进一步用「1.6 万条运动轴均衡合成数据」补足长尾运镜类型。
+· AVoCaDO-SFT-107K 的六源混合本身即是 domain 配比设计：TikTok-10M 24K（UGC 短视频）+ ShortVideo 18K + Shot2Story 20K（多镜头叙事）+ FineVideo 29K（最大宗，教育/生活类）+ YouTube-Commons 11K（长尾通用）+ CinePile 5K（影视）——即以 UGC 为主体、影视为少量高质量补充。
+· AVSCap-130K 来源为 AVoCaDO-107K + ASID-1M + FineVideo + TimeChatCap-40K + Movie101，Movie101 的引入显著提高了影视叙事类占比。
+· Panda-70M 的多教师贪心集合覆盖本质上是一种「按内容类型分派打标器」的隐式 domain 处理：单个最好的打标器仅覆盖 30.8% 的样本，31 个全用覆盖 84.7%，贪心选出的 8 个覆盖 76.8%——说明不同 domain 的视频需要不同的打标器，没有一个模型能通吃。这是本生态最重要的 domain 分布洞察。
+【评测侧的 domain 类目体系】AVSCapBench 视频来自 YouTube / TikTok / Video-MME 三源；Omni-Cloze 覆盖 9 大领域 47 个子类（阿里唯一公开完整类目体系的工作）；UGC-VideoCap 专注 TikTok UGC（1000 条）；VDC 的结构化 caption 分 camera / short / background / main object / detailed 五类（这是字段维度而非 domain 维度）。
+【生成侧对 captioner 的 domain 要求】Allegro 用 Tag2Text 的标签输出直接作为 people / objects / landscapes 三类目分布统计的依据——即打标器兼任数据分布统计工具；Goku 的分布均衡设计依赖 caption 语义聚类；LongCat-Video 用 LLM 对 caption 嵌入的聚类结果做类别命名。
+【缺口】除 SkyCaptioner-V1 外，无任何 captioner 公开其训练数据的 domain 直方图或均衡策略的量化收益。[部分不确定]
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：源自 HD-VILA-100M/Panda-70M/Koala-36M 的开放域网络视频，覆盖多类目日常场景，未做显式类目配比控制，选择偏好由“运动多样性”驱动（初筛因运动多样性要求大幅缩减源池）；SpatialVID：以运动关键词主动构造 domain（步行第一视角、城市/自然游览、无人机航拍），并对 SpatialVID-HQ 做类别分布与运动多样性的显式均衡采样，结构化标签体系覆盖天气、时段、人群密度、光照、场景类型五个维度，实现可查询的 domain 控制；对比 Panda-70M 显示 SpatialVID-HQ 在美学、亮度、运动三项指标上分布更集中，80%的clip具备弯曲或转向轨迹；WildWorld：domain 高度受控但狭窄，全部为单一游戏世界的战斗/探索场景，测试集 WildBench 按场景类型显式配比——100条协作场景（玩家+3 NPC 对战怪物）与100条单挑场景，覆盖多角色、多武器、多怪物物种、多难度与多事件（技能释放、击倒、死亡、暴击）；Action100M：教学视频域（HowTo100M），动作类目开放词表、超长尾，作者用 k-means 语义重采样（k=10³/10⁴/10⁵）缓解长尾，并统计出7.58M个重复组、共1.418亿条重复实例需去重后再重采样
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+这是后训练数据策略中区分度最高、也最能体现团队工程成熟度的维度。锚论文对此完全空白（仅说「curated the prompt set」）[不确定]，但横向存在四种清晰可辨的配比范式：
+【范式一：密度倒数采样做长尾提升（最优雅）】LongCat-Video 的 SFT 精选集在多指标过滤（美学分/视频质量/运动质量）之上，第二层按「样本在 caption 嵌入空间中的密度的倒数」采样（inversely proportional to their density in the caption embedding space），直接实现长尾概念的相对提升。这是把「概念均衡」形式化为可计算准则的代表做法。
+【范式二：k-NN 概念平衡 + 人工影视感筛选】Movie Gen 的视频 SFT 集经四阶段产出：自动严阈值过滤 → k-NN 概念平衡 → 人工挑「影视感」 → 人工重写 caption；论文明确指出第一阶段后剩「几百万条但概念不均衡」，即概念均衡是独立于质量过滤的第二道工序。
+【范式三：分类器分域 + 逐域独立 SFT（Physical AI 路线）】Cosmos-Predict 2.5 在 InternVideo2 embedding 上训练多头分类器把样本分入五域，逐域训练独立 SFT 模型（每域 30k iterations、batch 256），再做模型合并。域内规模差异极大（物体恒存 10.4M vs 机器人操作 730K），反映其对「物体不因遮挡而消失」这一基本物理常识的优先级。逐域人工胜率均显著优于预训练基线：机器人操作 72.6% vs 8.3%、物体恒存 50.9% vs 27.7%、高运动 44.0% vs 34.7%、复杂场景 42.6% vs 35.4%、驾驶 47.9% vs 28.8%。
+【范式四：数百类目定向采集 + 子模型融合】Seedance 1.0 按视觉风格、运动类型等属性定义「数百个类别」做定向采集，训练多个覆盖不同风格/运动/场景的子模型再做 model merging，并用比预训练更小的学习率、有限 GPU 数配合早停以防过拟合、保持文本可控性。这是「用多个专精 SFT 模型的权重平均替代单一混合 SFT 集」的思路，与 Movie Gen 的 model averaging 同源。
+【偏好数据侧的配比】HunyuanVideo 1.5 的 T2V RLHF prompt 集在「运动/场景/主体」三个维度上做类目平衡，来源为 LLM 生成 prompt 与训练 caption 混合；I2V 侧构建覆盖 100+ 类别的 prompt 集，配图从高美学图像中精选并经人工核验图文一致性。Seedance 1.0 的 RLHF prompt 做「数据均衡与信息过滤」以剔除重复与含糊 prompt。
+【Motif-Video 2B 的迭代补短板】SFT 语料组装采用迭代式补短板：在常规过滤基础上叠加更严的美学截断、由 style/subject 标签驱动的 domain-balancing、以及视频侧 action=Dynamic 的动态运动准入。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1664,6 +2039,10 @@ UniTalking 是一个高度垂直的单 domain 数据集——目标 domain 极�
 ### [Goku](../models/Goku.md)
 
 不适用。Goku 为纯视觉的图像+视频生成模型，训练数据为「图文对」与「视频文本对」，不包含音轨；论文全文未涉及语音/音效 foley/音乐/环境音/静音的任何分类、比例或控制策略，数据流水线中也无音频通道。若原始视频自带音轨，论文未说明是否保留或丢弃（从数据形态 video-text pair 判断应为直接丢弃音轨）。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+不适用 + [不确定]。Hailuo 视频模型不生成音频，训练数据中是否保留原生音轨、语音/音效/音乐/环境音/静音的比例如何控制，官方完全未提及，且从建模目标看很可能在数据处理阶段就直接丢弃了音轨。MiniMax 的音频数据能力体现在独立的 MiniMax Speech（语音）与 MiniMax Music（音乐）产品线，但这两条线的训练数据同样未披露，且未见任何证据表明其与视频线共享数据处理流水线。因此本字段对该对象无实质内容。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1814,6 +2193,15 @@ Movie Gen Audio 建立了「音频类型 × diegetic属性」的二维分类体�
 
 完全未披露。作为原生音视频模型，Sora 2 在能力上明确覆盖四类音频——对白（dialogue）、音效/foley（sound effects tied to on-screen actions）、背景音乐（background music matched to scene tone）、环境音/氛围声（context-aware ambient sounds / background soundscapes），且宣称声音的音量与空间定位随物体与镜头的距离变化。但训练数据中这四类音频各占多少比例、无音轨/静音片段如何处理与保留、是否对语音-音效-音乐做显式配比控制，OpenAI 未给出任何信息。这是本次调研中信息缺口最大的维度之一：模型明显具备该能力，但数据侧构造方式零披露。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+SpeakerVid-5M 是一个纯语音导向（speech-only）的数据集，音频类别配比是隐式且极端的：
+【设计取向】所有分支均围绕人类说话与倾听构建，音轨内容以人声对白为绝对主体，不存在为音效（foley）、音乐、环境音单独设立的子集或配比。
+【隐式的非语音剔除机制】音频质量过滤中设有 no-speech probability > 0.8 即剔除的规则（来自 Whisper 的无语音概率），这一条直接把纯音效、纯音乐、纯环境音、静音片段排除在数据集之外；ASR 置信度低于 −1.5 的样本同样被剔除。因此最终语料在音频类别上近似 100% 为语音主导片段。
+【倾听分支的音频特殊性】listening 分支的画面主体是不说话的一方，但其配对音轨仍是对方的语音，因此音频侧依然是语音，只是与画面主体的口型无对应关系——这是数据集内部唯一的「音画角色错位」设计，且是刻意为之（用于训练倾听者的反应生成）。
+【未做的处理】论文未描述背景音乐分离（BGM separation）、语音增强、SNR 估计、音效/音乐分类器（如 EAT）等任何音频类别细分处理，也未给出语音/非语音/静音的比例统计。相比 MOVA 明确统计「语音片段占预处理片段 69.47%」，SpeakerVid-5M 在此维度是信息空白。
+【下游影响】正因其纯语音属性，MOVA 等下游模型将其定位为唇同步能力的专项数据源，而通用音效与音乐能力需从 VGGSound、WavCaps 等其他数据集获取。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。Step-Video-T2V 不生成音频，训练数据 pipeline 完全不涉及音轨的提取、分类与配比，报告中无语音/音效/音乐/环境音/静音的任何比例控制内容。若需阶跃星辰体系内的音频数据方法，应转向独立的 Step-Audio 系列（语音交互模型，含情绪、方言、语种、歌声等维度的数据构建），但其与视频模型无数据共用关系。[不确定]
@@ -1867,6 +2255,56 @@ Movie Gen Audio 建立了「音频类型 × diegetic属性」的二维分类体�
 (3) 将每段语音分为 onscreen（说话人即画面中人物）/ offscreen（画外音，说话人不在画面中）/ overlap（多人声重叠）三类；含 overlap 段的 clip 直接整条剔除；
 (4) 针对唱歌与强背景音乐场景 diarization 模型不稳定（易把人声误判进音乐 stem、产生合成音色与失真伪影）的问题，引入启发式规则：若说话人在发声但语音能量占比过低（speech energy proportion too low），则丢弃该段——实际效果是系统性剔除歌唱与音乐主导片段。
 (5) caption 层面仍标注 sound effects（音效）与 background music（背景音乐）字段，说明这两类音频信息被保留为可描述属性，但语音仍是训练分布的绝对主体。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 的 V2A 子集给出了 Wan 系唯一明确的音频类别筛选准则，而 2.5 起的策略被彻底反转却未披露，形成最大的信息断层。
+【Wan 2.1 V2A（2025.02）】训练数据由视频生成数据集经「严格过滤」而来，规则为：系统性剔除（1）无音轨的视频、（2）含语音（speech）或人声演唱（vocal music）的视频，最终得到 O(1) 千小时的精炼子集。即：保留类别 = 环境音（ambient sound）+ 背景音乐（background music）；排除类别 = 语音、人声。报告在局限性中直言：模型无法生成笑声、哭声、说话等人声，「主要归因于我们的数据准备过程中刻意排除了语音相关数据」，并明确把「未来加入语音生成能力」列为后续工作。
+【Wan 2.5 起（2025.09）】「声画同步/唇同步」成为核心卖点，2.6 进一步支持「人声、音效、BGM」三类同时匹配以及音频驱动口型与表演。这意味着 2.1 时代被显式排除的语音数据被大规模重新纳入，且必然引入了对白/说话人相关的新数据流水线。但四类音频（语音/音效foley/音乐/环境音）各自占比、静音片段的保留策略、配比控制方法全部未披露。
+【推断】从 2.1「排除语音」到 2.5「主打唇同步」，是 Wan 系数据侧最大的一次策略转向，且恰好对应 Wan2.2-S2V（2025.08，专门处理说话人视频）的技术积累时间窗——S2V 的人本+主动说话人检测流水线很可能就是 2.5 语音数据的构建基础。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+AV 独有维度上，五者提供了三套互补的音频类目划分：
+
+【AV-SyncBench 三分法】Voice / Music / Sound，是最简洁可操作的顶层音频分类。其十场景映射关系为：Voice ← 单人说话、对话、群体发声、演唱；Music ← 单乐器、合奏、演唱（跨类）；Sound ← 动作、动物声、物体声、环境声。语义挑战任务也按此分流：人声走音色替换（OpenVoice V2），乐器走音色迁移（预训练 DDSP）—— 说明两类音频的语义扰动机制本质不同，训练数据的语义对齐过滤也应分流处理。样本量上时序挑战（37,569）远多于语义挑战（821），反映真实数据中语义错配样本更难构造。
+
+【VABench 内容驱动划分】动物声、人声（语言性/非语言性）、音乐、环境音（自然/城市/室内）、同步物理声、复杂声景（含画外声源）、虚拟音效。相比三分法更细，且显式引入「画外/不可见声源」这一类目 —— 训练数据中此类样本通常被 on-screen 过滤器误杀，但评测体系承认其存在，提示训练侧应保留一定比例的画外声样本以支持复杂声景生成。
+
+【PhyAVBench Foley 物理向划分】以发声机制而非内容主题分类（固体撞击/机械结构/流体空气动力/传播环境/观察者位置/时序因果），本质是对 Foley 音效类目的深度展开。
+
+【AVBench】以语音为绝对重心（10 维度中 Speech Content Accuracy、Speech Realism、Lip Sync 三项直接针对语音），对应 OpenHumanVid 人物视频数据源，音乐与音效类目基本不覆盖。
+
+五者未给出各自的音频类别精确百分比配比[不确定]，但类目并集（语音 / 音乐 / 物理音效 Foley / 环境声景 / 动物声 / 画外声 / 静音与虚拟音）可直接作为训练数据音频域配比表的行标签。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+这是 2025Q4–2026 年音视频 captioner 生态最具区分度的维度，且 AVSCapBench 首次给出了完整的横向量化证据：
+【三类音频的显式建模】AVSCap 的 Acoustic Completeness 准则明确要求 caption 同时覆盖 Speech（语音）/ SFX（音效）/ Music（音乐）三类。Foley-Omni 的三字段 schema 与 Bandit（cinematic audio source separation，天然按 speech / effects / music 三路分离）完全同构。MOVA 采用双模型分工：Qwen3-Omni-Instruct 负责语音（ASR）、Qwen3-Omni-Captioner 负责非语音声音与音乐。
+【AVSCapBench event recall（%）横向对比表 —— 本生态最有价值的一张数据】
+模型 / Visual / Speech / Music / SFX / Synergy / Overall：
+· AVSCap-7B：59.33 / 69.45 / 40.36 / 30.82 / 57.70 / 60.44
+· AVoCaDO-7B(9B)：50.59 / 70.42 / 38.71 / 19.25 / 29.13 / 49.31
+· video-SALMONN-2-7B：39.05 / 46.76 / 13.76 / 8.71 / 12.43 / 32.02
+· Qwen3-Omni-30B：41.85 / 49.08 / 9.34 / 8.68 / 16.19 / 35.29
+· Qwen2.5-Omni-7B（裸基座）：34.78 / 13.92 / 4.02 / 7.22 / 7.00 / 21.53
+· Gemini-3-Pro：60.43 / 79.81 / 39.52 / 27.77 / 48.88 / 60.97
+· Gemini-3-Flash：58.14 / 79.78 / 39.46 / 32.34 / 48.94 / 60.54
+【结论性观察】(1) 语音是所有模型最强的音频维度（40–80 分），音乐次之（4–40 分），SFX 最弱（7–32 分）——音频类别间的能力落差高达 8 倍，这直接限制了 Foley/环境音生成模型的训练数据质量；(2) 7B 开源模型（AVSCap 60.44）overall 已追平 Gemini-3-Pro（60.97），且 Synergy 反超（57.70 vs 48.88），但 Speech 仍落后 10 个点；(3) 裸 Qwen2.5-Omni 的 Speech 仅 13.92，证明 omni 基座不做 caption 专项训练完全不可用。
+【生成侧的音频类别配比处理】Movie Gen 同时保留 AED 的音乐后验概率与音乐 caption 两路信号（因音乐 caption 模型在无音乐时易幻觉），实测这种冗余组合可控性最好——这是「音频类别分布」影响打标器设计的直接工程证据。LTX-2 的数据筛选标准是「包含显著且信息量大的音频成分」，以保证视觉与听觉内容分布均衡（具体比例未披露[不确定]）。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+不适用。四个数据集均不涉及音频模态标注，无语音/音效/音乐/环境音的类别配比。Action100M 唯一间接触及音频——其源自 HowTo100M 的旁白 ASR 转写（72%视频有可用ASR，覆盖10.6年内容），但仅作为文本弱监督线索参与，未按音频类别做分布统计或配比控制
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文的四个奖励模型（视频美学、图像美学、运动质量、文本-视频对齐）无一涉及音频，SFT 数据的音频类别配比亦无任何说明——这是该框架相对 2026 年 AV 主流的显著缺口 [不确定]。
+【横向仅三例给出音频侧后训练配比】
+① Movie Gen 音频 SFT 集是本主题中披露最细的：分两个 split——cinematic split（专业制作、含画内音与画外环境/主题音乐、明确排除含人声片段，由影视感分类器 + AED 声音事件检测自动筛后人工选定）O(100)K 样本 / O(1)K 小时；high quality audio split（无视频的高质量音乐 O(10)K 小时 + 音效 O(10)K 小时）O(1,000)K 样本 / O(10)K 小时。「排除含人声片段」是一个关键决策：Movie Gen Audio 定位为音效+音乐生成而非对白生成，因此在 SFT 阶段主动剔除语音类样本。
+② Foley-Omni 的 Stage 3（V2ST 完整配乐微调）用规模最小的 216 小时数据做 2 epochs 轻量微调，并配每域 100 小时回放防遗忘，准入条件是「含多个音频组件」；
+③ JavisDiT++ 的 AV-DPO 用 AudioBox-Aesthetics 单独评估音频质量、用 Synchformer 单独评估时序同步性，即在偏好排序层面把音频作为独立模态处理，但未披露语音/音效/音乐的比例。
+【Seedance 1.5 pro】称多维奖励模型覆盖「音频保真度（audio fidelity）」，但语音/音效/音乐是否分维度打分未披露 [不确定]。Kling 3.0 Omni 的音频维度偏好标注（口型同步度、音色一致性是否作为独立打分项）同样未披露 [不确定]。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1934,6 +2372,10 @@ Movie Gen Audio 建立了「音频类型 × diegetic属性」的二维分类体�
 平均 clip 时长落在 4~10 秒区间（具体均值未披露）。
 是否含原生音轨：否（数据形态为纯视频-文本对）。
 论文未涉及多镜头叙事、故事板、长视频连续性等结构化叙事数据设计。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]。未披露单镜头 vs 多镜头的比例、平均 clip 时长、镜头数分布，也未说明训练片段是否保留原生音轨（考虑到模型不生成音频，很可能未保留）。间接线索：输出为 6~10 秒的单段视频，且 video-01-director 专门做镜头运动控制（camera movement，指单镜头内的运镜而非多镜头剪辑），说明训练数据以单镜头（single-shot）clip 为绝对主体，未见任何多镜头叙事/分镜连贯性的建模或数据设计。产品层的多镜头长视频能力由 Media Agent 在编排层拼接实现，而非模型原生具备。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -2069,6 +2511,14 @@ Seedance 1.0 的切分策略明确允许「每个切片可包含一个或多个�
 
 未披露训练数据的镜头数分布与单/多镜头配比。能力侧披露：Sora 2 可「follow intricate instructions spanning multiple shots while accurately persisting world state」，即支持跨多镜头的指令遵循并在镜头切换间保持角色、环境、光照一致，说明训练数据中必然包含多镜头叙事样本且带有跨镜头一致性监督信号。2025年10月推出的 Storyboard（故事板）工具进一步允许用户逐段规划多场景视频。是否含原生音轨：从原生音视频联合生成能力可反推训练数据以「自带同步原声的视频」为主体，但平均clip时长、镜头数直方图、有声/无声样本比例均无数字。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+【单镜头 vs 多镜头】数据集是严格的单镜头（single-shot）语料。切分第一步即用 PySceneDetect 检测颜色与亮度的显著变化以定位转场，并在转场处切断，保证每个 clip 内部无镜头切换；随后再用 YOLO 跟踪做空间裁剪，进一步保证 clip 内主体连续。因此不存在多镜头样本，也不存在镜头数分布——这与 MOVA 刻意保留「多场景片段」类目形成明确对比。
+【平均 clip 时长】约 6.0 秒（3–14 秒区间内），详见 duration_distribution。
+【是否含原生音轨】全部含原生同步音轨。数据集从采集起就是 audio-visual 成对的（原始采集口径即为「153K audio-visual videos」），且经过 SyncNet 唇音同步校验与 Whisper 音频质量过滤，无音轨或音画失步的样本被剔除。
+【更高层的叙事结构：对话轮次】SpeakerVid-5M 引入了视频数据集中罕见的「对话轮次（turn）」结构层：dialogue 分支把同一时段的两个说话人 clip 配成 pair；multi-turn 分支进一步在时间轴上串联多个轮次——contextual 型将前序轮次的 ASR 转写聚合为多轮对话上下文，sequential 型将时间间隔小于阈值 δt 的相邻 clip 判为连续对话并拼接。这使得数据集的叙事结构不是「镜头序列」而是「对话轮次序列」，是一种面向交互生成任务的独特叙事组织。
+【各分支的轮次数分布】论文未给出多轮分支的轮次数分布统计。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 明确采用「单镜头（single-shot）」数据范式，不做多镜头叙事训练：PySceneDetect AdaptiveDetector 检测场景变化后由 FFmpeg 切分，每段仅含一个镜头，且首尾各去 3 帧进一步剔除转场残留。因此镜头数分布恒为 1，平均 clip 长度对应 68/136/204 帧三档（外加 1 帧图像档）。
@@ -2108,6 +2558,50 @@ Seedance 1.0 的切分策略明确允许「每个切片可包含一个或多个�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 全部为单镜头（single-shot）片段，明确排除多镜头叙事：原始视频沿镜头边界切分为单镜头 clip，长镜头再细分，最终均为 3~60 秒单镜头单人片段。全部训练数据均含原生音轨（预过滤阶段即以「音视频完整性 audio-visual integrity」剔除缺失音轨或音视频不完整的样本）。未给出平均 clip 时长与镜头数分布的数值 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+训练侧无任何配比数字，但从版本能力演进可反推数据结构的重大变化。
+- Wan 2.1/2.2 时代：训练样本为固定5秒 clip，模型能力与评测（Wan-Bench）均围绕单镜头组织，无多镜头叙事概念。
+- Wan 2.6 起：官方新增「多镜头叙事 / 分镜控制」，API 通过 shot_type:"multi" + prompt_extend:true 显式开启；官方描述为「通过高层语义理解，将原始输入构建为具备完整故事线与叙事张力的专业级多镜头段落，在多镜头丝滑切换中保持核心主体、场景布局与环境氛围的统一建模」。
+- Wan 2.7：取消 shot_type 参数（配置也不生效），改为完全由自然语言控制镜头结构——用户写「生成单镜头视频」/「生成多镜头视频」，或直接用带时间戳的分镜脚本（官方示例：「第1个镜头[0-3秒] 全景：雨夜的纽约街头…第5个镜头[12-15秒] 特写：…」），未指定时模型自行判断。prompt 长度上限也从 2.5/2.6 的1500字符跃升至 wan2.7-t2v 的5000字符。
+【数据侧含义】2.7 的这种接口形态强烈暗示训练 caption 中存在「带时间戳的分镜级结构化描述」——即训练样本已从单镜头 clip 转为「多镜头片段 + 逐镜头时间轴标注」，且需要跨镜头的主体/场景一致性标注。这与 LTX-2 的「训练 caption 即推理接口」同构。
+【原生音轨】2.5 起全系标注为「有声视频」（wan2.6-i2v-flash 同时支持有声/无声），说明训练样本以自带原生同步音轨为主。
+单镜头 vs 多镜头占比、平均镜头数分布、平均 clip 时长分布均未披露。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+五者均聚焦单镜头短片段评测，未构建多镜头叙事评测：
+【VABench】5–10 秒单镜头生成，但「复杂场景」类目通过复杂声景、世界知识、符号联想等子维度间接考察叙事表达力；Module 2 中的 Expressiveness（叙事有效性与情绪对齐）与 Artistry（视听融合的美学表现力）两项是仅有的叙事层面指标。
+【AV-SyncBench】3–13 秒 in-the-wild 片段，全部含原生音轨（这是纳入的前置条件），单镜头为主；对话（Dialogue）与合奏（Ensemble）场景隐含多声源但非多镜头。
+【PhyAVBench】受控录制的单镜头短片段，全部含原生同期声。
+【AVBench】真实人物场景单镜头，Hard 子集的 3–4 说话人重叠语音是其最接近多主体叙事的设定。
+【Omni-Judge】Sora 2 / Veo 3 默认单提示词生成，未涉及多镜头。
+整体而言，长时序、多镜头、跨镜头音轨连续性仍是当前 AV 评测体系的空白区，训练数据侧若已在做多镜头叙事数据，暂无对应基准可验证。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+【单镜头 vs 多镜头的打标分野】主流生成模型训练 clip 为单镜头（经 PySceneDetect 等切分后），因此绝大多数 captioner 按单镜头优化。少数针对多镜头/叙事的例外：
+· ShareCaptioner-Video 的 DiffSW 显式建模「场景转换（scene transitions）」，是少数原生支持跨镜头描述的开源 captioner。
+· AVoCaDO 的五维 keypoint 中「Spatio-temporal & Cinematography」明确覆盖场景切换、时间推进与运镜。
+· Shot2Story（AVoCaDO-SFT 中 20K 条）与 Movie101（AVSCap-130K 来源之一）本身即多镜头叙事数据集。
+· CineDance 用 Qwen3.5-27B 做镜头分组与叙事边界判定，自底向上策略取得 F1 = 88.4%，仅 3.1% 序列短于 20 秒软阈值——这是本生态中唯一给出叙事结构解析定量指标的工作。
+· MOVA 在视觉标注指令中明确要求「聚焦视频场景转场」。
+【是否含原生音轨】纯视觉 captioner 完全忽略音轨（Panda-70M 甚至明确关闭 Video-LLaMA 的音频分支）；音视频 captioner 要求样本必须有有效音轨，LTX-2 的数据子集筛选条件即为「包含显著且信息量大的音频成分」。
+【平均 clip 时长】Koala-36M 均 13.75 秒；AVSCapBench 30–120 秒；Foley-Omni 固定 8 秒。
+[不确定] 无任何 captioner 公开其训练数据的镜头数分布直方图。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：显式追求单镜头连续性——先用 TransNetV2 检测硬切与渐变转场，将“非连续”视频拆分为语义连贯的单镜头clip并重新过滤，最终库为纯单镜头；SpatialVID：改造 PySceneDetect（调整敏感度阈值 + 基于间隔的多帧比较策略）确保 3–15 秒clip内无转场，同样是单镜头库，但强调镜头内的相机轨迹复杂度（80%含弯曲/转向轨迹）；WildWorld：游戏内连续录制，天然单镜头，按动作序列（action-sequence）与样本两级组织，叙事单位是战斗回合；Action100M：不追求单镜头，而是构建“镜头之上”的层级叙事树——用 Ward linkage 层次聚类把长视频组织为多层级时间树（Tree-of-Captions），同时保留帧级、片段级与聚合级三层语义。四者均无原生音轨相关的叙事标注
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未涉及 [不确定]。横向可记录：
+· Movie Gen 视频 SFT 集 50% 为 16 秒的长片段，且人工筛选标准是「影视感（cinematic）」，暗示以单镜头完整叙事为主；
+· 后训练阶段普遍偏好单镜头无转场素材——Step-Video-T2V 的人工评审标准之一即「场景转换是否平滑」，Motif 的 SFT 准入含 action=Dynamic；
+· 多镜头能力主要由预训练与推理侧的 prompt 结构承担，未见任何工作在 SFT/偏好数据层面显式控制镜头数分布 [不确定]；
+· 自回归蒸馏（锚论文 Phase 4、StreamChar、LongLive、OmniForcing、Causal Forcing）把叙事结构问题转成「长时 rollout 误差累积」问题，其训练数据是学生模型自生成的在线 rollout 而非采集素材——这是叙事结构维度上一条与数据采集完全不同的技术路线。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -2170,6 +2664,10 @@ Seedance 1.0 的切分策略明确允许「每个切片可包含一个或多个�
 ### [Goku](../models/Goku.md) ⚠️
 
 不适用/未涉及。Goku 不生成语音与唇形，无多语种唇同步能力，数据流水线中无 ASR、无语言识别、无口音标注。唯一与语言相关的是 caption 文本语言：论文使用 InternVL2.0、Tarsier2、Qwen2 生成与合并英文 caption，评测基准（GenEval、DPG-Bench、VBench）亦为英文提示词体系，可推断训练 caption 以英文为主。[不确定]（caption 是否含中文或多语种、以及各语种占比论文未说明）
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+不适用 + [不确定]。模型不生成语音，无唇同步任务，因此不存在语言/口音分布的数据基础问题。文本侧提示词（prompt）支持中英双语，官方未披露训练 caption 的语种构成或中英文比例。产品面向中国与海外双市场（hailuoai.com 与 hailuoai.video / minimax.io 双站），推测 caption 侧为中英双语，但无一手依据。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -2297,6 +2795,14 @@ Avatar 系列涉及真实语音驱动，但技术报告未披露任何语种、�
 
 完全未披露。模型具备对白生成与唇形同步能力，实际使用中可生成多语种语音，但 OpenAI 未公布支持语种列表、各语种数据占比、口音分布，也未说明多语种唇同步的数据基础。安全侧仅提及会对音频转写文本（audio transcripts）过安全分类器，间接说明存在ASR能力，但未涉及语种覆盖。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+披露极少，是本数据集最明显的统计空白之一：
+【已知信息】数据源全部为 YouTube 公开视频，采集口径为「高质量双人对话视频」，体裁为访谈/新闻/研讨会/综艺/辩论/教育，未限定语种。使用 Whisper 做 ASR 转写，Whisper 本身具备语种识别能力，且清洗流程中提到会依据「detected language mismatches（检测到的语言不匹配）」做过滤，说明 pipeline 内部确实记录了语种标签。
+【未披露】论文与数据卡均未给出支持语种清单、各语种的 clip 数或小时数占比、也未给出口音（accent）类别的任何标注或统计。caption 的结构化字段中不含语言或口音项，ASR 标注仅有转写文本与置信度。
+【间接推断】考虑到源自 YouTube 的访谈/新闻/辩论/教育类内容、以及娱乐与新闻政治类频道占比，语料很可能以英语为主导，但论文明确未作此声明，不应当作事实引用。
+【下游用途】MOVA 将 SpeakerVid-5M 与 OpenHumanVid、YouTube 内容一并作为其英文唇同步能力的数据基础，中文能力则另由 in-house 中文剧集提供，这从侧面印证 SpeakerVid-5M 的语种重心偏英文，但属旁证而非原文表述。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用于唇同步（无音频生成）。文本侧是本条目的一个特色：模型采用两个双语（中英）文本编码器（Hunyuan-CLIP 与自研 Step-LLM 的双编码器组合），原生支持中英双语 prompt 输入，官方将「原生中英双语输入」列为核心能力之一；配套的评测基准 Step-Video-T2V-Eval 全部 128 条 prompt 为中文，也印证其数据与评测的中文侧重。但训练 caption 的中英文语种构成比例、以及是否对中文 caption 做专门增强，报告均未公布。[不确定]
@@ -2337,6 +2843,48 @@ Avatar 系列涉及真实语音驱动，但技术报告未披露任何语种、�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。论文未披露训练数据的语种与口音分布，也未说明多语种唇同步能力的数据基础。仅在 caption 结构中包含 dialogue（对白）字段，并在 Vidu-StreamBench 基准中提到覆盖多样的「说话人属性（speaker attributes）」与情绪，但未展开语种维度。产品面向中文市场，推测以中文为主但无一手依据。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+未披露任何语种列表与占比，是 Wan 系相对 LTX-2 明显薄弱的一环。
+可确定的间接线索：
+- 文本编码器：Wan 2.1 经消融后选定 umT5（5.3B，多语种、双向注意力），报告的消融明确 umT5 优于 Qwen2.5-7B-Instruct 与 GLM-4-9B（即便为后者加上 HunyuanVideo 式的双向 token refiner），umT5 的多语种能力是选型理由之一。
+- OCR 与视觉文字：Wan 2.1 的 OCR 增强 caption 数据集「目前仅包含英文与中文文本」；合成文字图像专门渲染中文字符以提升中文字形生成。
+- Prompt 语言：API 全系「支持中英文」，负向提示词同样中英双语。
+- 2.6/2.7 的官方示例同时包含中文台词（古诗词朗诵）与英文 rap 演唱，说明至少覆盖中英双语唇同步。
+口音（accent）维度在 Wan 系所有公开材料中从未作为标注字段或能力维度出现——这与 LTX-2 把 speaker/language/accent 三属性写入 caption schema 形成鲜明对比。多语种唇同步的数据基础完全不可见。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+披露普遍薄弱，是五个基准共同的短板：
+【AVBench】唇同步与语音内容准确率（Speech Content Accuracy）为核心维度，但论文未披露评测提示词与 OpenHumanVid 训练片段的语种与口音构成[不确定]。
+【VABench】唇同步指标仅施加于「人声-语言性」子集中检测到说话人头部的样本；未披露多语种覆盖情况[不确定]。
+【AV-SyncBench】人声类场景（单人说话/对话/群体发声/演唱）语义扰动使用 OpenVoice V2 做音色替换（该工具本身支持跨语种音色克隆），但基准未按语种/口音分层统计[不确定]。
+【PhyAVBench】以非语音的物理音效为主，语音仅在 WER 指标（Whisper-Large V3）中间接涉及；184 名参与者的语言背景未披露[不确定]。
+【Omni-Judge】未涉及语种维度[不确定]。
+结论：多语种/多口音唇同步目前无公开基准可对标，训练数据的语种配比无法用现有基准反向验证。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+【双语/多语打标能力（少数明确处理的工作）】
+· Seedance 1.0 的 captioner（Tarsier2 基座）明确在中英双语数据上训练以获得双语打标能力，训练时冻结视觉编码器、对语言模型做全参微调——这是生成侧对 captioner 语言能力的最明确一手要求。
+· LTX-2 的自研 captioner 是对语言/口音处理最精细的公开方案：对白转写不仅给文本，还同时标注 speaker（说话人）、language（语言）、accent（口音）三个属性。这一 schema 设计对多语种唇同步能力的数据基础至关重要。
+· SkyCaptioner-V1 未明确双语声明；SkyReels-V4 的语音与歌唱内容由 Whisper 转写（多语种）。
+【ASR 侧的多语支持】Whisper-large-v3（多语种，~1.55B）是全生态默认选择；阿里 SenseVoice（~234M，支持中英粤日韩 + 情感/事件识别）被 Apollo/Klear 与 Whisper、Qwen2.5-Omni 三模型并用；ElevenLabs Scribe 被 InstructAV2AV 用于精确时间戳；Qwen3-Omni 系列原生多语。
+【口音处理的普遍空白】除 LTX-2 外，未见任何 captioner 显式标注口音；AVoCaDO 的对白 reward 只做 (speaker, spoken content) 二元组，不含语言/口音字段。
+[不确定] 无任何 captioner 或其训练数据公开语种分布比例。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M / SpatialVID / WildWorld：caption 均为单一英文，无多语种或口音维度，无说话人；Action100M：标注总量213亿词全部为英文，源自 HowTo100M 的英文教学视频子集（ASR为英文），未做语种与口音分布统计。四者均不具备多语种唇同步的数据基础
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文与绝大多数横向对象在后训练阶段均无语言/口音配比披露 [不确定]。可记录的间接事实：
+· 锚论文的 prompt enhancer（Phase 3）是用 GRPO 训练的 LLM，其训练 prompt 的语种构成未说明 [不确定]；
+· MOVA 构建 732 条中英双语 Arena 评测集（用于评测，非训练）；UniTalking 的 20 人 × 50 条盲测、Unison 的 40 样本 × 25 人排序投票同为评测用；
+· HPDv3 与 VideoReward 两个公开偏好集均以英文 prompt 为主 [不确定]，中文场景的偏好数据是公开生态的明确空白；
+· HunyuanVideo 1.5 的 RLHF prompt 集来源为「LLM 生成 prompt 与训练 caption 混合」，语种未说明 [不确定]。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 

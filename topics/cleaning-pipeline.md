@@ -130,6 +130,12 @@ Data-Juicer 的清洗漏斗不是一条固定流水线，而是「可配置的�
   内部视频分类模型对 4 帧关键帧打标 → 9 大类 / 86 子类 → 过度表征类降采样、不足表征类增强与过采样 → 整体加权人物内容。
 【结构特点】前四阶段是自下而上的「逐条样本净化」（漏斗式串行过滤），第五阶段是自上而下的「数据集级分布整形」，二者关注粒度不同。将分布均衡独立成阶段，是 Goku 区别于同期工作的关键设计。
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。MiniMax 从未公开 Hailuo 视频数据的清洗流水线结构——没有漏斗级数、没有各级过滤顺序、没有流程图。全部公开材料中与数据处理最接近的表述，仅是 Hailuo 02 博客中「训练数据扩大4倍，且质量与多样性提升（with improved quality and diversity）」这一句，隐含存在质量筛选与多样性配平环节，但对具体做法只字未提。
+这与本调研中 Vidu S1（六级漏斗图）、Seedance、Movie Gen、Cosmos 等给出完整流水线描述的对象形成鲜明对比。就数据处理方法论而言，Hailuo 属于「零披露」档位，可作为商用闭源模型披露下限的参照点，但无法提供任何可借鉴的流程细节。
+需要说明的是：MiniMax 在语言模型侧（MiniMax-01/M1/M2/M3 技术报告）对数据清洗有较详细描述，但这些是文本数据流水线，与视频数据处理不可直接迁移，本调研不做跨模态外推。
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
 七级顺序漏斗，整体呈「有无 → 切分 → 音频质量 → 跨模态对齐 → 分类标注」的收窄结构。最鲜明的特征是：全部质量过滤集中在音频侧，视觉侧零质量门槛；且把最贵的跨模态对齐检测放在质量过滤之后、标注之前，属于典型的「先便宜后昂贵」的成本优化排序。
@@ -467,6 +473,20 @@ E. 打标：短 caption / 长 caption / 带特殊 token 的结构化 caption 三
 
 训练数据清洗漏斗结构完全未披露。System Card 关于清洗的全部表述仅两句：「Our data processing pipeline includes rigorous filtering to maintain data quality and mitigate potential risks. We also employ a combination of safety classifiers to help prevent the use or generation of harmful or sensitive content, including explicit materials such as sexual content involving a minor.」即只承认存在(1)质量过滤与(2)风险/安全分类器两个大类，未说明级数、顺序、各级判据。相比之下，System Card 对「推理时安全栈」（输入prompt阻断 → 生成 → 输出阻断，含CSAM分类器与自定义训练的多模态推理监控模型）的描述详尽得多——这是本模型披露结构的典型特征：安全与部署侧详尽、训练数据侧近乎空白。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+整体为「五步结构化处理 → 五维质量过滤 → 多模态标注 → 四分支组织」的漏斗，全流程代码已开源（Dorniwang/SpeakerVid-5M-Code，六段式脚本）：
+【第一阶段：结构化处理（5 步，严格顺序执行）】
+  1) 场景切分（Scene Splitting）：PySceneDetect 依据颜色与亮度变化检测视觉显著转场，切分并将 clip 修剪至 3–14 秒。
+  2) 说话人分离（Speaker Diarization）：3D-Speaker 工具做声纹聚类，按说话时长/频次挑出两个主说话人 ID（二者合计占总说话时长 80% 以上），其余说话人丢弃。
+  3) 人体检测与跟踪（Human Detection & Tracking）：YOLO 做时空跟踪，对每个人做时间与空间裁剪，得到以单人为中心的子片段。
+  4) 唇音同步关联（Lip Synchronization）：SyncNet 计算音视频重合度，用 confidence score 把音频侧的说话人 ID 绑定到视觉侧的人体 bbox 上——这一步是「声音属于画面中哪个人」的关键裁决。
+  5) ID 校正（ID Correction）：ArcFace 提取人脸特征，跨 clip 计算面部余弦相似度验证说话人身份一致性，离群样本若与其他 ID 相似度更高则重新分配。
+【第二阶段：质量过滤（五维并行）】亮度、视频质量（DOVER）、清晰度（clarity = B/(W×H) 的比特率密度）、运动模糊（人脸/手部 Laplacian 方差）、音频质量（Whisper 置信度/无语音概率/压缩比）。
+【第三阶段：多模态标注】Qwen2.5-VL 结构化 caption、Qwen-3 话题分类、Whisper ASR、DWpose 骨架、SyncNet 指标、Laplacian 模糊分、Qwen2.5-VL 多 persona 运动强度打分。
+【第四阶段：分支组织】按 talking/listening/dialogue/multi-turn 四类交互形态重组为四个分支，并按 HQ 阈值切出 571K clips 的 SFT 子集。
+【设计特征】与通用视频数据集不同，本 pipeline 的核心不是「筛掉坏视频」而是「解析交互结构」——diarization、SyncNet 绑定、ArcFace 校正三步都在回答「谁在说、谁在听、他在画面的哪里、跨片段是不是同一个人」，质量过滤反而是配角。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 核心价值所在。Step-Video-T2V 的数据 pipeline 由六个串行阶段构成，且每个阶段所用的工具/模型基本全部点名，可复现性描述在同期工作中属较好一档：
@@ -533,6 +553,73 @@ E. 打标：短 caption / 长 caption / 带特殊 token 的结构化 caption 三
 第5级 Diarization（说话人分离）：VAD + ASD 标注语音段与说话人，onscreen/offscreen/overlap 三分类，Overlap Filter 剔除重叠人声片段，Speech Energy Filter 剔除语音能量占比过低（唱歌/强背景音乐）片段；
 第6级 Caption + Embedding：生成 clip 级与 speech-aware chunk 级双粒度结构化 caption，最终入选 clip 与其 caption 一起被 embedding 成训练数据。
 设计目标被总结为同时提升视觉清晰度、时序稳定性、音视频一致性与跨模态可解释性。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+2.5/2.6/2.7 未披露。Wan 2.1 报告第3章给出了业界少见的完整四步漏斗，是本条目最核心的可复用资产；Wan2.2-S2V 则给出了人本/音画专用的层级化漏斗。
+【Wan 2.1 预训练四步清洗（four-step data cleaning process）】
+第0步 候选池构建：内部版权数据 + 公开可获取数据，先做去重（curated and deduplicated）。
+第1步「基础维度」（fundamental dimensions）——针对源数据固有属性的高效粗筛，由8+项轻量检测并联组成：OCR 文字覆盖率检测、LAION-5B 美学分类器初筛、内部 NSFW 安全模型、水印与 logo 检测、黑边检测、过曝检测、合成图检测、模糊检测、时长与分辨率门槛。此步「成功淘汰约50%的初始数据集」。
+第2步「视觉质量」（visual quality）——语义驱动的精筛，拆为「聚类 + 打分」：先分100簇按簇配额采样以保持原始分布/防长尾丢失，再用人工1–5分标注训练的专家评估模型对全量打分。
+第3步「运动质量」（motion quality）——六档运动质量分级，按档位分别执行保留/降采样/排除。
+并行分支「视觉文本数据」（visual text data）——两条支路：白底渲染中文字符合成数亿张文字图 + 真实世界含文字图像经多 OCR 模型识别后送入 Qwen2-VL 生成含精确文字内容的自然描述。
+第4步 后训练精选（3.2节）——图像走「专家模型 top20% + 人工精选」，视频走「视觉质量分类器 top + 运动质量分类器分选简单/复杂运动 + 12大类类别均衡」。
+最后 打标阶段（3.3节）：自研 LLaVA 式 dense caption 模型对全量图像与视频重新打标。
+【结构特点】典型的「廉价并联粗筛（砍掉50%）→ 聚类配额 + 学习式打分精筛 → 运动语义分级调采样 → 高质量子集精选 → 全量重打标」五段式；判别器以专家小模型为主，MLLM 只在打标与评测环节出现。
+【Wan2.2-S2V 层级化人本漏斗（论文 Fig.1）】
+1) 数据收集：开源数据集自动粗筛（caption 中含人物相关描述）+ 人工精选含说话/唱歌/跳舞等复杂人体活动的视频 → 百万级人本视频池；
+2) 姿态跟踪：VitPose 提取2D姿态并转 DWPose，兼作控制信号与筛选依据；
+3) 细粒度筛选：剔除人物在时间或空间维度占比过小的视频；只保留全序列中人脸持续一致可见的视频（保证能从音频学到面部表情）；
+4) 视频质量五项：Dover 清晰度、UniMatch 光流运动分、Laplacian 算子对人脸/手部区域的锐度检验、改进版美学预测器、OCR 字幕遮挡检测；
+5) 音画对齐：Light-ASD 主动说话人检测，剔除音频与活跃说话人不同步、或画面中不存在活跃说话人的视频；
+6) 密集打标：QwenVL2.5-72B 生成结构化 dense caption。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+五者的「清洗流程」实为评测数据策展流程，但其漏斗结构对训练数据 pipeline 有直接借鉴价值：
+
+【PhyAVBench 五阶段策展流程（最完整）】① 音频物理知识调研 —— LLM 头脑风暴候选物理原理，人类专家剔除不可行/冗余/无关条目；② 分类体系构建 —— LLM 生成层级结构，专家审核消歧去冗；③ 物理约束提示词对设计 —— LLM 生成候选模板，专家人工核验并改写，保证每对提示词仅在单一物理变量上有差异、其余非目标条件全部不变，并避免主观描述与对预期声学结果的显式提示；④ 真实音视频采集 —— 全新录制，可控环境，跨个体/演示者/设备多样采样；⑤ 迭代式质控与过滤 —— LLM 先做语义歧义与非预期物理混杂因素的初筛，人类复核物理一致性、文本-音频-视频三方对齐与现实合理性，问题样本删除、修订或重新采集。这是一条典型的「LLM 生成 → 专家修订 → 采集 → LLM 初筛 + 人工复核 → 迭代回流」闭环。
+
+【AV-SyncBench 三级漏斗】① 网络采集 in-the-wild 视频；② Gemini 3 Flash 自动过滤 —— 剔除画外声源（off-screen sound sources）样本与明显视听错配样本；③ 人工复核 —— 5 名标注员，每条 clip 至少由 3 人独立审核，确认主声源在画面内可见，并剔除音质差、噪声过大、语义模糊的片段。之后进入第四步：程序化扰动生成时序与语义负样本。这是本次调研中「大模型初筛 + 多人交叉人工复核」的标准范式样板。
+
+【VABench 双路策展】T2AV 路：LLM + 专家模板批量生成原始提示词 → LLM 结构化解耦为视觉子提示与听觉子提示 → 生成 VQA/AQA 问答对 → 人工核验类目归属正确性、要素可观测性、物理与常识约束满足性。I2AV 路：人工精选并分类高质量图像（含隐私筛查）→ 多模态 LLM 生成统一视听描述（视觉客观 + 音频常识推断）→ 描述同时用于构造 VQA/AQA 并由 LLM 解耦为子提示 → 人工复核听觉推断的合理性与问题的区分度。论文明确表述「employed human workers and large language models to filter testing samples and adjust the distribution of test data」——即人机协同同时承担过滤与分布调整两项职责。
+
+【AVBench 两条流水线】评测集路：从提示词池按 Hard Quota-Based Greedy Sampling 采样 470 条 ≥720p 提示词，配额约束单属性占比 ≤50%，再分层为 Normal/Hard 子集。训练集路：OpenHumanVid 抽取 30K 真实片段作正例 → LLM 驱动扰动 + 算法性错配生成硬负例 → 每维度扩展至 100K 对 → 三维度合计 300K。
+
+【Omni-Judge】无数据清洗流程，属元评测：300 条 VidProM 提示词 → Sora 2 / Veo 3 各生成 1 条 → 6 名博士生按 9 维度打分 → 计算 Omni-LLM 判分与人类判分的相关性。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+本条目的「清洗流程」有两层含义，需分开：(A) captioner 自身训练数据的清洗；(B) captioner 在生成模型数据 pipeline 中所处的位置与承担的过滤职能。
+【(A) captioner 训练数据的清洗漏斗】普遍简单，典型为「教师模型生成 → LLM 打分过滤 → SFT → RL」四段：
+· AVoCaDO：Gemini-2.5-Pro 分别生成 visual caption 与 audio caption → 把两条 caption + 原视频再喂回 Gemini-2.5-Pro 合成时序连贯的多模态 caption → GPT-4.1 对「synthesis completeness」打 1–5 分，只保留 ≥4 分 → SFT → GRPO。
+· AVSCap：三阶段 —— decoupled unimodal anchoring（解耦单模态锚定）→ cross-modal fusion（跨模态融合）→ automated verification（tag 保留检查 + 语义一致性检查）→ SFT → GRPO。
+· CogVideoX 教师链：Panda-70M 短 caption → CogVLM 每 2 秒一帧的稠密图像 caption → GPT-4 按时间戳摘要 → 5 万条数据微调 LLaMA2 替代 GPT-4 → 再蒸馏为端到端的 CogVLM2-Caption。这是「四段式教师链逐级降本」的经典样本。
+· SkyCaptioner-V1：Qwen2.5-VL-72B 产出通用描述 + 三个子专家 captioner（镜头/表情/相机运动）补充影视专业维度 → 融合 → 蒸馏进 7B 统一模型。
+· Panda-70M：31 个候选打标器并行生成 → 用户研究做贪心集合覆盖选出 8 个 → UMT-large 细粒度视频-文本检索择优。这是唯一一个把「打标器选择」本身做成一道过滤工序的工作。
+【(B) captioner 在生成 pipeline 中的位置】三种典型摆位：
+· 漏斗中段的语义闸门：Allegro 把 Tag2Text 放在第 6 级，其标签输出直接作为第 7 级 CLIP 相似度过滤的文本侧输入 —— 打标器同时是过滤器的上游依赖。
+· 漏斗末端的全量打标：绝大多数工作（HunyuanVideo、Step-Video、Movie Gen、Seedance）在所有过滤通过后才做打标，因为打标是最贵的一步。
+· 分级打标金字塔：Open-Sora 2.0 低分辨率（256px）海量数据用开源 LLaVA-Video 打标、高分辨率（768px）精选 5M 数据改用 Qwen 2.5 Max 重标 —— 「粗标底层 + 精标顶层」与数据金字塔严格对应，是低成本策略的核心一环。Movie Gen 的 70% 8B / 30% 70B 混比是同一思路的另一实现。
+· 在线打标（罕见）：UniVerse-1 把标注放进训练循环，因此被迫选择轻量模型（Qwen2.5-Omni + Whisper），无法承受 120B 级模型的逐样本推理开销 —— 这是「标注时机」与「标注模型容量」之间权衡的唯一公开案例。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M（三级漏斗+标注）：①规格过滤（分辨率>1080p、帧率≥10fps、时长5秒–1分钟）→②Qwen2.5-VL-72B 六维内容质量过滤（运动强度未知、可见水印、强相机畸变、强光照伪影等剔除）→③TransNetV2 时序切分（仅对非连续视频）并对切出的clip重新过滤→④几何标注（MegaSaM 相机+深度、TAPIP3D 3D点轨迹）+语义标注（Qwen2.5-VL-72B caption）；SpatialVID（人工初筛→切分→四维质量过滤→几何重建→双阶段caption）：①人工筛选（剔除损坏内容、标题含不当词或“全景相机”字样、与 MegaSaM 重建不兼容者）→②改造 PySceneDetect 切 3–15 秒clip并统一转码 1280×720 H.265→③四项质量过滤（美学、亮度、OCR文本占比、运动/VMAF）→④MegaSaM 相机位姿+深度重建（深度模块替换为 UniDepth v2 与 Depth Anything v2）→⑤SAM2 动态掩膜与动态比例计算→⑥轨迹运动指标（MoveDist/RotAngle/TrajTurns）与加速度异常检测→⑦Gemini-2.0-Flash 视觉解析 + Qwen3-30B-A3B 语言精修的双阶段结构化caption→⑧HQ子集均衡采样；WildWorld（引擎直采，无传统清洗漏斗）：基于 OBS Studio + Reshade 的采集平台将显示分区为子窗口，同步时间戳同时录制 RGB(720p) 与深度，并从游戏内存/引擎导出骨骼、世界状态、相机内外参，逐帧119列结构化标注，再用VLM生成两级caption；Action100M（标注型流水线，几乎不做视频过滤）：①V-JEPA 2 编码器把视频转为时序稠密视觉嵌入（每4帧采1帧，64帧重叠窗口、步长8）→②带时序约束的层次凝聚聚类（Ward linkage）生成时间树→③Llama-3.2-Vision-11B 帧级caption + Perception-LM-3B 片段级caption→④GPT-OSS-120B 做证据聚合与结构化抽取，三轮 Self-Refine→⑤去重与语义重采样
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文的四阶段后训练流水线（本条目的骨架）】Phase 1 SFT（用精选数据建立稳定的指令跟随基线与参考策略）→ Phase 2 RLHF（基于 GRPO 的训练器，用多维奖励对齐美学、运动质量、文本对齐）→ Phase 3 PE 提示增强（用同一套奖励回路 GRPO 训练 LLM 改写用户输入）→ Phase 4 AD 自回归蒸馏（self-forcing 目标，把能力迁移到因果架构以提升推理效率）。
+论文的核心论断是「SFT as the foundation for RLHF」：SFT 的目标不是解决对齐或优化主观质量，而是建立一个稳定、结构良好的参考策略（stable and well-structured reference policy），消除最严重最频繁的失败模式，防止后续 RL 发散到退化行为，并且「SFT also enlarges the exploration for RLHF」（SFT 还扩大了 RLHF 的探索空间）。第二条论断是「PE complements RLHF」：RLHF 优化输出侧生成策略，PE 优化输入侧 prompt，二者用同一套奖励（人类偏好、视觉真实感、语义对齐）训练，形成输入-输出双侧对齐。
+【重要质量提示】3.1 节 SFT 的具体表述明显是从 LLM 后训练文本迁移而来——所列举的失败模式为「refusal cascades（拒答级联）、incoherent reasoning（推理不连贯）、unsafe outputs」，这些是语言模型的失效模式而非视频扩散模型的失效模式（视频侧应为手部错误、文字错误、快速运动崩坏等，正文引言中恰好提到过）。该段落不含任何视频特有的数据构造细节，读者不应把它当作可复现的 SFT 数据方法论。
+【横向的后训练流水线形态谱系】
+· 四段式（SFT→RLHF→PE→蒸馏）：锚论文、Seedance 1.5 pro（SFT→AV 定制 RLHF）、Kling 3.0 Omni（quality-tuning SFT→DPO）；
+· 三段式 CT→SFT→RLHF：HunyuanVideo 1.5（且 T2V 与 I2V 全程分开）；
+· 两段式 SFT→DPO：Step-Video-T2V（Step-3 SFT → Step-4 Video-DPO）、SkyReels-V2（概念均衡 SFT→高质量 SFT→三阶段 DPO）；
+· 两段式 SFT→GRPO：LongCat-Video、Cosmos-Predict 2.5（五域 SFT→模型合并→GRPO）；
+· 只有 SFT 无偏好学习（开源/学术侧的绝大多数）：Movie Gen、CogVideoX、Allegro、Goku、Motif、MAGI-1、Open-Sora 系列、NAVA、ALIVE、Apollo；
+· 完全无后训练：MOVA（把 SFT 融进预训练课程末端）、Unison、UniTalking、UniVerse-1、HunyuanVideo-Foley、Foley-Omni、CineDance、Mochi 1；
+· 用推理时搜索替代后训练：ITS-JAVG（多验证器 + Best-of-N/EvoSearch，JavisDiT 5 samples、MMDisCo 10 samples），主张不做后训练也能达到可比效果。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -629,6 +716,10 @@ E. 打标：短 caption / 长 caption / 带特殊 token 的结构化 caption 三
 [不确定]。论文给出了每一级过滤的判定阈值（Table 4）与最终数据量（160M 图 / 36M 视频），但**未披露任何一级的输入量、输出量或保留率**，也未给出原始采集规模，因此无法计算整体漏斗保留率（对比 Apollo 披露 27% 保留率的做法，Goku 在这一点上透明度较低）。
 唯一可反推的定量收缩线索是按分辨率档位的数据量级联：480p 档 36M → 720p 档 24M（相对 480p 保留约 66.7%）→ 1080p 档 7M（相对 480p 保留约 19.4%，相对 720p 约 29.2%）。但这一收缩是「分辨率+更严阈值」的复合结果，不等同于单级过滤保留率。
 此外 I2V 后训练用 4.5M 三元组，相对 36M 视频池约占 12.5%，可视作高质量子集比例的一个间接参考。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。无任何一级过滤的输入/输出量、无最终保留率。由于连漏斗结构本身都未公开，定量保留率更无从谈起。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -793,6 +884,15 @@ Phase 2 三道子过滤各自的产出量也有公开数字：OCR 无字幕子�
 
 完全未披露。没有任何一级过滤的输入/输出量、保留率或淘汰率数字。无法与 Apollo 27% 之类的公开定量漏斗做对比。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+论文未提供逐级保留率表格，只能从首尾两个口径做端到端推算：
+【入口】153K 条视频 / 64,386 小时原始素材。
+【出口】超过 5.2M clips / 8,743 小时（含单人分支 8.7K 小时 + 对话分支 1.8K 小时，两者存在样本重叠，总量以 8,743 小时计）。
+【端到端时长保留率】8,743 / 64,386 ≈ 13.6%。这一保留率显著低于 MOVA 的 26.39% 与 Apollo 的 27%，但口径不完全可比——SpeakerVid-5M 的损耗大头并非质量过滤，而是结构性损耗：只保留两个主说话人（其余人物丢弃）、只保留有明确说话/倾听行为的时段、以及 YOLO 单人裁剪后的画面区域损失，均会大量削减有效时长。
+【HQ 子集保留率】1,368 / 8,743 ≈ 15.6%（相对最终数据集）；1,368 / 64,386 ≈ 2.1%（相对原始素材）。即从原始素材到可用于 SFT 的高质量对话数据，等效保留率约五十分之一。
+【未披露】各单步（场景切分、diarization、SyncNet 绑定、ArcFace 校正、以及五维质量过滤中每一维）的输入/输出量与逐级淘汰率均未给出，Figure 3 中虽有 DOVER 分数与 SyncNet 置信度的分布直方图，但无法据此反推淘汰比例。这是本数据集披露体系中相对薄弱的一环。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 定量披露不完整，只能部分推算：
@@ -825,6 +925,49 @@ Phase 2 三道子过滤各自的产出量也有公开数字：OCR 无字幕子�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。论文虽给出完整的六级漏斗结构图（Figure 2），但未提供任何一级的输入/输出数据量或保留率数字，也没有最终保留率。这是该报告数据披露的主要缺口之一（对比 Apollo 类工作给出 27% 保留率的做法）。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+定量披露仅有两处，无法构成完整漏斗账本：
+1) Wan 2.1 基础维度阶段：「we successfully eliminated approximately 50% of the initial dataset」——第一级并联粗筛淘汰约50%，保留50%进入语义精筛。这是 Wan 系唯一明确的级间保留率。
+2) Wan 2.1 后训练图像精选：取专家模型预测分数的 top 20%。
+其余各级（聚类配额具体取多少、视觉质量分阈值、六档运动各自保留比例、V2A 音频过滤前后的量比、S2V 各级淘汰率）均无输入/输出量与保留率。V2A 侧只知结果为 O(1) 千小时，母集规模为「数十亿视频」，若粗略折算保留率远低于1%，但报告未给出可比口径，不能作为漏斗数字使用。整体上无法与 Apollo 27% 之类的定量漏斗对齐。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五个基准均未公布逐级过滤的输入/输出量与保留率数字[不确定]。可间接推算的仅有：
+【AV-SyncBench】最终保留 3,269 条视频，但网络采集的原始池规模未披露，故 Gemini 3 Flash 初筛与 5 人复核两级的保留率无法计算[不确定]。
+【PhyAVBench】11,605 条视频对应 337 组配对提示词，平均每组约 17 条 ground-truth 视频；论文设计目标为每组 N≥20 条，实际均值 17 说明质控阶段存在明显淘汰（粗估保留率约 85%，属推算而非论文披露[不确定]）。
+【AVBench】30K 真实片段 → 300K 训练对属扩增而非过滤，无保留率概念；470 条评测提示词的原始候选池规模未披露[不确定]。
+【VABench】1,299 条最终样本对应的候选生成量未披露[不确定]。
+相较于训练侧数据集（如 Apollo 公布 27% 端到端保留率、MOVA 公布逐级保留率表），评测基准论文普遍不披露漏斗定量信息，这是本类文献的通病。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+[不确定] captioner 生态整体缺乏定量保留率披露，仅有零星数字：
+· SkyCaptioner-V1：训练数据从 1000 万条精选出约 200 万条概念均衡视频，保留率 20%。这是本条目唯一明确的 captioner 训练数据保留率。
+· AVoCaDO：GPT-4.1 对 synthesis completeness 打 1–5 分、只保留 ≥4 分，但未披露该步的通过率。
+· Tarsier2：对 100 万条公开数据集视频做 recaption，最终发布 585K（Tarsier2-Recap-585K），若 585K 全部来自该 1M 则保留率约 58.5%，但论文未确认二者是同一批（也可能是主动抽样发布而非过滤）。[不确定]
+· Panda-70M 的贪心集合覆盖给出的是「覆盖率」而非保留率：单个最好模型覆盖 30.8%、8 个覆盖 76.8%、31 个全上 84.7%；同时报告人类之间的一致率仅 44.9%，说明「最佳 caption」本身高度主观。
+· AVSCap-130K、AVoCaDO-SFT-107K 均未给出「原始候选量 → 最终保留量」的逐级数字。
+· 生成侧最完整的端到端保留率来自 Apollo/Klear（27%），但那是整条数据漏斗而非打标环节。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SpatialVID 给出最清晰的量化漏斗：21,789小时原始 YouTube 视频（33,443条）→ 最终 7,089 小时动态内容（271万clip），时长维度保留率约 32.5%；高质量子集 SpatialVID-HQ 为 0.37M/2.71M clip，即在已过滤库上再保留约 13.7%（相对原始素材端到端约 4.5%）。关键量化发现：Panda-70M 中超过 80% 的视频因运动不足而无法被 MegaSaM 成功重建，构成运动过滤的主要淘汰源。SceneScribe-1M 各级输入输出量未逐级披露，仅知从 HD-VILA-100M/Panda-70M/Koala-36M/Pexels 的亿级源池收敛至100万clip、156.7M帧、4000+小时，论文表述“因运动多样性要求初筛大幅缩减源池”，逐级保留率数值缺失[不确定]；Action100M 的量化在去重侧：识别出 7.58M 个重复组、1.418亿条重复实例并去除，源120万视频中72%有可用ASR，最终产出1.47亿片段；WildWorld 为引擎直采，无过滤漏斗概念，仅提及过滤后得到数千条clip（确切数量未给出）[不确定]
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文无任何漏斗定量数据 [不确定]。横向可对标的「后训练保留率」（SFT 精选集 ÷ 预训练池）如下，这是本专题最有价值的一组可比数字：
+· NAVA：160K ÷ 15M ≈ 1.07%（本次调研中最严，「千条里取十条」）；
+· Allegro：2M ÷ 500M = 0.4%（若以原始片段计则更严，但其 2M 是最严阈值组合的直接产出）；
+· Goku I2V：4.5M ÷ 36M = 12.5%（且筛选标准侧重领域多样性而非质量分）；
+· CogVideoX：top 20%（明确以百分位而非阈值定义）；
+· Open-Sora Plan T2V 阶段三：过滤后 Panda70M 约 19M / 27% 保留；
+· NVIDIA Cosmos WFM：从约 10^8 预训练 clip 中切出约 10^7 用于微调（约 10%，筛选标准未公布）；
+· SkyReels-V4：500 万 → 100 万人工精选（第二段 SFT 保留率 20%）。
+【经验区间】SFT 精选集相对预训练池的保留率集中在 0.4%–20%，中位数约 5%–10%；越是追求美学与「影视感」的模型保留率越低（Allegro、NAVA），越是追求领域覆盖或多任务能力的保留率越高（Goku、Open-Sora Plan、Cosmos）。
+【偏好数据侧的「保留率」形态不同】其规模由标注预算而非过滤阈值决定，SkyReels-V2 的 3 万人工样本对、Step-Video 的未公开条数、HunyuanVideo 1.5 的 O(10K) 均是「标注能力上限」的体现。JavisDiT++ 给出的一个独特指标：最终偏好数据中约 30% 的 winning 样本来自模型生成而非真值，作者据此判断「基线模型本身已具备相当强的生成能力」——这个比例可作为判断模型是否已到达「可用自生成数据做偏好优化」阶段的经验信号。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -896,6 +1039,10 @@ Phase 2 三道子过滤各自的产出量也有公开数字：OCR 无字幕子�
 (2) 第二级——DINOv2 语义特征校验：对切出的片段按每秒 1 帧采样，提取 DINOv2 视觉特征，计算相邻采样帧的余弦相似度，要求整段维持高相似度才判为「同一镜头且视觉连贯」。阈值随分辨率收紧：480×864 档要求 ≥0.85，720×1280 档要求 ≥0.90。该步骤的作用是补 PySceneDetect 的漏检（如渐变转场、同场景大幅内容变化），属于「shot-aware splitting + 语义一致性双保险」。
 (3) 长度约束——单片段最长 10 秒，超长镜头强制截断。
 未使用自研端到端切分模型，也未提及 TransNetV2 等替代方案。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未说明是否使用 PySceneDetect、TransNetV2 或自研镜头边界检测模型，也未说明是否做 shot-aware splitting。仅能从「输出为 6~10 秒单镜头片段」推断训练数据必然经过某种镜头切分，但方法完全未知。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1015,6 +1162,15 @@ Seedance 1.5/2.0 未直接描述。Seedance 1.0 的方法：采用自动镜头�
 
 完全未披露。既未提及 PySceneDetect 等开源工具，也未提及自研 shot-aware splitting 模型。虽然模型具备多镜头生成与跨镜头世界状态保持能力，暗示训练pipeline中存在镜头级切分与镜头组织逻辑，但方法零披露。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+使用 PySceneDetect（SceneDetect）作为唯一的镜头切分工具，无自研切分模型：
+【检测原理】分析画面颜色与亮度的变化以定位「视觉显著转场（visually significant transitions）」，在转场处切断。
+【长度约束】切分后的 clip 被修剪到 3 至 14 秒；不足或超长的做丢弃/截断处理。
+【与说话人结构的耦合】场景切分只是第一步，真正决定最终 clip 边界的是后续的三重约束：(1) 3D-Speaker 的说话人时间区间；(2) YOLO 人体跟踪的时空连续段；(3) SyncNet 的音画绑定有效区间。因此 SpeakerVid-5M 的切分本质是「shot-aware + speaker-aware + track-aware」的三重感知切分，而非单纯的场景切分。
+【与 MOVA 的对比】MOVA 用 PySceneDetect 场景切点 + Silero VAD 语音边界联合生成 8.05 秒定长窗口，刻意保留多镜头样本；SpeakerVid-5M 则用 PySceneDetect 切断后再按说话人轨迹裁剪，产出严格单镜头的变长片段。两者都是 shot-aware，但目标不同：前者服务于「学会转场」，后者服务于「学会人物交互」。
+【代码可得性】场景检测与说话人分离的代码在开源仓库中作为第 6 步提供（标注为可选，部分结果已预计算）。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 PySceneDetect 的 AdaptiveDetector 函数（自适应阈值检测器，相对 ContentDetector 对渐变与摄像机运动更鲁棒）检测场景变化点，再调用 FFmpeg 按检测到的边界切分为单镜头片段。切分后统一去掉每个片段的首 3 帧与尾 3 帧，理由是这些帧常包含不稳定的镜头运动（转场残留、抖动）。
@@ -1048,6 +1204,34 @@ PySceneDetect 的 AdaptiveDetector 函数（自适应阈值检测器，相对 Co
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 沿镜头边界（shot boundaries）将原始视频切为单镜头 clip；长镜头进一步再切分。关键约束是「切点不得落在语音中间」（speech-aware cutting），这是为唇形同步任务定制的切分策略。未说明具体使用 PySceneDetect、TransNetV2 还是自研镜头边界检测模型 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+全系（2.1 至 2.7）从未披露镜头切分方法——既未提及 PySceneDetect / TransNetV2 等开源工具，也未说明是否有自研 shot-aware splitting 模型或阈值参数。可确认的只有切分粒度：Wan 2.1 训练样本为5秒 clip；Wan-Dancer 明确将原始视频切为5秒 clip 且相邻重叠50%（这是同团队唯一写出的具体切分策略，但属舞蹈垂类）。2.6/2.7 的多镜头叙事能力必然要求训练数据具备镜头边界标注与跨镜头一致性标注，其切分与镜头级对齐方案是本条目最重要的未知项之一。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者均不涉及传统意义上的镜头切分（PySceneDetect 类），因为素材本身即为短单镜头片段。相关的时间轴切分策略为：
+【AV-SyncBench】统一切成 0.64 秒互不重叠 chunk 用于视听嵌入的逐段对齐计算，这是其时序评测的基本粒度（对应 CAV-MAE / Synchformer 类模型的原生窗口设定）。
+【VABench】Desync 指标仅取生成视频的首 4.8 秒与末 4.8 秒两个窗口送入 Synchformer 预测偏移，规避中段长时序不稳定问题。
+【PhyAVBench】录制阶段按「单一物理事件」为单位切分，每条视频对应一次完整的发声事件（如一次撞击、一段流水），属语义事件级切分而非镜头级。
+【AVBench / Omni-Judge】未涉及切分[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+captioner 本身通常不做镜头切分（切分在其上游完成），但有三类交互：
+【打标器承担叙事分组】CineDance 用 Qwen3.5-27B 做镜头分组与叙事边界判定（自底向上镜头索引分组优于直接让 LLM 输出时间戳），F1 = 88.4%、仅 3.1% 序列短于 20 秒软阈值，是打标模型直接承担切分决策的代表。
+【打标器描述转场】ShareCaptioner-Video 的 DiffSW 显式识别 scene transitions；MOVA 的视觉标注指令明确要求「聚焦视频场景转场」；AVoCaDO 的 Spatio-temporal & Cinematography 维度覆盖场景切换。
+【切分质量反过来决定打标质量】Koala-36M 的核心贡献之一即「更准确高效的转场检测方法」，其消融显示：用 Koala-all 训练相较 Panda-70M 训练，VBench 主体一致性 +1.1%、背景一致性 +2.4%，论文将该时序质量提升归因于更准的镜头切分 —— 这是「切分 → caption 一致性 → 生成质量」链条的唯一量化证据。CineDance 的伪影审计显示 CineDance-1M 不合规率 2.8% vs Koala-36M 37.4%（13.4× 改善）。
+【上游常用工具】PySceneDetect 仍是行业默认；各家自研的转场检测模型（Koala-36M、CineDance）主要针对渐变转场与快速剪辑的漏检问题。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：TransNetV2 深度模型检测硬切与渐变转场，仅对判定为“非连续”的视频执行切分，切后clip重新过滤以保证语义连贯；SpatialVID：改造版 PySceneDetect——调整敏感度阈值并引入基于间隔的多帧比较策略（interval-based multi-frame comparison），弥补原版对渐变转场的漏检，输出 3–15 秒clip；WildWorld：无需镜头切分，游戏引擎连续录制，按动作序列边界组织样本（训练取81帧窗口）；Action100M：不用传统镜头检测，改用 V-JEPA 2 语义嵌入 + Ward linkage 带时序约束的层次凝聚聚类做语义级时序分割，可产出跨镜头的层级片段树，丢弃<0.5秒片段
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未涉及 [不确定]。后训练阶段一般不再重做镜头切分——SFT 精选集是从已完成切分的预训练池中筛选的子集，因此镜头切分属于上游预训练数据 pipeline 的职责。横向唯一相关的是 Step-Video-T2V 的 SFT 人工评审把「场景转换是否平滑」列为四项标准之一，即在后训练阶段用人工把关切分残留问题（一个 clip 内混入转场）——这是「后训练阶段作为切分质量最后一道防线」的少数明证。Motif-Video 2B 的 SFT 准入含 action=Dynamic，间接排除了静止的转场残片。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1194,6 +1378,11 @@ Appendix A Fig.11 展示了美学分数分布随阶段推进整体右移（360p 
   这一项阈值极为严格，说明团队高度重视避免模型学会生成乱码文字。
 【去重（与质量联动）】同源片段用感知哈希比对，哈希相近时**保留美学分更高的那条**——去重决策直接以质量分为仲裁依据。
 【未提及的常见项】论文未描述黑边检测、水印/logo 检测、模糊度/清晰度（如拉普拉斯方差、NIQE）、亮度/饱和度异常、时序闪烁一致性等过滤维度，也未提及图像侧（T2I 数据）除美学分之外的独立过滤标准。相较 2025 年底至 2026 年的工作，Goku 的质量过滤维度偏经典、偏浅层。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未提及美学评分器、清晰度/技术质量评分、OCR 文字检测、黑边裁切、水印/logo 检测等任何一项具体手段，也未给出任何阈值。唯一相关的官方措辞是 Hailuo 02 的「improved quality and diversity（质量与多样性提升）」以及 Hailuo 2.3 的能力描述，均为结果性宣称而非方法披露。
+从模型表现可反推的间接证据（推测，非披露）：Hailuo 系列输出在画面干净度与电影感上表现较好、极少出现字幕/台标残留，暗示存在有效的画面干净度与水印/字幕过滤；「原生1080p」暗示存在分辨率与清晰度门槛。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1428,6 +1617,17 @@ Seedance 1.5 pro 仅称管线包含「片段质量」相关的筛选（第三方
 
 仅有「rigorous filtering to maintain data quality」一句笼统表述。美学评分模型、清晰度/模糊度判据、OCR文字/字幕过滤、黑边裁剪、水印与logo检测等具体手段，OpenAI 均未提及，无任何阈值或模型名称。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+五维阈值化过滤，全部阈值公开，另设更严的 HQ 阈值组：
+【1. 亮度（Luminance）】luminance score < 10 或 > 210 的 clip 被剔除（灰度 0–255 区间的两端），用于排除过暗与过曝画面。
+【2. 视频质量（DOVER）】使用 DOVER 视频质量评估工具的融合分（fused score），< 0.25 的剔除。
+【3. 清晰度（Clarity Score）】自定义指标，定义为 clarity = B/(W×H)，即码率（bitrate）除以分辨率面积——衡量单位像素上的比特密度，可有效识别「高分辨率但实为低清上采样/重压缩」的伪高清视频。按分数排序后剔除最低 5%。这是本数据集较有特色的一个自定义质量指标。
+【4. 运动模糊（Motion Blur）】对人脸与手部区域各裁 128×128 patch，计算 Laplacian 方差作为清晰度/模糊分；人脸或手部的平均模糊分 < 0.1 的剔除。分人脸与手部两路独立打分，是为下游手势生成任务专门设计的。
+【5. 音频质量】三条并列否决规则，满足任一即剔除：Whisper 转写置信度 < −1.5；no-speech probability（无语音概率）> 0.8；compression ratio（压缩比）> 2.5（用于识别 ASR 重复退化/幻觉输出）。
+【HQ / SFT 子集阈值（更严）】手部模糊分 > 0.5、人脸模糊分 > 0.7、DOVER > 0.6、运动强度分 > 2、ASR 置信度 > −1。五条全部满足才入选，得到 571K clips / 1,368 小时。
+【未做的过滤】论文未描述美学评分（aesthetic score）单独打分、OCR 烧录字幕检测与过滤、水印/logo 检测、黑边检测。DOVER 本身含美学视角分支，但论文只使用其融合分而未拆分使用。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 第2阶段对每个片段的抽样帧打 7 类质量标签，工具与方法几乎全部点名（阈值数值一律未公布，只说明「逐级抬高阈值」构造 6 个子集）：
@@ -1481,6 +1681,66 @@ Seedance 1.5 pro 仅称管线包含「片段质量」相关的筛选（第三方
 (5) 镜头稳定性（shot stability）：保留静止镜头或慢速运动镜头，以降低长时流式生成中的镜头漂移（shot drift）风险；
 (6) 交互性（interactivity）：要求主体有清晰的动作/行为。
 未公开任何评分器的具体名称与阈值数值 [部分不确定]。未提及 OCR 文字检测的具体实现、黑边检测。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 的质量过滤是全行业公开材料中枚举最完整的之一（2.5+ 未披露，推测沿用并升级）。
+【基础维度并联检测（逐项原文级还原）】
+1) 文字检测（Text detection）：轻量 OCR 检测器量化「文字覆盖率」，剔除文字元素过多的视频与图像以保持视觉清晰度；
+2) 美学评估（Aesthetic evaluation）：使用业界通用的 LAION-5B 美学分类器做初步质量评估，快速滤除低质数据；
+3) NSFW 打分：内部安全评估模型对全部训练数据算 NSFW 分并过滤；
+4) 水印与 logo 检测：检测是否含水印/logo，并在训练时对这些区域做裁剪（注意是 crop 而非丢弃，属「可回收」处理）；
+5) 黑边检测：启发式方法自动裁掉多余黑边，聚焦内容富集区；
+6) 过曝检测（Overexposure detection）：自训练专家分类器识别并剔除色调分布异常的数据；
+7) 合成图检测（Synthetic image detection）：自训练专家分类器剔除 AI 生成图像。报告给出了一条极有价值的经验性结论——「即便极小比例（<10%）的生成图污染，也会显著劣化模型性能」，这是数据纯净度重要性的直接量化断言；
+8) 模糊检测（Blur detection）：自研模型给训练素材打模糊分，系统性移除视觉不清晰内容；
+9) 时长与分辨率：时长必须 >4 秒；分辨率阈值随训练阶段动态提高。
+【视觉质量学习式打分】从每个簇中抽样交人工按 1–5 分打分（1最差5最好），用全部标注数据训练一个专家评估模型，再对全量数据打分，用于各阶段的数据选择与处理。
+【Wan2.2 增量】引入「精心策划的美学数据，带有光影（lighting）、构图（composition）、对比度（contrast）、色调（color tone）等细粒度标签」，使模型可按电影美学风格可控生成——这是从「一个美学总分」到「多维可控美学标签」的重要升级，也是 2.5+「电影级」定位的数据基础。
+【Wan2.2-S2V 五项视频质量指标】Dover 清晰度评估、UniMatch 光流运动稳定性（滤除主体/背景运动过剧者）、Laplacian 算子专门检验人脸与手部区域是否模糊、改进版美学预测器、OCR 检测字幕是否遮挡人脸或手部。其中「对人脸/手部单独做锐度检验」与「字幕遮挡人脸检测」两项针对人本场景的设计最值得借鉴。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+各基准的质量把关手段：
+【AVBench】质量维度本身即是可复用的过滤器，其 6 项单模态质量维度分别绑定成熟工具：音频质量用 NISQA MOS、音频美学用 Audiobox、视频技术质量用 DOVER++、视频美学单列一维，另加 Speech Content Accuracy 与 Speech Realism 两项语音专项。论文明确指出其连续可微分打分可直接用作数据过滤机制与 RLHF 奖励信号 —— 这是本次调研中最直接可移植为训练数据质量过滤器的基准。
+【VABench】Module 1 的单模态音频质量三件套：SpeechClarity 用 DNSMOS 检测背景噪声、SpeechQual&Nat 用 NISQAv2 评整体质量与自然度、AudioAesthetic 用 Audiobox 评愉悦度/有用性/制作复杂度与质量。视觉侧质量并入 MLLM 打分的 Visual Realism 与 Artistry。此外立体声专项提供 9 项声学质量指标：空间成像质量（立体声宽度、成像稳定性、电平稳定性、声道间一致性）与信号完整性/兼容性（相位相干性分低/中/高三频段评估、单声道兼容性 Mono Compat = 1 − 归一化单声道损失、方向一致性、Mid/Side 能量比测声场宽度）。
+【AV-SyncBench】人工阶段明确剔除「音质差、噪声过大、语义模糊」三类样本，即音频 SNR、清晰度与语义可判别性三重门槛（未给出量化阈值[不确定]）。
+【PhyAVBench】质控聚焦物理正确性而非画面美学：LLM 初筛语义歧义与非预期物理混杂因素，人工复核物理一致性与现实合理性；因是可控环境自录，画面清晰度、水印、黑边等问题天然不存在。
+【Omni-Judge】不做过滤；但其结论对质量过滤有警示意义 —— Omni-LLM 在 video quality 维度上与人类的相关性极低（Kendall τ_b ≈ 0.020），说明用 Omni-LLM 直接替代传统美学/技术质量打分器做数据过滤是不可靠的，画质类过滤仍需专用模型。
+未提及 OCR 文字过滤、水印/logo 检测等训练侧常见手段[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+captioner 生态的「质量过滤」有两个方向：
+【方向一：captioner 作为质量过滤器的组成部分】
+· Allegro：Tag2Text 输出作为 CLIP 相似度过滤的文本侧输入，打标器直接嵌入过滤链。
+· Mochi/MAGI/Motif 批次中的 Motif-Video 2B：另配 PaddleOCR-VL（经 vLLM 服务化）做帧上文字检测，属于打标链中的 OCR 过滤分支。
+· InstructAV2AV 用 Grounded-SAM-2 提供实例级 mask 锚点，TalkNet 做主动说话人检测 —— 结构化标注工具兼任质量闸门。
+· 传统浅层过滤器（LAION 美学分、DOVER technical score、清晰度、黑边/水印/logo 检测）与 captioner 并行而非串行，通常在打标之前完成以节省打标算力。
+【方向二：captioner 输出本身的质量控制】这是本生态的核心问题，主流手段有四：
+(1) LLM 打分过滤：AVoCaDO 用 GPT-4.1 打 synthesis completeness 1–5 分、只保留 ≥4；
+(2) 自动化一致性校验：AVSCap 的 automated verification（tag 保留检查 + 语义一致性检查）；
+(3) 检索式择优：Panda-70M 用 UMT-large（ViT-L/16 + BERT-large，VTC+VTM 双损失 + 难负例挖掘，未选中的 7 条 caption 权重 1.0、batch 内其他负例权重 0.01，12 帧 224×224，AdamW lr 2e-5，batch 32，10 epoch，8×A100-80G）从多候选中选最佳 caption，微调后 R@1 达 35.90%（预训练 UMT 仅 21.82%）；
+(4) 幻觉抑制的后训练：腾讯混元 1.5 对其三个 caption 模型用 OPA-DPO（针对多模态幻觉的偏好优化）做 RL 后训练；video-SALMONN 2 的 MrDPO 同时奖励完整性与事实性，7B 模型 caption 错误率相对基线降 28%；Tarsier2 用 model-based sampling 构造偏好对做 DPO。
+【生成侧的兜底】Step-Video-T2V 不对 caption 模型做幻觉抑制专门后训练，兜底依赖 SFT 阶段人工复核 + 第 6 阶段 CLIP Score 对齐过滤 —— 代表了「打标器不够好就用下游过滤补」的务实路线。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：核心是 Qwen2.5-VL-72B 的六维内容质量评估，显式剔除运动强度不明、可见水印、强相机畸变、强光照伪影等clip；叠加硬性规格门槛（>1080p、≥10fps、5s–60s）。SpatialVID：四项独立打分器构成质量层——①美学：CLIP+MLP aesthetic predictor，分数 < 4.0 剔除；②亮度：仅保留均值落在 [20, 140] 区间的clip，过暗过曝剔除；③OCR文字：PaddleOCR 检测，文字面积占比 > 30% 的clip被标记剔除；④运动：VMAF 指标 + 后续重建可行性判定。WildWorld：引擎渲染画面天然无水印、无压缩伪影、无黑边，质量过滤退化为场景有效性筛选，主要保证录制同步与深度无损编码。Action100M：几乎不做画质过滤（沿用 HowTo100M 原始画质），质量控制转移到标注侧——通过 LLM 多轮 Self-Refine 保证标注质量，并按时长下限（片段>0.5秒、树节点>4秒）剔除无意义碎片
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】SFT 数据的质量过滤标准完全未披露 [不确定]。质量控制被完全推给了 RLHF 阶段的四个奖励模型（视频美学：光照、构图、色彩和谐、时序一致性、跨帧影视感；图像美学：帧级感知质量、锐利细节、结构悦目；运动质量：运动真实性、平滑性、连贯性，抑制抖动/运动不连续/时序不一致的物体转换；文本-视频对齐：语义一致性）。这体现了一种范式转移——把「什么是高质量」从数据过滤阈值搬到可学习的奖励模型里。
+【横向的 SFT 质量筛选标准（阈值级公开的少数案例）】
+· Allegro（阈值最完整）：时长 6–16 秒、分辨率 ≥1280×720、亮度 [20,180]、DOVER ≥0.07、LPIPS ≥0.05、UniMatch 运动 [1.0,100]、美学 ≥5.3、文字面积 ≤0.05%、CLIP 相似度 ≥0.20；
+· HunyuanVideo 原版：人工精选 100 万，标准为美学四项（色彩和谐、光照、主体突出、空间布局）+ 运动三项（运动速度、动作完整性、运动模糊）——这套七维人工标准是本主题被引用最多的 SFT 筛选 rubric；
+· HunyuanVideo 1.5 SFT：在 CT 数据之上按美学吸引力、清晰度、运动流畅性三项再严筛，最终经人工标注构建；
+· CogVideoX：针对「字幕、水印、低码率」三类脏数据筛出 top 20%；
+· Step-Video-T2V：三步走——自动分数与启发式规则过滤 → VideoCLIP K-means 簇内剔除距簇中心超阈值的离群样本（阈值未公布）→ 人工逐条评审（清晰度、美学、运动是否恰当、场景转换是否平滑）并优化 caption；
+· LongCat-Video：第一层多指标（美学分、视频质量、运动质量）+ 第二层 caption 嵌入空间密度倒数采样；
+· Motif-Video 2B：常规过滤 + 更严美学截断 + style/subject 标签驱动的 domain-balancing + action=Dynamic；
+· NAVA：多算子协同过滤，标准为「caption 准确 + 音视对齐强」，阈值未公开。
+【共性】SFT 筛选 = 预训练阈值 + 显著上调的美学/清晰度门槛 + 概念均衡 + 人工终审。人工终审出现在 HunyuanVideo（原版与 1.5）、Step-Video-T2V、Movie Gen、SkyReels-V4、Apollo Stage III 等几乎所有工业级工作中，是 SFT 区别于预训练过滤的标志性环节。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1571,6 +1831,10 @@ Seedance 1.5 pro 仅称管线包含「片段质量」相关的筛选（第三方
   - 1080p：0.5 ≤ motion score ≤ 8.0
 设计逻辑：下限剔除幻灯片式静态视频与死画面（保证模型学到动态度，对应 VBench dynamic degree，Goku 得 76.11）；上限剔除手持抖动、快速摇镜、剧烈转场残留等会导致训练不稳定与运动模糊的素材。分辨率越高，上限压得越低（20 → 15 → 8），因为高清素材更倾向于用于精细画质学习而非大幅运动学习。
 此外运动分数并未在过滤后被丢弃——它被**复用为 caption 的一部分**（见打标字段），成为推理期可控的运动强度条件，这是 Goku 一个巧妙的设计：同一信号既做过滤门控又做条件控制。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未提及光流计算、运动分数阈值、静态帧剔除或抖动剔除的任何细节。间接线索：Hailuo 02 与 2.3 都把「复杂人体运动、物理合理性、大动态」作为核心卖点，2.3 进一步强调「即使在动态运镜下也能保持流畅自然精确的复杂肢体动作」，这强烈暗示数据侧存在针对高运动幅度样本的定向筛选或加权（剔除静止片段、保留高动态样本），但没有任何一手说明其方法与阈值。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1692,6 +1956,14 @@ Seedance 1.0 在预训练过滤阶段剔除抖动过大与以静态内容为主�
 
 完全未披露。未提及光流计算、运动分数阈值、静态镜头剔除或抖动/手持晃动剔除策略。考虑到模型在物理动力学（重力、动量、碰撞）上的表现被重点宣传，推测存在面向运动质量的筛选，但无任何依据。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+SpeakerVid-5M 不做传统的光流/运动幅度阈值过滤，而是把运动强度做成一个可检索的标注维度，并仅在 HQ 子集环节用作筛选条件：
+【运动强度标注方法】用 Qwen2.5-VL 做多 persona 打分——设计三个不同人格的 prompt，各自从不同视角对同一视频在 1–5 分制上评分：(1) 专家视角，评估动作幅度（movement amplitude）与身体动作频率；(2) 观众视角，评估身体语言反映出的情绪起伏与观众反应；(3) 标注专家视角，评估手势使用（gesture usage）与交互频率。剔除离群值后取平均分作为最终的运动幅度标注。这是用 MLLM 替代光流打分器的典型做法，且用多 persona 集成来降低单次打分的方差。
+【作为过滤条件的使用】仅在 HQ / SFT 子集构造时启用：motion score > 2（5 分制）才入选，即排除近乎静止的呆板片段。全量数据集不施加运动下限。
+【间接的静态/抖动控制】运动模糊过滤（人脸/手部 Laplacian 方差 < 0.1 剔除）会剔除因剧烈抖动或快速运动导致的糊帧；YOLO 跟踪的时空裁剪则保证主体在画面内稳定，间接抑制了强烈的镜头晃动。
+【未使用】无光流（optical flow）计算、无 RAFT/UniMatch 类运动分数、无专门的静态镜头检测器。考虑到语料本身是访谈/对话类近景人物视频，运动幅度天然受限，传统运动过滤的必要性较低。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 第3阶段专设「视频运动评估（Video Motion Assessment）」：使用 Farneback 稠密光流算法（OpenCV 经典算法）计算片段的光流场，导出三个标量指标——Motion_Mean（平均运动幅度）、Motion_Max（峰值运动幅度）、Motion_Min（最小运动幅度）。三值组合用于识别并剔除两类样本：几乎静止的片段（运动信息量不足、易导致模型生成静态画面）与运动过于剧烈/抖动的片段。具体阈值未公布。
@@ -1723,6 +1995,43 @@ Seedance 1.0 在预训练过滤阶段剔除抖动过大与以静态内容为主�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 有两条方向相反的运动约束：一方面通过「镜头稳定性」过滤只保留静止或慢速运动的镜头，剔除大幅运镜/抖动（jitter 亦在视觉质量项中被剔除）；另一方面通过「交互性」过滤要求主体本身具有清晰可辨的动作或行为，剔除完全静止无动作的样本。即「镜头要稳、主体要动」。未提及使用光流或具体运动分数阈值 [不确定具体方法与数值]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 把运动质量提升为与视觉质量并列的独立漏斗层级，目标是「选出自然、完整、运动显著的视频，同时规避静态与抖动」。
+【六档分级与差异化处置】最优运动（保留，最高优先）／中等质量运动（保留，保证运动多样性并帮助模型理解时空关系）／静态视频（聊天访谈类，画质高但运动少 → 单独识别并降低采样比例）／相机主导运动（航拍等，近似静态图 → 大幅降低采样优先级）／低质量运动（主体过多、严重遮挡、主体不清 → 排除）／抖动镜头（业余手持、运动模糊、前后景难分 → 系统性排除）。
+【要点】静态与相机主导运动不是被删除而是被「降采样」，体现了「保分布不丢概念」的一贯思路；真正被删除的只有低质运动与抖动两档。
+【方法】Wan 2.1 未说明六档分级所用的具体算法（是否光流、是否训练分类器），也未给出任何阈值数值。同族旁证：Wan2.2-S2V 用 UniMatch 预测光流并计算运动分；Wan-Dancer 用 SEA-RAFT 生成光流 mask（用途是损失函数而非过滤）；Wan-Bench 评测侧用 RAFT 光流幅值度量大运动生成能力。[不确定：阈值与算法]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者均未采用光流或运动分数阈值做过滤[不确定]，但存在若干功能等价的替代机制：
+【AV-SyncBench】Local Jitter 挑战任务（30–700 ms 三档严重度的局部抖动扰动）与 Global Speed Change（0.8×–1.25× 共 10 档变速）本质是在人为构造「运动-音频时间基不一致」的负样本，可反向用作训练数据中变速/抽帧异常样本的检测思路。
+【PhyAVBench】Time and Causality 维度下的「周期运动 / 非周期运动节奏一致性」测试点，以及 Transient Synchronization（起振与止声）测试点，考察的正是运动与声音的因果一致性，比单纯运动幅度阈值更语义化。
+【VABench】未做运动过滤；生成侧被测模型的静态画面问题由 Visual Realism 与 Artistry 打分间接惩罚。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+captioner 生态与运动过滤的交互点有三：
+【打标器输出运动信息供过滤使用】Tarsier2 天然会描述相机运动类型（zoom in / pan right 等），Goku 论文明确指出这是选它做视频级 caption 的关键优势 —— 无需额外的相机运动标注模块即可获得镜头语言标签。
+【专用运动分类器与 captioner 分工】主流做法是运动识别不交给通用 VLM 而用轻量分类器：Movie Gen 训练了 16 类相机运动分类器，高置信度预测结果作为前缀拼到 caption 上；LongCat-Video 的相机运动（pan/tilt/zoom）由单独训练的轻量分类器负责而非 VLM（推测出于成本与精度考虑）；HunyuanVideo 有独立的自研 camera movement classifier（1.5 版升级为 clip 级 + 时序级双粒度）；SkyCaptioner-V1 的相机运动子专家基于分类，训练数据为 9.3 万条高置信度人工标注 + 1.6 万条运动轴均衡合成数据，1.5 万条测试集上单类型运动准确率 89%。
+【运动过滤本身（光流/运动分数阈值、静态与抖动剔除）属于打标上游】Foley-Omni 用 motion∈[0.1, 3.2] 阈值；InstructAV2AV 用 CoTracker3 运动阈值；Open-Sora Plan 用 LPIPS 上界 0.3（超过即出现抖动闪烁，结论经 2000 条人工抽检验证）。这些均在 captioner 之前执行。
+【生态判断】「运镜识别用专用分类器、内容描述用 VLM」是 2024–2026 年稳定的分工范式，原因是 VLM 对运镜的判别准确率不稳定且难以量化验证，而分类器可给出置信度用于过滤。SkyCaptioner-V1 的做法（把分类器结果蒸馏回 7B 统一 captioner）是两条路线的融合尝试，其影视专业字段平均准确率 76.3%（镜头类型 93.7%、机位角度 89.8%、机位位置 83.1%、相机运动 85.3%），显著超过 Qwen2.5-VL-72B 等更大的通用模型。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+运动过滤是这四个数据集区别于常规视频生成数据集的关键点——常规pipeline剔除过大运动，几何标注数据集反而剔除“运动不足”者。SpatialVID：以 VMAF 结合三项相机轨迹度量做筛选——MoveDist（总位移距离）、RotAngle（累计旋转角）、TrajTurns（方向变化次数），并用基于加速度的检测器识别突兀、非物理的运动抖动予以剔除；量化证据是 Panda-70M 中 80%+ 视频因视差/运动不足无法被 MegaSaM 重建，故必须主动检索 walk/tour/drone 类高运动素材；最终库中80%的clip具有弯曲或转向轨迹。SceneScribe-1M：以“运动多样性”为初筛主轴，Qwen2.5-VL-72B 判定运动强度未知者直接剔除，并因运动要求大幅缩减源池；选用 MegaSaM 的理由正是其在相机视差受限场景下仍稳健。WildWorld：动作由游戏输入直接给定，无需从像素反推运动，静态帧通过动作ID可精确识别。Action100M：无光流层面的运动过滤，语义分割阶段的方差最小化聚类天然把静止段落合并为长节点
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文在数据侧无运动过滤描述，但在奖励侧设有专用的 Motion Quality 奖励模型（评估运动动态的真实性、平滑性与连贯性，抑制抖动、不连续运动、时序不一致的物体转换），并在结果中报告运动质量是 RLHF 增益最显著的两个维度之一 [数据侧不确定]。
+【横向】
+· Allegro SFT：UniMatch 光流运动分数区间 [1.0,100]；
+· HunyuanVideo 原版 SFT 人工标准含运动速度、动作完整性、运动模糊三项；
+· Motif-Video 2B SFT 显式要求 action=Dynamic；
+· SkyReels-V2 的 RL 目标明确聚焦运动质量（动态一致性与流畅度）而非通用美学偏好，其偏好数据的自动侧样本正是「对真实视频施加受控失真」生成的损坏样本；
+· LongCat-Video 的 Motion Quality 奖励模型有一个值得借鉴的设计：以 VideoAlign 为基座在内部标注数据上微调，输入灰度视频（去色以迫使模型只评估运动而不被色彩/美学干扰）——这是解耦运动奖励与美学奖励的直接工程手段；
+· Cosmos-Predict 2.5 单列「high motion」域（1.0M 条）做专项 SFT。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -1796,6 +2105,10 @@ Seedance 1.0 在预训练过滤阶段剔除抖动过大与以静态内容为主�
 
 仅描述了一种机制：**基于感知哈希（perceptual hashing）的近似去重**。做法是对每个片段的关键帧计算感知哈希值并两两比对，若两个片段哈希值相近则判为重复，此时**保留美学评分更高的那条**，丢弃另一条。论文明确限定该去重发生在「同一源视频切出的片段之间」（clips from the same source video），主要解决长视频切分后相邻片段内容高度重叠、以及重复镜头/回放镜头的问题。
 【未涉及】跨源/全局的精确去重（如文件级 MD5、逐帧哈希全库比对）、基于 embedding 的语义级去重（如 CLIP/DINOv2 特征聚类去重）、图像侧（LAION 1亿样本）的去重处理，均未在论文中说明。这是 Goku 数据流水线相对薄弱的一环——DINOv2 特征已经在切分阶段被提取，却未被用于语义去重。[不确定]（是否存在未披露的全局语义去重）
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未说明是否做精确去重（哈希级）或基于 embedding 的语义去重，未给出特征提取方式或相似度阈值。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1922,6 +2235,13 @@ Seedance 1.0 采用语义去重（Semantic Deduplication）：用内部自研的
 
 完全未披露。既未说明精确去重（哈希级），也未说明基于embedding的语义去重。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+论文与数据卡均未提及任何去重环节：既无基于视频哈希/指纹的精确去重，也无基于 embedding（CLIP/DINO 等）的语义去重，也未描述跨 clip 或跨源视频的近重复检测。
+【客观风险】(1) 同一 YouTube 视频会被切分出多个 clip，同一说话人在同一场景下的多个片段高度相似，属结构性近重复；(2) 数据源覆盖 2006–2025 的 YouTube，同一访谈的转载、剪辑版、多平台重复上传在 YouTube 上极常见，采集时若仅按视频 ID 去重则无法识别内容级重复；(3) 83K 说话人 ID 对应 5.2M clips，平均每个说话人约 63 个 clip，头部名人（访谈/新闻类内容的典型主体）很可能贡献远高于平均的片段数，存在身份层面的长尾失衡。
+【唯一相关机制】ArcFace 的 ID 校正步骤会跨 clip 计算人脸余弦相似度，但其目的是「保证同一 ID 的标注一致」而非「删除重复内容」，方向恰好相反——它是在做身份聚合而不是去重。
+【结论】去重是本数据集披露体系中的明确空白。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 技术报告未描述任何去重环节——六阶段 pipeline 中没有独立的去重步骤，也未提及感知哈希（pHash）等精确/近重复去重，或基于 embedding 的语义去重。
@@ -1954,6 +2274,39 @@ Seedance 1.0 采用语义去重（Semantic Deduplication）：用内部自研的
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 在流程最前端（正式进入 pipeline 之前）对所有数据先做去重（all data are first deduplicated），再进行预过滤。论文未区分精确去重与基于 embedding 的语义去重，也未说明所用特征或相似度阈值 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+披露极其薄弱。Wan 2.1 报告仅在数据来源句中一笔带过：「We curated and deduplicated a candidate dataset sourced from…」——确认存在去重环节且发生在漏斗最前端（候选池构建阶段），但完全未说明方法：既未区分精确去重（哈希/指纹）与语义去重（embedding 聚类），也未给出相似度阈值、去重比例或簇内保留策略。
+可能被误读的一点：第2步视觉质量中的「clustering」（100簇）目的是配额采样以保持分布，报告明确其作用是防长尾丢失，并非去重手段，不应混淆。
+2.2/2.5/2.6/2.7 均无任何去重信息。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者均未披露显式的精确去重或 embedding 语义去重流程[不确定]。相关的近似机制为：
+【PhyAVBench】采用「反向去重」思路 —— 主动保证与现有训练集零重叠（全部新录制），并在采集时刻意跨不同个体、演示者与录制设备取样以提升样本内多样性，这是从源头避免同质化而非事后去重。
+【AVBench】Hard Quota-Based Greedy Sampling 强制任一单属性占比 ≤50%，功能上等价于属性层面的去冗余/均衡采样。
+【AV-SyncBench / VABench / Omni-Judge】未提及去重[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+[不确定] 这是 captioner 生态披露最少的字段之一。
+【已知的少量证据】
+· AVSCap-130K 的来源包含 AVoCaDO-107K，AVoCaDO-SFT 的来源又包含 FineVideo、Shot2Story 等公开数据集，而这些公开集之间本身存在视频重叠 —— 「数据集叠数据集」的滚雪球式复用带来了显著但未被量化的跨数据集重复风险，两篇论文均未讨论去重。
+· Tarsier2-Recap-585K 从 1M 条公开数据集视频中产出，其来源（VATEX、TGIF、LSMDC 等）之间同样存在已知重叠，去重策略未披露。
+· Panda-70M 的贪心集合覆盖是对「打标器」去冗余（31 个降到 8 个），不是对视频样本去重。
+· Goku 用 Qwen2 作为 LLM 融合器把关键帧 caption 与视频 caption 合并为「统一、无冗余、无矛盾」的最终描述 —— 这是 caption 文本级的冗余消除，与样本级去重不同。
+· LongCat-Video 用 LLM 对 caption 嵌入的聚类结果做类别命名，caption embedding 聚类具备做语义去重的技术条件，但报告未说明是否用于去重。
+【生态判断】视频样本的精确去重（哈希）与语义去重（embedding）普遍在 captioner 上游完成、由生成侧团队执行且很少披露；caption 文本本身的去重（避免同质化模板句）几乎无人讨论 —— 考虑到 CogVideoX 的 prompt 明令禁止「The video presents / depicts / showcases」「throughout the video」等套话，说明 caption 同质化是真实存在的问题，但业界靠 prompt 约束而非事后去重解决。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+Action100M 的去重最系统且量化：在标注聚合后识别出 7.58M 个重复组、共 1.418亿条重复实例并执行去重，随后用 k-means（k=10³/10⁴/10⁵）做语义重采样以压平长尾——属于基于语义嵌入的去重+再平衡组合。SceneScribe-1M：源自 HD-VILA-100M/Panda-70M/Koala-36M/Pexels 四个库的合并，存在跨库重叠风险，论文未描述显式去重步骤[不确定]。SpatialVID：以视频ID为单位从 YouTube 采集，同一长视频切出的clip间存在天然近重复，论文未描述embedding级语义去重[不确定]。WildWorld：动作空间长尾明显（top-150 动作占 58.49% 样本），论文以动作三元组统计呈现分布而非去重，未见显式去重流程[不确定]
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未涉及 [不确定]。后训练阶段的去重关注点与预训练不同：不是去除重复素材，而是去除重复/含糊的 prompt。Seedance 1.0 明确在 RLHF prompt 收集后做「数据均衡与信息过滤以剔除重复与含糊 prompt」；Step-Video-T2V 邀请标注员依指引合成补充 prompt 以保证 prompt 多样性；JavisDiT++ 保证 3 万条 DPO prompt 池与 SFT 数据不重叠；VideoReward 保留 1.3 万 prompt 从未出现在训练集的三元组作验证集。
+素材级去重在 SFT 阶段最典型的形态是 Step-Video-T2V 的 VideoCLIP K-means 簇内离群剔除（形式上是聚类，作用上兼顾了语义去重与离群剔除）与 LongCat-Video 的 caption 嵌入密度倒数采样（对高密度即近重复区域降采样，是一种连续化的软去重）。这两者代表了「用 embedding 空间密度替代硬去重阈值」的方向。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -2051,6 +2404,10 @@ Gemini 2.5 Pro 在本pipeline中承担的是「标注生成 + 存在性判别」
   (6) 多模态大模型（InternVL2.0、Tarsier2）与 LLM（Qwen2）—— 但它们仅被用于 **caption 生成与融合**，论文**未**将其用于质量打分、图文错配（text-video misalignment）检测或语义合理性剔除。
 【明确缺失】论文没有 VLM 打分环节、没有 caption 与视频一致性的回验（如 CLIP score / VLM 一致性判定）、没有 LLM 对 caption 质量的审核。
 【评价】Goku（2025年初）代表的是「浅层打分器 + 模型打标」阶段；相较后续 Seedance、LTX-2 等引入 VLM 作为质检员做语义级筛选与错配剔除，Goku 在这一维度是明显的时代分界前侧样本，可作为趋势演进的对照基线。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未提及使用 VLM/LLM 作为数据质检员。值得注意的间接背景：MiniMax 自身拥有强多模态大模型能力（MiniMax-01 系列具备 VL 能力，M3 为 427B 图文输入模型），且在 2025年12月开源了 VTP 视觉 tokenizer，技术栈上完全具备用自家全模态模型做数据质检与语义打标的条件；但公司从未公开确认视频数据流水线中是否采用了这一做法。因此本字段属于「有能力但无披露」，无法归入 2026 年「从浅层打分器转向大模型语义判断」这一趋势的证据集。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -2238,6 +2595,16 @@ SkyReels 系列是「大模型下沉到数据环节」趋势的典型代表，�
 
 训练数据侧是否使用 VLM/LLM 作为质检员，未披露。但在推理安全侧，OpenAI 明确使用了大模型作为判官：输出阻断环节部署「a safety-focused reasoning monitor... a multimodal reasoning model which is custom-trained to reason about content policies」（一个为内容政策推理而定制训练的多模态推理模型），对生成视频帧、场景描述文本、音频转写进行语义级判断。这证明 OpenAI 已具备并部署了「大模型语义判断」能力栈，将同类能力复用于训练数据质检在技术上顺理成章，但 System Card 未做此陈述。此外安全评测流程中，对抗prompt由「helpful-only 版本视频模型」生成输出后再打分并转化为自动化评测，也体现了模型参与数据构造与评判的范式。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+SpeakerVid-5M 处于「大模型深度参与标注、但质量裁决仍由专用模型承担」的中间形态，与 MOVA 的分工格局类似：
+【MLLM 作为打分员的实际用法（唯一一处）】Qwen2.5-VL 被用作运动强度评分器，采用三 persona 集成打分（专家/观众/标注专家三种人格视角，各自 1–5 分制），剔除离群后取均值。这是把主观、难以用浅层指标刻画的「动作幅度与交互活跃度」交给 MLLM 判断的典型案例，且用多视角集成缓解单次打分的不稳定性——相比单 prompt 打分是更审慎的做法。该分数随后成为 HQ 子集的硬性筛选条件之一（> 2）。
+【LLM 作为分类器】Qwen-3 被用于对话主题类目（dialogue topic category）的分类标注。
+【MLLM 作为描述器】Qwen2.5-VL 生成结构化 caption（相机运动、实体列表、身体朝向、半身/全身、表情、动作描述等）。
+【质量裁决仍由专用模型承担】DOVER（视频质量）、SyncNet（唇音同步）、ArcFace（人脸身份）、Whisper（ASR 置信度与无语音概率）、Laplacian 方差（模糊）、自定义 clarity 公式（清晰度）——这六类硬性过滤全部由专用判别模型或传统信号指标完成，没有任何一项由 VLM 出综合质量分替代。
+【未采用的做法】没有 LLM-as-judge 式的跨模态一致性校验（对比 MOVA 用 GPT-OSS-120B 做视听语义自洽裁决）；没有 caption 幻觉自审计机制；没有用 MLLM 复核过滤结果。
+【总体定位】MLLM 在此负责「标注与主观打分」，不负责「质量判决与错配剔除」，属该趋势的早期/保守形态。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 本条目在这一维度上明显偏「传统打分器」而非「大模型语义评判」，是观察 2025 年初到 2026 年范式迁移的一个基线样本：
@@ -2284,6 +2651,66 @@ Veo 3 是「大模型深度介入数据流程」这一趋势的典型代表，�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 这是该报告数据侧最突出的方法论主张，体现了2026年「从浅层打分器转向大模型语义判断」的趋势：论文明确指出仅用专家模型（expert models only）评估视频数据存在明显局限——例如人脸检测模型难以泛化到夸张或高度风格化的2D动画主体；部分专家模型是基于图像的、只能对抽帧做判断，因全局信息不足而产生误判。因此引入 omni model（全模态大模型，引用文献[24,25]）对完整视频进行全局语义理解作为补充，由其沿 editing、subject、action、emotion、face、speech、scene、shot、tone 九个质量维度生成语义标签。专家模型与 omni 模型共同构成兼具全局上下文感知与局部细节敏感度的联合过滤系统（joint filtering system）。omni 模型的具体身份与规模未披露 [不确定]。此外 caption 标注同样由标注模型（annotation model）完成。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 系呈现清晰的「专家小模型做质检、MLLM 做打标与评测」的分工，尚未见到公开证据表明其数据漏斗已转向大模型语义判断。
+【Wan 2.1 数据漏斗中的判别器全部是专用/浅层模型】轻量 OCR 检测器、LAION-5B 美学分类器、内部 NSFW 安全模型、水印/logo 检测器、启发式黑边检测、过曝专家分类器、合成图专家分类器、自研模糊打分模型、人工标注训练的1–5分视觉质量专家评估模型、运动质量分级器。
+【MLLM 出现的三个位置，均非质检】
+1) 打标：自研 LLaVA 式 dense caption 模型（ViT + 两层 MLP + Qwen LLM）对全量重打标；视觉文字分支用 Qwen2-VL 把 OCR 结果转成自然描述；V2A 用 Qwen2-Audio 生成音频 caption；Wan2.2-S2V 用 QwenVL2.5-72B 打标。
+2) 数据构造中的校验：用 LLM 从文本中抽取 (类别, 数量) 对，再用 Grounding DINO 实际计数，只有两者一致才保留——这是 Wan 系最接近「模型做裁判」的一处，属交叉校验式弱质检。
+3) 评测：Wan-Bench 大量使用 Qwen2-VL 做物理合理性、运动平滑度、风格化、物体/数量/空间关系、复杂运镜、动作指令遵循等复杂任务的判定，简单任务（如物体检测）才用传统检测器。这说明团队已具备用 MLLM 做语义判定的完整工程能力，只是公开材料中未把它用于训练数据过滤。
+2.5/2.6/2.7 是否已引入 VLM 质检不可知；考虑到其「角色扮演」「多镜头一致性」等能力对语义级图文/音画匹配的要求，很可能已引入，但无任何依据。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+这是本次调研中五个基准最具训练侧参考价值的字段，五者恰好构成「大模型作质检员」这条 2026 年趋势的完整证据链：
+
+【AV-SyncBench —— Gemini 作前置质检员的实证】明确使用 Gemini 3 Flash 作为自动过滤第一关，任务是剔除「画外声源」与「明显视听错配」两类样本，随后才交人工复核。这是目前公开文献中少见的、把商业闭源多模态大模型直接嵌入数据 pipeline 首级过滤的做法，其成本-效果权衡（用 Flash 级轻量模型做高召回粗筛，再用人力做高精度精筛）对大规模训练数据清洗有直接可移植性。
+
+【AVBench —— 训练专用评测器替代通用大模型】走了另一条路：不用通用 MLLM 直接打分，而是通过偏好学习训练专用评测器。VT 与 AV 维度基于 Qwen2.5-Omni (7B) 仅微调 LLM 部分；AT 维度基于 Qwen2-Audio (7B) 微调 LLM 与 connector 层。训练约束设计巧妙：模型仅输出单 token（Yes/No），通过 token 概率比归一化得到连续分数，从而把离散判断转成连续可微信号，可直接用于数据过滤与 RLHF reward。这解决了 LLM-as-judge 打分离散、方差大、不可微的核心痛点，是训练侧最值得复用的技术细节。
+
+【VABench —— 通用 MLLM 做语义层评测】Module 2 使用 Qwen2.5-Omni 7B 承担 5 项宏观打分（Alignment / Artistry / Expressiveness / Audio Realism / Visual Realism，1–5 分）与 2 项微观问答（每样本 3–7 条音频 QA 与 3–7 条视觉 QA）。「宏观打分 + 微观 QA 双层」结构值得借鉴：细粒度 QA 把模糊的整体评分拆解为可验证的事实判断，显著降低 MLLM 打分的主观漂移。
+
+【Omni-Judge —— 能力边界的系统性测绘】最重要的负面结论提供者。以 Qwen3-Omni（30B 总参 / 3B 激活）为对象，对比 instruct 版与 reasoning 增强版，在 9 个维度上与 6 名博士生标注做相关性分析。结论清晰分层：语义类维度可用 —— audio-text alignment 在 Sora 2 子集上达 τ_b=0.292 / ρ=0.345，audio-video-text 三模态一致性 0.139/0.151；感知类维度不可用 —— video quality τ_b≈0.020，audio-video synchronization 仅 0.142，作者归因于 Omni-LLM 的时间分辨率不足。对训练数据 pipeline 的直接指导：Omni-LLM 适合承担「语义匹配/错配剔除」，但时序同步与画质判定必须交给 Synchformer、DOVER++ 这类专用模型。此外论文展示了利用 Omni-Judge 可解释反馈做生成模型「反馈式修正」的应用（基于识别出的错误生成修正帧），但未主张用于训练数据过滤。
+
+【PhyAVBench —— LLM 在知识构建与初筛两端介入】LLM 用于物理知识头脑风暴、分类体系生成、提示词模板生成，以及质控阶段的语义歧义与混杂因素初筛；但所有 LLM 产出均经人类专家审核修订，形成严格的「LLM 提效 + 专家把关」分工。
+
+综合判断：2026 年的共识是「大模型判语义、专用模型判感知、人类判物理与最终边界」三层分工，而非用大模型一把梭。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+这是 2025–2026 年该生态最显著的趋势，且 captioner 生态同时是「被判」与「判人」的双重角色：
+【趋势一：LLM/VLM 作为 caption 质量裁判（浅层打分器 → 大模型语义判断）】
+· AVoCaDO：GPT-4.1 对 Gemini 合成 caption 打 synthesis completeness 1–5 分，只保留 ≥4；GRPO 阶段进一步用 GPT-4.1 判定五维 checklist 覆盖度作为 reward ℛ_C。
+· AVSCap：automated verification 做 tag 保留检查 + 语义一致性检查；GRPO 的 hybrid reward 含 audio-visual consistency 项。
+· MOVA：GPT-OSS-120B（120B 开源模型）承担 caption 融合 + 跨模态一致性校验 —— 把最大的模型放在融合与裁决环节而非感知环节，是成本与效果权衡的典型选择。
+· AuroraCap 提出 VDCScore：用分治策略把长 caption 评测转化为多个短问答对，由 LLM 判定 —— 代表 caption 评测从 CIDEr/BLEU 等 n-gram 指标向 LLM 语义判断的迁移。
+· Omni-Cloze 反其道而行：用 2000 clip / 7 万道细粒度完形填空题规避 LLM-judge 噪声，是对 LLM-as-judge 可靠性的一种质疑与修正。
+【趋势二：captioner 作为数据质检员】
+· InstructAV2AV：Qwen3-Omni 既生成编辑指令又承担五维度验证打分 —— 论文自身承认「生成与验收同源是本 pipeline 的方法论隐患」，这是本生态少见的自我批评。
+· Vidu S1 在质量过滤阶段使用 omni model 做判别（细节未披露）。
+· Foley-Omni 用 Gemini 2.5 Pro 做标注，再用 Bandit（cinematic audio source separation）做声学后验证纠偏视觉幻觉，阈值 −35 dB —— 「大模型标注 + 信号级验证」的组合是抑制多模态幻觉的有效范式。
+【方法论隐患（全生态共性）】(1) benchmark 与 model 同源：AVSCap 既是 AVSCapBench 的作者又是榜首（60.44），存在过拟合风险，其分数需用第三方基准（UGC-VideoCap、Omni-Cloze）交叉验证；(2) 教师即裁判：多数工作用 Gemini/GPT 家族既做教师又做裁判，评分偏向自身输出风格；(3) 人类一致性天花板：Panda-70M 报告的人类之间 caption 偏好一致率仅 44.9%，意味着 LLM-judge 的「准确率」上限本身就模糊。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+这批数据集充分体现了“大模型作质检员”的2026年趋势。SceneScribe-1M 最典型：直接用 Qwen2.5-VL-72B 作为唯一的内容质量判官，一次性完成六个维度（运动强度、水印、相机畸变、光照伪影等）的语义判断，取代了传统的浅层美学/清晰度打分器组合。SpatialVID 采取混合策略：浅层打分器（CLIP+MLP美学、亮度统计、PaddleOCR、VMAF）做粗筛，把大模型算力留给标注侧——Gemini-2.0-Flash 做1fps视觉解析、Qwen3-30B-A3B 结合相机位姿先验精修并纠正运动方向描述，本质是“用几何真值校验VLM输出”的反向质检，可修正VLM常见的左右/推拉方向幻觉。Action100M 把LLM质检推向极致：GPT-OSS-120B 对多来源caption做证据聚合与结构化抽取，并执行三轮 Self-Refine 自我修正，等于用推理模型充当标注一致性审核员。WildWorld 用VLM做评测端的judge：WildBench 的 Action Following 指标由VLM判定生成片段与真值片段是否一致（0/1打分），与人工评价达成85%一致率——是模型即评委在几何数据集上的显式效度验证
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+这是本专题的核心——后训练阶段「模型即判官」不再只是数据过滤器，而是直接成为训练信号（奖励模型），这是 2025–2026 年最重要的范式转移。
+【锚论文的奖励模型体系（披露相对充分的部分）】遵循 HPSv3 训练范式，用 Qwen3.5（引文指向 Qwen3-VL 技术报告 arXiv:2511.21631）作为主干从图像与文本抽特征，经 MLP 输出标量分数；对训练图像对 (x1,x2) 与文本 c 及人类偏好标注 (y1,y2) 计算 r1、r2，采用「不确定性感知的排序损失（uncertainty-aware ranking loss）」；训练分两阶段——Stage 1 用「数据感知的正交梯度投影（data-aware orthogonal gradient projection）」把来自 HPDv3++ 的多样美学偏好整合进来，同时保留 HPSv3 中已编码的原始人类偏好知识；Stage 2 进一步利用「由不同能力等级模型与不同 RL 迭代产生的无标注数据」。最终得到覆盖视频美学、文本-视频对齐、图像美学、文本-图像对齐的四个奖励指标。
+【多奖励融合的工程难点（论文明确点出）】不同奖励信号的粒度、尺度与优化倾向各异：强调文本-视频对齐会提升语义保真但有时损害视觉自然度；过度优先运动质量或视频美学则导致画面好看但语义变弱。因此需精心设计奖励聚合策略并调节权重系数，使优化过程稳定且不被任一目标主导。论文自陈其最终以「整体视觉质量」为首要目标做取舍。
+【横向奖励模型清单】
+· VideoAlign / VideoReward（arXiv:2501.13918，快手可灵 + CUHK）：VLM-based，三维（视觉质量 VQ / 运动质量 MQ / 文本对齐 TA），训练自 1.6 万 prompt、12 个 T2V 模型生成的 10.8 万视频、18.2 万标注三元组，采用带平局的 Bradley-Terry 模型（BTT）。被 Cosmos-Predict 2.5、LongCat-Video、JavisDiT++ 广泛复用为基座，是开源视频奖励模型的事实标准；
+· HPSv3（ICCV 2025）：HPDv3 含 108 万文本-图像对与 117 万成对比较标注，覆盖 SOTA 生成模型与低到高质量真实图像；
+· LongCat-Video 三奖励：VQ = HPSv3-general（全帧平均）+ HPSv3-percentile（取分数最高前 30% 帧、结合视频 caption 计算，用于抑制少数低质帧对整体判断的稀释）双路；MQ 与 TA 均以 VideoAlign 为基座在内部标注数据上微调；
+· Seedance 1.0 三个专用 RM：Foundational RM（VLM 架构，图文对齐与结构稳定性）、Motion RM（抑制伪影、增强运动幅度与生动性）、Aesthetic RM（图像空间输入，数据源改为视频关键帧），并做多轮迭代式学习；
+· SkyReels-V2：Bradley-Terry 模型在 3 万样本对上训练；
+· JavisDiT++ 六模型分工：AudioBox-Aesthetics（音频质量）、ImageBind（文本-音频对齐 / 文本-视频对齐 / 跨模态相似度）、VideoAlign（视频质量）、Synchformer（时序同步）；
+· 其他被引用的 RM 谱系：ImageReward、Pick-a-Pic、VideoScore、VisionReward（AAAI 2026）、Unified Reward Model、RewardDance。
+【反例与警示】Step-Video-T2V 明确不训练奖励模型，并在展望中指出当前 DPO 的局限——当模型能轻易区分正负样本时收益即饱和——提出未来引入 RM 对新生成样本动态打分以持续提供有效梯度。ITS-JAVG 揭示的 verifier hacking 问题预示：若贸然用自动验证器构造偏好数据做 RLHF，很可能训出只会讨好判官的模型。Cosmos-Predict 2.5 的应对是用微调数据集上的 diffusion loss 做正则以缓解 reward hacking；LongCat-Video 与锚论文的应对是多奖励并用互相牵制。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -2346,6 +2773,10 @@ Koala-36M 走的不是「更大的VLM」而是「更好的融合」。其 **Trai
 ### [Goku](../models/Goku.md) ⚠️
 
 [不确定]。论文全文未提及 NSFW/涉黄涉暴过滤、版权过滤、人脸与隐私保护、敏感人物识别、有害内容分类器等任何安全合规环节，也没有 Responsible AI / 模型卡章节。考虑到发布方为字节跳动，实际生产流程中几乎必然存在内部安全审核（字节有成熟的内容安全中台），但论文层面零披露。唯一间接相关的是 OCR 文字过滤（剔除字幕/贴片广告），但其动机是画质与生成质量而非安全合规。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（数据侧无披露，仅有推理侧证据）。训练数据端的 NSFW 过滤、版权过滤、人脸/隐私处理均未披露。可观测的只有推理侧的内容安全策略：海螺AI 与开放平台 API 对涉政、色情、暴力及公众人物肖像的提示词与生成结果有明确的实时审核与拦截（中国监管环境下的《生成式人工智能服务管理暂行办法》合规要求），海螺AI 网页端展示「内容由 AI 生成，请合法、友好地使用该功能」提示。推理侧存在严格审核可间接说明公司具备成熟的内容安全模型，但不能直接推断其在训练数据清洗阶段的应用方式与强度。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -2463,6 +2894,14 @@ Seedance 1.0：部署先进分类器检测并剔除色情（pornography）、露
 
 这是训练数据侧唯一有实质披露的清洗环节。明确内容：(1) 使用「a combination of safety classifiers」防止有害或敏感内容被使用或生成，明确点名涉未成年人的性内容（CSAM）；(2) 儿童安全上采取「responsibly sourcing datasets to exclude CSAM」——即在数据源头筛除CSAM，并与NCMEC合作，对所有输入输出（含一方产品与API/企业版三方使用）执行强扫描，除非客户满足严格豁免标准；(3) 拥有专门的CSAM安全栈，复用其他产品的系统级缓解措施并叠加Sora专属保护。NSFW/版权/人脸隐私在训练数据侧未单独说明过滤方式，主要通过部署侧策略处理：不支持video-to-video、不支持公众人物的文生视频、除通过cameo显式opt-in授权的用户外阻断包含真人的生成、对疑似未成年人的上传素材施加更严阈值。
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+论文与数据卡均未描述任何安全与合规过滤环节：无 NSFW/暴力内容检测、无版权内容识别、无人脸模糊化或隐私脱敏、无未成年人内容处理、无有害言论（基于 ASR 转写文本的内容审核）过滤。
+【替代性的风险处置】唯一的合规措施是事后的、被动的：限定非商业科研教育用途、声明版权归原作者、提供 takedown 下架政策、不托管原始视频而只发布 YouTube ID。这是「转移责任」而非「主动过滤」。
+【隐私敏感度评估】该数据集的隐私风险实际高于一般视频数据集——它包含 83K 个唯一说话人身份、逐 clip 的 ArcFace 人脸特征关联、DWpose 全身骨架、以及完整的 Whisper 语音转写文本（即「谁在什么时候说了什么」的可检索结构）。这一组合足以构成可用于身份追踪的生物特征数据库，但论文未做任何隐私影响评估，也未说明是否获得出镜人物同意（YouTube 公开视频的默认答案是没有）。
+【内容政治敏感性】数据源明确包含「新闻与政治（news and politics）」与「辩论（debates）」类目，ASR 转写会完整保留其中的政治言论，但未见任何内容审核说明。
+【结论】安全与合规过滤是本数据集披露体系中最大的空白。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 披露很弱，只有一项：pipeline 第2阶段的 NSFW 打分，使用 LAION 提供的基于 CLIP ViT-L/14 的二分类 NSFW 检测器对抽样帧判分，据此过滤色情/不适宜内容。除此之外，报告未提及版权过滤、人脸/隐私保护（人脸打码、肖像权处理）、暴力血腥内容分类、政治敏感内容过滤、名人肖像剔除等任何环节，也未描述生成侧的安全对齐或输出审核。水印检测虽可间接剔除部分明显带版权标记的素材，但其设计动机是画面清洁而非合规。
@@ -2495,6 +2934,46 @@ Seedance 1.0：部署先进分类器检测并剔除色情（pornography）、露
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 在第4级过滤中设有独立的内容安全过滤（Content Safety Filter），剔除 NSFW 及其他不当内容，动机是防止模型学到有害信息。未提及版权过滤、人脸隐私/肖像权处理、名人过滤等机制 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+披露有限，且集中在训练数据侧的单点动作与推理侧的合规标识。
+【训练数据侧】
+- NSFW：内部安全评估模型对「所有训练数据」计算 NSFW 分并系统性过滤不当内容（Wan 2.1 基础维度阶段的固定项）。
+- 版权/权属：仅通过「内部版权来源」的获取端约束，以及水印与 logo 的检测与训练时裁剪，无下游版权分类器描述。
+- 人脸/隐私：无通用隐私脱敏说明。人脸处理集中在个性化子集的构造上（1FPS 人脸检测、任一帧检出多张人脸即丢弃、超10%帧无人脸即丢弃、ArcFace 帧间相似度筛身份一致性、人脸分割去背景、人脸关键点检测用于画布对齐；且刻意不过滤小面积人脸，因为这类视频通常含全身人物）——这些是能力构建而非隐私保护动作。
+- 未提及 CSAM 筛除、红队流程、名人肖像限制（相反，caption 模型专门训练了含数千身份的名人/地标/影视角色识别数据集）。
+【推理侧】API 的 watermark 参数（右下角固定文案「AI 生成」）；负向提示词机制；prompt_extend 改写；商用服务受中国生成式 AI 服务管理办法与内容标识办法约束。
+2.5/2.6/2.7 的安全过滤策略完全未公开。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+披露有限：
+【VABench】I2AV 路的高质量图像在人工精选与分类阶段做了隐私筛查（privacy-screened），是五者中唯一明确提及隐私过滤的。
+【AV-SyncBench】人工阶段剔除语义模糊样本，未提及 NSFW/版权/人脸隐私专项过滤[不确定]。
+【PhyAVBench】自录数据涉及 184 名参与者出镜，肖像权与知情同意流程未披露[不确定]；因内容为受控物理演示，天然规避 NSFW 风险。
+【AVBench】基于公开数据集 OpenHumanVid，继承其安全过滤；自身未追加安全过滤描述[不确定]。
+【Omni-Judge】使用商业模型 API 生成，安全过滤由 Sora 2 / Veo 3 自带的内容安全机制承担。
+五者均未提及 NSFW 分类器、版权检测或人脸匿名化的具体工具与阈值[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+[不确定] 该字段在 captioner 生态中几乎完全空白，仅有间接证据：
+· NSFW / 版权 / 人脸隐私过滤普遍在 captioner 上游由生成侧团队完成，captioner 论文一律不讨论。
+· 唯一相关的设计是 LTX-2 captioner 的「comprehensive yet factual」原则 —— 只描述看到与听到的，显式禁止情绪解读（emotional interpretation）。这既是防幻觉措施，客观上也降低了 caption 对人物主观状态做出可能有偏见的判断的风险，是本生态中最接近「安全设计」的公开做法。
+· AVoCaDO-SFT 含 TikTok-10M 与 ShortVideo 子集，涉及真实人物 UGC 内容，未讨论人脸/隐私处理。
+· 涉及说话人身份标注的工作（AVoCaDO 的 (speaker, content) 二元组、LTX-2 的 speaker/language/accent、CineDance 的角色 anchor token 绑定）都在生成与人物身份高度相关的标注，但均未讨论隐私合规。
+· 生成侧团队的安全过滤（Movie Gen、Veo 3）在其各自条目中记录，与 captioner 选型无直接耦合。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SpatialVID 有显式的安全人工介入：初筛阶段人工审阅并剔除标题含不当词汇（inappropriate terms）的视频，同时剔除“全景相机”类不兼容内容；许可采用 CC-BY-NC-SA 4.0 限制商用。Action100M 的隐私保护来自上游——使用的是已做人脸模糊（face-blurred）处理的 HowTo100M 1,199,096 条版本，且只发布标注不发布视频，进一步降低版权与隐私暴露。WildWorld 天然无隐私风险，画面全部为游戏引擎渲染的虚拟角色与怪物，无真实人脸。SceneScribe-1M 未描述独立的 NSFW/人脸/版权过滤模块，安全性依赖上游数据集（HD-VILA、Panda-70M、Koala-36M）已有的清洗[不确定]
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文 3.1 节把「unsafe outputs（不安全输出）」列为 SFT 阶段要消除的失败模式之一，但无任何具体过滤方法、分类器或数据处理描述 [不确定]（且如前所述该表述疑似来自 LLM 后训练文本的迁移）。第 6 节 Broader Impact 讨论的是商业应用价值而非风险缓解。
+【横向】Sora 2 是唯一在后训练维度详述安全的对象，但其内容属于安全对齐评测而非能力后训练：通过定向红队收集「数千条对抗性 prompt」按用例与政策领域分类，用 helpful-only 版本视频模型生成输出后打分，转化为自动化评测集，测量 not_unsafe 与 not_overrefuse 两项指标（成人裸露/性内容不涉肖像 96.04%/96.20%、涉肖像 98.40%/97.60%、自残 99.70%/94.60%、暴力血腥 95.10%/97.00%、违规政治说服 95.52%/98.67%、极端主义仇恨 96.82%/99.11%）。Veo 3/3.1 官方所称的「post-training mitigations」实指 SynthID 水印与生产环境输出过滤，属部署侧而非数据侧。InstructAV2AV 的 Qwen3-Omni 五维自动验证把「安全性」作为训练样本准入条件之一，是学术侧少见的把安全并入 SFT 准入的做法。
+【整体判断】后训练阶段的安全工作在公开材料中几乎全部集中在「输出侧拦截 + 红队评测」，而非「偏好数据中构造安全偏好对」。用 RLHF 做安全对齐（LLM 领域的标准做法）在视频生成领域尚未见公开实践。[不确定]
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 

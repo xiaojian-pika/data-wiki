@@ -89,6 +89,10 @@ Data-Juicer 不自研 caption 模型，而是把多种 caption 模型封装为�
 【设计动机】单一图像 VLM 缺时序与运动信息，单一视频 VLM 在静态细节上颗粒度不足，两路互补后由 LLM 消歧融合，兼得空间细节与时序/镜头语义。
 【未披露】各模型的具体参数规模与版本号（InternVL2.0 有 1B~76B 多档、Tarsier2 有 7B 档）、是否做过领域微调、打标算力成本与吞吐、图像数据（T2I 的 160M）是否使用同一套 caption 方案。[部分不确定]
 
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未说明使用自研 VLM 还是开源模型做视频 caption，未给出模型规模。背景旁证（非披露）：MiniMax 自研多模态大模型 MiniMax-01（VL 版本）与 MiniMax-M3（427B，Image-Text-to-Text）具备做视频 caption 的能力，且公司内部模型自给自足程度高，推测 caption 由自研模型完成，但无一手确认。
+
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
 标注环节的模型配置极简，与其他工作动辄三四个大模型协同的做法形成鲜明对比：
@@ -269,6 +273,17 @@ Seedance 1.0：caption 模型以 Tarsier2（强视频理解能力的开源模型
 
 完全未披露。Sora 2 未公布任何caption模型信息（自研VLM名称、规模、是否使用GPT-4o/GPT-5系列打标）。可参考前代：Sora 1 技术博客称训练了一个「highly descriptive captioner model」为训练视频生成高描述性文本caption（沿用 DALL·E 3 的 re-captioning 思路），并在推理时用 GPT 将用户短prompt扩写为长详细caption。Sora 2 极可能延续并升级该方案，但无官方确认，也无模型规模数字。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+全部使用开源模型，未自研 captioner，形成「一个 MLLM 负责视觉描述 + 一个 LLM 负责话题分类 + 一个 ASR 模型负责转写」的三模型分工，且无融合环节：
+【视觉结构化 caption】Qwen2.5-VL（阿里通义千问 2.5 视觉语言模型）。论文未明确说明使用的参数规模档位（Qwen2.5-VL 有 3B/7B/72B 等版本）。[不确定] HuggingFace 数据卡中该标注文件夹描述为「MLLM captions from qwen-vl」。
+【运动强度打分】同样使用 Qwen2.5-VL，但以三 persona prompt 的方式独立调用，与 caption 生成是两条不同的调用链。
+【话题分类】Qwen-3（阿里通义千问 3 系列 LLM），对对话主题做类目标注。
+【语音转写】Whisper（OpenAI），输出转写文本、置信度分数、no-speech 概率与压缩比等诊断量。
+【姿态标注】DWpose，输出人脸、手部、身体关键点。
+【身份与同步】ArcFace（人脸识别）、3D-Speaker（声纹分离）、SyncNet（唇音同步）、YOLO（人体检测跟踪）、Deep3DFaceRecon 与 UniSpeech（用于 VidChatBench 评测侧的表情 FID 与音色相似度）。
+【与 MOVA 的对比】MOVA 用 MiMo-VL-7B-RL + Qwen3-Omni-Instruct + Qwen3-Omni-Captioner + GPT-OSS-120B 四模型分工并融合；SpeakerVid-5M 的标注模型链更轻，且各路标注保持独立字段、不做 LLM 融合，成本更低但语义整合度也更低。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 使用自研内部视觉语言模型（in-house Vision Language Model）作为 caption 模型，为每个视频片段生成描述。报告未披露该 VLM 的名称、参数规模、基座架构、训练数据或训练方式，也未说明是否基于阶跃星辰自家的 Step-1V 多模态模型改造。未对 caption 模型做幻觉抑制方面的专门后训练（无 DPO/RLHF 类描述），caption 质量的兜底依赖 SFT 阶段的人工复核（人工会「优化 caption」）与第6阶段的 CLIP Score 对齐过滤。
@@ -314,6 +329,89 @@ Seedance 1.0：caption 模型以 Tarsier2（强视频理解能力的开源模型
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 使用了一个「标注模型（annotation model）」生成结构化自然语言描述，并在质量过滤阶段使用了 omni model（全模态大模型）。论文均未披露这些模型是自研还是开源模型、参数规模多大 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 用整整一节（3.3 Dense Video Caption）描述自研 caption 模型，细节完整度在同类报告中名列前茅；2.5+ 未披露。
+【动机】原始网页文本描述「过于简单，无法传达详细视觉内容」，援引 DALL-E 3 的结论——用高描述性的生成式 caption 训练可显著提升生成模型的提示词遵循能力，因此自研 caption 模型对数据集中每一张图/每一条视频重新打标。
+【架构】LLaVA 式：ViT 视觉编码器提取图像与视频帧嵌入 → 两层感知机（two-layer perception）投影 → 输入 Qwen LLM。
+- 图像侧：采用 LLaVA 式动态高分辨率，一张图最多切7个 patch，每个 patch 的视觉嵌入自适应池化到 12×12 网格以降算力。
+- 视频侧：3 FPS 采样、上限129帧；采用 slow-fast 编码策略——每隔4帧保留原分辨率，其余帧的嵌入做全局平均池化。报告给出量化收益：在有限视觉 token 下 VideoMME（无字幕）从 67.6% 提升到 69.1%。
+【训练三阶段】阶段一冻结 ViT 与 LLM，只训 MLP 做视觉-语言空间对齐（lr=1e-3）；阶段二全参可训；阶段三在小规模高质量数据上端到端训练（LLM 与 MLP lr=1e-5，ViT lr=1e-6）。
+【训练数据】开源视觉语言数据集（caption + 视觉问答，涵盖动作/计数/OCR）+ 纯文本指令数据（使 caption 模型可按用户指令产出特定风格或内容的 caption）+ 大量自建数据（见 caption_structure）。
+【效果】自建自动评测 pipeline（基于 CAPability），10个维度各随机采样1000条视频与 Gemini 1.5 Pro 对比 F1：自研模型在事件（88.0 vs 52.6）、相机角度（89.1 vs 52.6，提升最大）、相机运动、风格、物体颜色上更优；Gemini 在动作、OCR、场景、物体类别、计数上更优。整体持平于 Gemini 1.5 Pro。
+【参数规模】未公布 ViT 与 Qwen LLM 的具体尺寸。[不确定]
+【同族其他打标模型】Wan2.2-S2V 直接用 QwenVL2.5-72B 打标；Wan 2.1 的 V2A 音频 caption 用 Qwen2-Audio；视觉文字分支用 Qwen2-VL。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+评测基准侧的「打标」主要指提示词构造与问答对生成，所用模型如下：
+【VABench】提示词生成使用通用 LLM（具体型号未指名[不确定]）配合专家模板；I2AV 路使用多模态 LLM 从图像生成统一视听描述（型号未指名[不确定]）；评测阶段的 MLLM 打分器明确为 Qwen2.5-Omni 7B。
+【AVBench】评测器为自训练模型：Qwen2.5-Omni 7B（VT、AV 维度，仅微调 LLM 部分）与 Qwen2-Audio 7B（AT 维度，微调 LLM + connector）；硬负例构造使用 LLM 驱动扰动（型号未指名[不确定]）。
+【AV-SyncBench】数据质控使用 Gemini 3 Flash；语义扰动使用 OpenVoice V2（人声音色替换）与预训练 DDSP（乐器音色迁移）；不涉及 caption 生成。
+【PhyAVBench】LLM 用于知识调研、分类体系构建、提示词模板生成与质控初筛（型号未指名[不确定]）；语音任务的转写使用 Whisper-Large V3 计算 WER。
+【Omni-Judge】被测裁判模型为 Qwen3-Omni（30B 总参 / 3B 激活），对比 instruct 与 reasoning 增强两个变体。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+本条目的核心字段。按「谁被用来打标」给出完整生态图谱：
+
+【第一梯队：专为视频打标训练的开源 captioner（下游复用率最高）】
+· Tarsier2-7B（字节跳动，2025-01）：预训练 11M→40M video-text pairs、SFT 做细粒度时序对齐、model-based sampling 构造偏好对 + DPO。DREAM-1K F1 超 GPT-4o 2.8%、超 Gemini-1.5-Pro 5.8%，人评 +8.6% / +24.9%，是首个 DREAM-1K overall recall 突破 40% 的模型，15 个公开基准 SOTA。天然描述相机运动类型是其独特优势。下游被 Seedance 1.0（作为基座，冻结视觉编码器 + LLM 全参微调 + 中英双语训练）、Goku（视频级 caption，与 InternVL2.0 关键帧 caption 互补，Qwen2 融合）、LongCat-Video（时序增强）复用 —— 是被生成侧采用最广的单一开源 captioner。
+· ShareCaptioner-Video（中科大 + 上海 AI Lab + 港中文，2024-06）：基座 InternLM-XComposer2-4KHD，用 40K GPT-4V 密集 caption SFT 而成，产出 4.8M 高质量美学视频标注。核心方法 DiffSW（差分滑窗）—— 把「全帧到 caption」转化为差分描述任务：先为首帧生成详细 caption，再以长度 2 的滑窗顺序处理后续帧，每步输入「前一帧 + 其差分 caption + 当前帧」，输出相机运动/物体运动/人物动作/场景转换四类变化。支持任意时长、宽高比与分辨率，附带 clip summarization（无需重新处理帧）。Open-Sora Plan v1.3 的 stock footage 部分直接使用其标注。
+· CogVLM2-Caption（智谱，2024-09-19 开源）：CogVLM2-Video + Llama3 底座，约 12B 级，由 Panda-70M→CogVLM→GPT-4→LLaMA2 教师链产出的稠密 caption 微调而成，是 CogVideoX 数据 pipeline 中唯一可复现的一环。
+· SkyCaptioner-V1（昆仑万维，2025-04）：Qwen2.5-VL-7B-Instruct 基座（小模型以支撑亿级吞吐），知识蒸馏式融合 —— Qwen2.5-VL-72B 产出通用描述 + 三个子专家 captioner（镜头类型/机位角度/机位位置、面部表情与情绪强度、6DoF 相机运动）→ 融合 → 蒸馏进 7B。影视专业字段平均准确率 76.3%，显著超过更大的通用模型。
+· AuroraCap（学术，2024-10）：token merging 压缩视觉 token，三阶段 2000 万图/视频-文本对训练，Flickr30k CIDEr 88.9（vs GPT-4V 55.3、Gemini-1.5-Pro 82.2），配套 VDC 基准与 VDCScore 指标。
+
+【第二梯队：通用 VLM 直接当打标器（成本最低、最普遍）】
+· Qwen 系列是 2025–2026 年事实标准：Qwen2-VL-7B-Instruct（Open-Sora Plan v1.3 主力）、Qwen2.5-VL（LongCat-Video 的结构化属性判别；SkyCaptioner 基座）、Qwen3-VL（UniTalking 视觉 caption；MOVA 推理侧 prompt 增强）、Qwen3-VL-30B-A3B（Motif-Video 2B 的全部 caption 与标签来源）、Qwen3.5-27B / Qwen3.5-35B-A3B（CineDance 的叙事解析与视觉标注）。选 MoE 稀疏架构（约 3B 激活）在吞吐与质量间取平衡是 2026 年的新趋势。
+· LLaVA 家族：PLLaVA-13B（Open-Sora 1.x 主力，配置 2×2 空间池化、抽 4 帧；文档明确解释不用 GPT-4V 是因为「20 秒/样本太慢」）、LLaVA-Video（Open-Sora 2.0 低分辨率阶段、LongCat-Video 主 captioner）、LLaVA v1.6-Mistral-7B、Koala-36M 用 GPT-4V 种子 caption 微调的 LLaVA。
+· InternVL2.0（Goku 的关键帧 caption）、Aria 25.3B MoE / 3.9B 激活（Allegro 的细粒度打标器，可在 10 秒内为 256 帧视频生成 caption）、MiMo-VL-7B-RL（MOVA 视觉标注）、Tag2Text（Allegro 的粗粒度标签器）。
+
+【第三梯队：全模态/音视频联合 captioner（2025Q4 起爆发）】
+· AVoCaDO（快手可灵 + 中科院自动化所等，2025-10）：Qwen2.5-Omni-7B 基座（HF 标 9B 全栈），AVoCaDO-SFT-107K → GRPO。Reward = ℛ_C（五维 checklist 覆盖，GPT-4.1 判定）+ ℛ_D（对白 F1，speaker 准确率与 content 相似度，编辑距离 + 动态规划找最优对齐子序列，阈值 0.6）+ ℛ_L（长度正则，>4096 token 惩罚）。Apache-2.0。
+· AVSCap-7B（南京大学 NJU-LINK + 快手 Kling，2026-07）：同基座，AVSCap-130K → GRPO（长度控制 + speech preservation + AV consistency），AVSCapBench overall 60.44 追平 Gemini-3-Pro（60.97）。论文关键论断：RL 增益 > 扩 SFT 数据量。
+· video-SALMONN 2 / 2+（清华电子系 + 字节，2025-06 起迭代至 2026-02）：LLaVA-OneVision + LoRA 加装音频能力，3B/7B/72B，MrDPO（多轮 DPO，周期性用新训轻量 adapter 重置 reference policy），caption 错误率相对基线降 28%，Apache-2.0。
+· Qwen3-Omni-Captioner（阿里，2025-09，音频专用）与 Qwen3.5-Omni（2026-03，仅 API）：后者把「剧本级细粒度描述、自动切片、时间戳打标、人物与音频关系描述」直接定位为视频合成模型训练数据生成能力，Omni-Cloze 64.8 > Gemini-3.1 Pro 57.2。配套 Omni-Detective（agentic Query-Observation 循环标注框架）。
+· Qwen2.5-Omni / Qwen3-Omni（被 UniVerse-1、UniTalking、MOVA、SkyReels-V4、InstructAV2AV、Apollo/Klear、LongCat Avatar 1.5 广泛用作音频侧或融合侧打标器）。
+
+【第四梯队：闭源 API 作为教师或高价值子集打标器】
+· GPT-4V / GPT-4 / GPT-4.1：ShareGPT4Video-40K、Koala-36M 种子 caption、MiraData 结构化 caption、CogVideoX 摘要、AVoCaDO 质检。
+· Gemini 系列（2.5-Pro / 3-Pro / 3-Flash）：AVoCaDO 教师、Script-a-Video 的 500K MTSS 全部标注、Harmony 的 400 万条音视频标注、Foley-Omni 主标注（选它因原生支持视频+音频双模态输入，纯视觉 VLM 无法胜任音频存在性判别）、Apollo/Klear 高价值子集、Veo 3 的「多个 Gemini 模型」。
+· Qwen 2.5 Max（Open-Sora 2.0 高分辨率精选 5M 数据重标）。
+
+【第五梯队：生成侧自研且完全闭源】
+· OpenAI Sora：「highly descriptive captioner model」（沿用 DALL·E 3 re-captioning 思路），Sora 2 零披露。
+· Meta Movie Gen：LLaMa3-Video，8B 与 70B 两个变体分别做视频 captioning 微调，训练集 caption 中 70% 来自 8B、30% 来自 70B —— 唯一公开「大小模型混比」数字的工作。另有 16 类相机运动分类器。音频侧四模型协同（音频质量预测 1–10 分、AED 判定 voice/singing 存在性与 music 后验、通用音频 caption、音乐 caption）。
+· 腾讯混元：原版为单一自研 VLM 输出 JSON 结构化 caption；1.5 升级为三模型分工（图像 caption、视频 caption、图生视频指令式 caption）+ 镜头运动识别模型，并用 OPA-DPO 抑制幻觉。
+· Lightricks LTX-2：为音视频联合生成专门开发的新 captioning 系统，同时详尽描述视觉与听觉轨道。
+· 阶跃星辰 Step-Video：in-house VLM，TI2V 版本专门微调强化「物体运动动态」与「镜头运动」描述。
+· 快手可灵 3.0 Omni：官方仅称有「视频描述增强」环节，模型未公开[不确定]；同团队公开做法为 Koala-36M 的 LLaVA 微调路线与自研 Kwai Keye-VL（arXiv:2507.01949）。
+· 字节 Seedance 1.5 pro / 2.0：称有「先进的字幕系统」为视频与音频提供专业级描述，未指明基座[不确定；推测已切换至自研 Seed-VL 系列]。
+
+【关键选型规律（跨条目归纳）】
+(1) 参数量普遍收敛到 7B：ShareCaptioner、Tarsier2、SkyCaptioner-V1、AVoCaDO、AVSCap、MiMo-VL 全部是 7B 级，原因是亿级样本打标必须控制单样本推理成本；把大模型（GPT-OSS-120B、Qwen2.5-72B）放在融合/裁决/教师环节而非感知环节，是全行业一致的成本-效果权衡。
+(2) 多模型分工 > 单模型通吃：Panda-70M 的实证最有力 —— 单个最好打标器仅覆盖 30.8% 样本，8 个组合覆盖 76.8%。Goku（图像 VLM + 视频 VLM + LLM 融合）、MOVA（视觉 + ASR + 非语音 + 120B 融合）、SkyCaptioner（通用 + 三子专家）均是此思路的实现。
+(3) 运镜识别用专用分类器而非 VLM：Movie Gen 16 类分类器、LongCat 轻量分类器、混元独立分类器、SkyCaptioner 的 6DoF 子专家（89% 准确率）—— 一致的行业选择。
+(4) 蒸馏降本是标准动作：GPT-4V/Gemini 教师 → 7B 学生，几乎每个工作都做。Script-a-Video 给出了最完整的蒸馏收益量化（见 data_ablation）。
+(5) 2026 年的分水岭是「能不能听」：纯视觉 captioner 无法服务音视频联合生成模型，omni captioner 成为 AV 生成模型的刚需组件。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+SceneScribe-1M：Qwen2.5-VL-72B（开源VLM，72B规模），利用其动态分辨率处理与绝对时间编码能力处理长视频，同一模型同时承担质量过滤与caption生成双重角色；SpatialVID：双模型级联——Gemini-2.0-Flash（闭源商用API）对1fps采样帧做视觉解析产出初稿，Qwen3-30B-A3B（开源MoE，30B总参/3B激活）做语言精修，并注入相机位姿先验纠正运动方向；WildWorld：用视觉语言模型生成动作序列级与样本级两层caption，具体模型型号论文未指明[不确定]；Action100M：三模型分工——Llama-3.2-Vision-11B 负责帧级（中间帧）caption、Perception-LM-3B（PLM-3B）负责视频片段级caption、GPT-OSS-120B（120B推理模型）负责证据聚合与结构化字段抽取，总标注算力约130万 V100 GPU小时 + 30万 H100/H200 GPU小时
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未披露 SFT 数据的 caption 模型 [不确定]，但其 Phase 3 提示增强（PE）实质上是「用 GRPO 训练一个 LLM 做 prompt 改写」，采用 RePrompt（arXiv:2505.17540）范式，冻结生成主干、只优化策略 πθ，因此可无缝套用到任意现成 T2I/T2V 生成器。PE 的模型规模、基座名称与训练 prompt 规模均未披露 [不确定]。
+【横向后训练阶段的 caption/prompt 模型实践】
+· NAVA 的做法最值得注意：SFT 精选子集（160K）的 caption 由更贵的 Gemini-3-Pro 重新生成（原预训练 caption 由 Flash 生成），即「精选子集 + 升级标注质量」的双重提纯——SFT 阶段不仅换数据，还换标注器；
+· Open-Sora 2.0：阶段三 5M 精选数据用 Qwen2.5-Max 重新打标；
+· Movie Gen：SFT 集的 caption 由人工重写（四阶段的最后一阶段）；
+· Step-Video-T2V：SFT 的人工评审环节同时对 caption 做优化；
+· MAGI-1 的推理侧 Prompt Enhancement 小模型（约 7B）用约 200 万条 MLLM 生成的增强 prompt 语料蒸馏而成，并过滤掉目标文本过长的样本以控制输出长度——是 PE 训练数据规模的唯一公开数字；
+· Open-Sora Plan 的 prompt refiner：19,500 条 caption、LLaMA-3.1-8B LoRA（rank 64，batch 32，1 epoch，单 H100 30 分钟）——PE 的成本下界样本；
+· MOVA 用推理侧 prompt rewriter（Qwen3-VL 抽结构化视觉描述 + Gemini 2.5 Pro 通过 in-context learning 改写为符合训练分布的 prompt）替代后训练指令对齐，人类 Arena ELO 从 982.9 提升到 1025.3——量化证明了 PE 的独立价值。
+【规律】重打标（re-captioning）是 SFT 阶段的标配动作，而非可选项：预训练用便宜模型批量打标，SFT 子集用最贵的模型或人工重打，是当前公认的成本最优配置。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -407,6 +505,14 @@ Seedance 1.0：caption 模型以 Tarsier2（强视频理解能力的开源模型
 【主体】自然语言密集描述，由 InternVL2.0（关键帧细节：物体、属性、场景、构图）与 Tarsier2（时序动态、动作演进、相机运动如 zoom in / pan right）两路生成后经 Qwen2 融合为单条统一长文本。因此单条 caption 同时覆盖「画面内容 + 时序动作 + 镜头语言」三个层面。
 【结构化字段追加】最具特色的一点是：**将 RAFT 计算出的运动分数（motion score）数值直接追加到 caption 末尾**，使运动强度成为一个显式的、可在推理时人为指定的条件变量。这样用户可通过在 prompt 中给定运动分数来控制生成视频的动态幅度，把一个原本只用于过滤的统计量转化为可控生成接口——是「过滤信号复用为条件信号」的典型范例。
 【未采用】未见分层多粒度 caption（短/中/长多版本）、未见风格标签/光照/画质等独立结构化字段体系、未见 caption dropout 或短长 caption 混合训练策略的描述。[不确定]（caption 平均长度、是否保留短 caption 版本）
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。caption 的长度、密度、是否结构化、是否含镜头运动/风格/光照等字段，均未公开。可反推的间接证据（推测）：
+(1) Hailuo 系列在长复杂提示词的指令跟随上表现突出（Hailuo 02 官方宣称 SOTA Instruction Following），通常对应长而密集的训练 caption；
+(2) video-01-director 支持通过提示词内嵌的方括号指令指定具体镜头运动（如 [Push in]、[Pan left]、[Truck left] 等一套约 15 种运镜词表），这是公开 API 文档中可确认的唯一「结构化标签体系」痕迹——它强烈暗示训练数据中存在显式的、词表化的镜头运动标注字段，且该字段被设计为可在推理时直接由用户调用；
+(3) 2.3 对「运动指令响应（motion commands）」的强调，暗示动作类标签同样被结构化。
+以上是从可控接口反推训练标注 schema 的推断，caption 的实际组织形式仍属未知。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -640,6 +746,26 @@ Seedance 1.0 采用「密集描述（dense caption）」风格，融合动态特
 
 完全未披露。无caption长度分布、密集程度、是否结构化字段（镜头运动、构图、风格标签等）的信息。前代 Sora 1 强调「highly descriptive captions」提升文本忠实度与视频质量，可推断 Sora 2 仍走长密caption路线，且从其「enhanced steerability（增强可控性）」「expanded stylistic range（扩展风格范围）」「follows intricate instructions spanning multiple shots」等能力宣称可反推caption中很可能包含风格标签、镜头/运镜描述与多镜头分段结构，但均属推测。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+属于「结构化 JSON 字段」路线，而非长篇密集自然语言描述，是与 MOVA/LTX-2 等生成模型数据集的显著分野：
+【最终形态】标注以 JSON 结构保存并随数据集一并发布（anno 文件夹），字段并列而非融合成段落。论文示例中出现的字段包括：
+  - Clarity（清晰度）
+  - Camera Motion（相机运动模式）
+  - Motion Intensity Level（运动强度等级，1–5）
+  - Entity List（画面实体列表）
+  - Speech Presence（是否有语音）
+  - Observed Actions（观察到的动作，详细身体动作描述）
+  - Number of People（人数）
+  - Upper-Body Only（是否仅上半身/半身 vs 全身）
+  - Facing Direction（朝向：正面/侧面）
+  - 面部表情概括（facial expression summary）
+  - 对话主题类目（topic category，由 Qwen-3 标注）
+【密度】以短字段值为主，仅 Observed Actions 一项为较长的自然语言描述。整体 caption 长度远短于 MOVA 的约 200 词密集融合段落。Figure 3 给出了 caption 词云与词频统计图。
+【显式风格/运镜标签】有——Camera Motion 与 Upper-Body Only / Facing Direction 都是显式的离散化结构字段，这一点比纯自然语言 caption 更便于条件化控制与数据检索。
+【设计取向】该 schema 明显是为「可检索、可按条件筛选子集」优化的（例如可直接筛出「全身 + 正面 + 高运动强度 + 有语音」的样本），而非为「直接作为扩散模型的文本条件」优化。下游模型若要用作生成条件，通常需自行改写为自然语言 prompt。
+【空白】未给出 caption 的平均长度统计、未提供 caption 质量的人工评估或准确率数据。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 采用「三路并行 caption」而非单一密集描述，是本条目在打标维度上最值得记录的设计：
@@ -699,6 +825,50 @@ Seedance 1.0 采用「密集描述（dense caption）」风格，融合动态特
 (1) full-clip caption（整段级）：为整条视频提供连贯的全局语义锚点；
 (2) speech-aware chunk-level caption（语音感知的分块级）：将描述与其对应的时间区间对齐，为可控的交互式流式生成提供细粒度、时序局部化的条件信号——这是适配自回归流式范式的关键设计，使得用户可在生成过程中随时用语音指令改变后续内容。
 结构化字段覆盖视觉、听觉、对白三类属性，明确列举：主体外观（subject appearance）、动作（actions）、运动（motion）、情绪（emotion）、场景上下文（scene context）、镜头语言（camera language）、影视化属性（cinematic properties）、光照（lighting）、画面文字（on-screen text）、对白（dialogue）、音效（sound effects）、背景音乐（background music）共12类。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+走「dense caption + 十维语义槽位」路线，结构化信息熔入自然语言而非显式 JSON 字段。
+【十个核心维度】由 caption 评测体系反推训练目标：动作（action）、相机角度（camera angle）、相机运动（camera motion）、物体类别（object category）、物体颜色（object color）、物体计数（object counting）、OCR 文字、场景（scene）、风格（style）、事件（event）。团队特别指出：当时的 MLLM（含 GPT-4o、Gemini Pro）在预测相机角度与运动上普遍很差，因此专门人工标注了相机角度与运动数据集，既直接训练 caption 模型，也用于训练专家模型给早期训练阶段批量扩标——报告明确这提升了下游视频生成模型的相机运动可控性。
+【Wan2.2-S2V 的显式打标规范（最接近「caption 模板」的官方表述）】要求 QwenVL2.5-72B 详细描述三方面：(1) 相机角度——平视、俯拍、仰拍、全景、中景、特写；(2) 人物外观特征（服装、配饰）与动作，且需拆解为具体的分解动作；(3) 背景环境主要特征，包括建筑风格、配色方案、绿植等。同时明确要求模型「避免主观评价与情绪化解读，因为这些对生成目标视频无益」——与 LTX-2 的「comprehensive yet factual」风格准则高度一致，说明这是业界共识性的打标规范。
+【caption 模型的能力型数据（体现结构化诉求）】名人/地标/影视角色识别（数千身份，LLM 收集人名 → TEAM CLIP 式模型检索 → 关键词匹配双重校验降噪）、物体计数（数字关键词检索 → LLM 抽 (类别,数量) → Grounding DINO 校验）、OCR 增强 caption（先 OCR 抽文字作为先验再让模型生成描述，目前仅中英文）、相机角度与运动、细粒度类别（动物/植物/车辆，数百万图）、空间关系理解（左右上下，借助目标检测数据集）、re-caption（把已有短标签/短caption 扩写为密集描述）、编辑指令 caption（描述两图差异与变换）、图组描述（先写共性再逐图描述）、人工标注的图像与视频密集 caption（最高质量，用于最终训练阶段）。
+【长度与密度】未给出 caption 词数分布。生成侧可作旁证：prompt 长度上限从 wan2.2/wanx2.1 的800字符 → wan2.5/2.6 的1500字符 → wan2.7-t2v 的5000字符，一路放大，暗示训练 caption 也在持续加长加密。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+各基准的提示词/标注结构化程度差异显著，对训练侧 caption 设计有直接映射：
+【VABench 结构化解耦最彻底】原始提示词由 LLM 结构化解耦为「视觉子提示」与「听觉子提示」两条独立流，再据此分别生成 VQA（3–7 条）与 AQA（3–7 条）细粒度问答对。即一条样本携带四类结构化字段：完整提示词 + 视觉子提示 + 听觉子提示 + 分模态问答对。这种「整体描述 → 分模态解耦 → 可验证问答」的三层结构，可直接迁移为训练数据的分层 caption schema。
+【PhyAVBench 单变量受控提示词】337 组配对提示词，每组两条仅在单一物理变量上不同，且刻意避免主观描述、避免显式提示预期声学结果 —— 这是极端结构化的「受控变量式 caption」，本质是把物理属性作为可枚举的标签维度写进文本。
+【AVBench】470 条 ≥720p 真实人物场景提示词，按说话人数量与声学复杂度分层标注；采样时按属性配额控制，暗示提示词已被打上可枚举的属性标签（说话人数、是否重叠语音、背景噪声等级）[具体标签体系未完整披露，不确定]。
+【AV-SyncBench】不生成 caption，但每条样本携带结构化的扰动元数据：扰动类型（全局偏移/局部抖动/全局变速/人声音色替换/乐器音色迁移）+ 扰动强度档位 + 场景类目 + 音频大类。这套「扰动标签」结构对构造训练侧同步性负样本极具参考价值。
+【Omni-Judge】直接使用 VidProM 真实用户提示词，不做结构化改写 —— 代表真实用户 caption 的自然分布（通常短、模糊、缺听觉描述）。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+【长度谱系：从 13.2 词到 824.2 词，跨度 60 倍】Panda-70M 均 13.2 词（单句摘要，prompt 为「Please faithfully summarize the video in one sentence.」）→ Movie Gen caption 平均约 100 词 → Koala-36M 均 202.3 词 → AVoCaDO 最优区间 2048–4096 token。打标模型选择直接决定 caption 长度，进而决定下游 T2V 模型对 prompt 长度的敏感区间。
+
+【结构化程度的四个档次】
+· 档次一 · 纯自由文本单句：Panda-70M。适合大规模预训练的粗对齐，不足以支撑可控生成。
+· 档次二 · 长密集散文 + 固定句式嵌入：主流做法。Allegro 覆盖主体属性、主体间交互、背景、环境、风格、氛围、镜头角度与运动、时序变化，其中镜头运动以固定句式「Camera [MOTION_PATTERN]」显式插入，其余以散文表达；Movie Gen 把 16 类相机运动分类器的高置信度预测作为前缀拼到 caption 上；Step-Video-TI2V 的示例形如「a flock of birds flying over a tree at sunset, camera pans left」。这种「散文主体 + 结构化片段」的混合形态是可控性与自然性的折中。
+· 档次三 · 显式多字段结构化：VDC 定义 camera / short / background / main object / detailed 五字段；Koala-36M 六类结构化信息；SkyCaptioner-V1 输出镜头类型/机位角度/机位位置/相机运动/面部表情与情绪强度等影视专业字段；腾讯混元输出 JSON 结构化 caption；LongCat-Video 用 Qwen2.5VL 判别景别、镜头类型、写实度、动画风格、色调；CineDance 产出镜头级五维属性 + 转场类型 + 局部角色表 + 活跃场景 + 镜头描述 + 转场描述。
+· 档次四 · 多粒度并存 + 随机采样：SkyReels-V4 生成短/长/结构化三档描述；Motif-Video 2B 的 caption 三变体按 0.5/0.3/0.2 概率采样（论文坦承这是「务实的配方选择而非经隔离验证的最优性主张」）；UniTalking 同时保有「分头标注后拼接」与「统一模型融合标注」两条路径的产物，训练时随机采样使用 —— 把标注策略的选择交给随机采样，让模型同时适应两种文本分布。
+
+【DiffSW：唯一为可扩展性设计的结构】ShareCaptioner-Video 的差分滑窗把 caption 组织为「首帧详细描述 + 逐步差分描述」的链式结构，天然携带时序增量信息，且支持任意长度线性扩展与事后快速摘要。
+
+【风格约束（被严重低估的工程细节）】CogVideoX 附录 G 的 prompt 明令禁止「The video presents / depicts / showcases」「throughout the video」等套话与换行符；LTX-2 的原则是「comprehensive yet factual」，只描述看到和听到的，显式禁止情绪解读（防止 T2V 训练时 caption 引入不可控主观信号）。这两条是全生态最有参考价值的 caption 风格设计经验。
+
+【与推理侧 prompt 的分布对齐（caption 结构的下游约束）】Open-Sora Plan 明确论证训练 caption（密集长文）与用户 prompt（<10 词）的分布错配会损害生成效果，为此以 LLaMA-3.1-8B-Instruct 做 LoRA 微调（rank 64，batch 32，1 epoch，单张 H100 上 30 分钟）训练 prompt refiner；Seedance 1.0 的 PE 模型与 captioner 同源以保证结构对齐；MAGI-1 把大 MLLM 的增强 prompt 蒸馏到约 7B 小模型（约 200 万条语料）以降低推理延迟；Goku 用 GPT-4o 扩写 GenEval 短 prompt 后分数达 0.76，间接证明模型性能高度依赖与训练期密集 caption 一致的长 prompt。**caption 结构的选择实际上锁定了推理侧必须配套 prompt 改写器**，这是本生态最重要的系统性结论。
+
+【文本编码器的上限约束】Allegro 用 T5（512 token 上限，论文定性论证 T5 优于 mT5）；Mochi 1 用单个 T5-XXL；Foley-Omni 与 UniVerse-1 用 UM-T5/umT5；HunyuanVideo-Foley 用 CLAP 文本编码器（约 77 token，因 CLAP 文本嵌入空间天然与音频语义对齐）；LTX-2 用 Gemma3-12B；Motif 第 4 阶段起换为 T5Gemma2；Apollo/Klear 用 Qwen2.5-7B。编码器的 token 上限直接截断了 caption 密度的可用上界。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+SceneScribe-1M：单条综合性结构化场景描述，显式区分场景设定（scene settings）、主要主体/角色（primary subjects or characters）、关键动作（significant actions）三要素，属中等密度长caption；SpatialVID：多风格并行的结构化caption组，同一clip产出四类文本——运动导向描述（精修后平均50.3词）、场景摘要（平均28.6词）、沉浸式叙事（平均89.7词），外加天气/时段/人群密度/光照/场景类型五类结构化标签，实现了“一视频多粒度多风格”的密度谱；Action100M：Tree-of-Captions 层级结构，每节点五个结构化字段——简要动作描述（平均3.2词）、详细动作描述（平均27.8词）、动作主体识别（actor）、简要caption（平均19.2词）、详细caption（平均95.3词），从3词到95词覆盖完整密度梯度，全库213亿词；WildWorld：caption 分动作序列级与样本级两层，但caption并非主要监督信号，核心监督来自119列结构化数值标注
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未披露 SFT caption 的结构与密度 [不确定]。PE 的奖励设计中含一项「Structure Reward（结构奖励）」，强制格式合规与长度约束以保证 prompt 有效可执行——这是唯一与 caption 结构相关的信息，说明其增强后的 prompt 有明确的结构化模板，但模板内容未公开 [不确定]。
+【横向】后训练阶段的 caption 结构趋势是「更长、更密、更结构化」：NAVA 的 SFT caption 由 Gemini-3-Pro 生成「更准确、更结构化、时序落地（temporally grounded）」的音视觉描述；HunyuanVideo 1.5 的 RLHF prompt 集来源为 LLM 生成 prompt 与训练 caption 混合，说明训练 caption 与用户 prompt 的分布差异被显式建模；MOVA 的 rewriter 明确目标是「弥合用户输入与训练数据分布的 gap」——这实际上揭示了 SFT caption 结构设计的核心张力：caption 越密越有利于训练，但离用户实际 prompt 分布越远，因此必须配套 PE 才能兑现收益。锚论文把 PE 单列为一个阶段，正是对这一张力的系统性回应。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
@@ -778,6 +948,10 @@ Apollo 采用的是「按音频类型分流标注 → 各轨独立产出 → 融
 ### [Goku](../models/Goku.md)
 
 不适用。Goku 无音频模态，caption 仅覆盖视觉轨道（画面内容 + 动作 + 相机运动 + 运动分数），不存在听觉轨道描述、音视频分流字段或全音景（full soundscape）描述。可作为「纯视觉时代 caption schema」的基线，与 LTX-2 全音景描述、Script-a-Video 因子化流、Foley-Omni 三字段等音视频联合 schema 形成代际对照：Goku 的「关键帧+整段」双路融合思路，在结构上与后续音视频模型「视觉流+听觉流」因子化再融合的思路同源，只是维度换成了时间粒度而非模态。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md)
+
+不适用。模型不生成音频，训练 caption 不涉及听觉轨道描述，不存在音视频联合 caption 结构。与 LTX-2 全音景描述、Script-a-Video 的 factorized streams、Foley-Omni 三字段、Vidu S1 的 dual-path 视听解耦等方案均无可比性。若未来 MiniMax 推出带音频的视频模型，此项需重新调研。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -961,6 +1135,18 @@ Seedance 1.5 pro 是该系列首次引入音频侧描述的版本：其字幕系
 
 完全未披露。作为原生音视频模型，Sora 2 必然需要覆盖听觉轨道的标注（否则无法响应对白/音效/音乐类文本指令），实际使用中用户可通过prompt中的引号对白直接指定台词内容，说明caption schema中存在明确的对白字段或等价机制。但 OpenAI 未说明是采用单一融合caption、还是像 LTX-2（全音景描述）、Script-a-Video（factorized streams）、Foley-Omni（三字段）那样分流为视觉/对白/音效独立字段。这是与开源同类工作对比时最大的信息空白。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+SpeakerVid-5M 采用的是「多轨道并列保留、不做融合」的 schema，是本次调研中融合度最低的一档：
+【视觉轨】Qwen2.5-VL 生成的结构化 JSON caption（相机运动、实体、朝向、身体构图、动作、表情等），完全不描述听觉内容。
+【语音轨】Whisper 的 ASR 转写文本 + 置信度，存于独立的 asr 文件夹。
+【同步轨】SyncNet 的三项指标（offset 偏移、confidence 置信度、embedding distance 嵌入距离）作为独立数值标注保存。
+【结构轨】DWpose 骨架关键点序列（代码开源，数据因体积未上传）。
+【质量轨】l_score 文件夹的人脸/手部清晰度分、merge_anno 中的 clear/DOVER 分。
+【关键缺失】没有非语音音频描述——不存在对音效、环境音、背景音乐、录音空间感、说话人音色/口音的任何文字描述。这与 MOVA 的 Qwen3-Omni-Captioner 非语音轨、LTX-2 的全音景描述、Foley-Omni 的三字段 schema 形成鲜明对比。SpeakerVid-5M 的音频侧标注仅有「说了什么（转写）」与「同步得多好（SyncNet 数值）」两类，没有「听起来是什么样」。
+【也没有融合环节】不存在类似 MOVA 中 GPT-OSS-120B 的跨模态一致性校验与统一 caption 合成步骤。各轨道以文件夹形式并列发布，由使用方自行组合。
+【评价】这套 schema 反映了 SpeakerVid-5M 的定位——它是一个「人体交互结构数据集」而非「音视频语义数据集」，其价值在于精确的说话人-画面-口型对应关系与丰富的结构化元数据，而非丰富的音视频联合语义描述。下游若需联合 caption，须自行补标。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。模型无音频模态，caption 只覆盖视觉轨道（主体、动作、环境、视觉表现、镜头运动），不存在视觉+听觉双轨 caption 结构，也不存在音景描述、说话人字段或音效字段。可作为「纯视觉 caption」的对照基线：其三路 caption 设计（短/密集/原始标题）中「保留原始标题以引入真实人类文本风格分布」的思路，理论上可正交迁移到 AV caption 体系（如保留视频原始标题与人工描述作为音景 caption 的风格多样性来源），但报告本身无任何 AV 相关内容。[不确定]
@@ -1007,6 +1193,54 @@ Unison 的音视频联合标注 schema 是二字段 factorized 结构，但其�
 ### [Vidu S1](../models/Vidu_S1.md)
 
 是典型的「音视频联合 caption 但双路解耦」方案：caption 同时覆盖视觉轨道与听觉轨道（听觉侧含 dialogue、sound effects、background music 三类字段）。为提升标注保真度、减少跨模态幻觉（cross-modal hallucination），采用 dual-path strategy 解耦两个模态——视觉属性只从视频帧推断（inferred exclusively from video frames），听觉属性只从音轨推断（inferred exclusively from the audio track），二者互不交叉参考后再合并为结构化描述。论文称该结构化标注方案提升了多模态表征的质量与一致性，并使标注更可靠、生成更可控。与 LTX-2 的全音景描述、Foley-Omni 三字段属同一类思路，但 Vidu S1 的特色是叠加了 speech-aware 的时序分块对齐。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 的 V2A 模块给出了一个明确的三段式音视频联合 caption 结构，是本条目最具参考价值的一手设计；但 2.5 起转向语音与唇同步后的 schema 完全未披露。
+【Wan 2.1 V2A 三组件结构化 caption】报告原文：最终的结构化 caption 整合三个部分——(1) 密集视频描述（dense video description）；(2) 环境音刻画（ambient sound characterization）；(3) 背景音乐分析（background music analysis），后者以风格（style）、节奏（rhythm）、旋律（melody）、配器（instrumentation）四个属性刻画。
+【实例（论文 Fig.32 中的真实模板）】「The video description: a horse is running. This audio contains ambient sound: the sound of clip-clop. This audio does not contain music.」——可见其为固定句式模板拼接的自然语言串，且显式支持「不含音乐」的负向声明，使模型能学到「音乐存在与否」本身也是一个可控条件。
+【生成方式】视觉侧沿用自研 dense video caption 模型；音频侧由 Qwen2-Audio 生成音频专用 caption，并归类为环境音与音乐两类。属「视觉 captioner + 音频 captioner 分别产出后按固定 schema 拼接」的分流式设计，与 LTX-2 的「单一 captioner 产出融合式全音景长描述」路线不同，更接近 Foley-Omni 的三字段思路。
+【训练时的随机掩码】实现细节中明确：训练时以预设概率随机省略环境音 caption 与音乐 caption。目的是强制模型仅凭视觉线索也能建立稳健的跨模态关联，同时保留有文本时的可控性。这一「caption 分量随机丢弃」的做法是该 schema 中最值得借鉴的训练侧配套设计。
+【缺口】三类文本的长度配比、音频 caption 的具体属性词表、是否有质量校验未披露；2.5/2.6/2.7 引入语音后 schema 如何扩展（是否新增对白转写字段、说话人字段）完全不可知。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md)
+
+本字段是评测体系对训练侧 caption schema 最直接的反向指导：
+【VABench 的 factorized 双流方案】明确将统一的视听描述由 LLM 解耦为 visual sub-prompt 与 auditory sub-prompt 两条独立字段流，并分别生成 VQA / AQA 问答对做交叉验证。这与训练侧 Script-a-Video 的 factorized streams、Foley-Omni 三字段方案属同一设计哲学。特别值得注意的是 I2AV 路的做法：多模态 LLM 从静态图像生成的描述中，视觉部分要求客观可观测，音频部分要求基于常识推断（commonsense-inferred audio），然后由人工复核听觉推断的合理性 —— 这为「无音轨视频/图像如何补齐音频 caption」提供了可操作范式。
+【VABench 的可观测性约束】人工核验环节明确检查「要素可观测性」与「物理/常识约束满足性」，即 caption 中的听觉描述必须是从画面可合理推断的，不得凭空捏造。这一约束可直接作为训练数据音频 caption 的质检标准。
+【AVBench 的三维一致性拆分】把视听文本关系拆为 AT（音频-文本）、VT（视频-文本）、AV（音频-视频）三条独立一致性维度，各自训练专用评测器 —— 说明 joint caption 的质量应按这三条边分别度量而非合并成单一分数。
+【AV-SyncBench 的正交拆分】进一步将 AV 边拆为「时序对齐」与「语义匹配」两个正交子维度，这意味着完整的 joint AV caption 质检需要至少 4 条边：AT、VT、AV-时序、AV-语义。
+【PhyAVBench】提示词中音频属性以物理因果形式隐式表达（描述物理条件而非直接描述声音），是另一种 schema 思路：让模型从物理条件推导声学结果，而非直接给出声音标签。
+【Omni-Judge】评测的 9 维度中包含 audio-video-text 三模态联合一致性（tri-modal coherence），是唯一显式定义「三模态联合」这一 caption 质量指标的基准。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+音视频联合 caption 的 schema 设计是 2026 年该生态最活跃的创新点，已形成四种可辨识的范式：
+
+【范式一 · 全音景融合式（单条 caption 同时叙述视听）】LTX-2 的自研 captioner 是标杆：视觉侧覆盖 camera motion（运镜）、lighting（打光）、subject behavior（主体行为）；音频侧覆盖 music、ambient sounds，以及精确的对白转写并附带 speaker / language / accent 三属性；设计原则「comprehensive yet factual」，显式禁止情绪解读。AVoCaDO 同属此类，输出自由形式长文本（非 JSON），结构性体现在 reward checklist 的五维分解上：Static Entity Description、Dynamic Action & Interaction、Auditory Elements（语音/音乐/环境音与叙事音效）、Spatio-temporal & Cinematography、**Cross-modal Narrative Logic**（视听互相解释/补充/引导，是其核心创新维度）。
+
+【范式二 · factorized streams（分流为独立字段，各自成轨）】Script-a-Video 的 MTSS（Multi-Track Structured Script）是代表，由 Gemini-2.5-Pro 生成 500K 条标注，再蒸馏进 Qwen3-Omni-MTSS-FT。UniVerse-1 用单个 Qwen2.5-Omni 一次性并列输出「核验后的语音内容 / 视频描述性 caption / 环境音 caption」三路独立字段，不做融合。UniTalking 产出四种格式（Qwen3-VL 详细版 + 简短版视觉 caption、Whisper-V3 转写、Qwen3-Omni-Captioner 音频 caption、Qwen3-Omni 融合式统一描述），训练时随机采样。
+
+【范式三 · 固定三字段 schema（对齐音频源分离的天然分类）】Foley-Omni 的三字段设计（speech / effects / music）与 Bandit（cinematic audio source separation）的输出结构完全同构 —— 若用通用音乐分离模型（如 Demucs 的 vocals/drums/bass/other）则无法直接对应。这是 schema 设计与验证工具协同的最佳案例。MOVA 的双模态分工（Qwen3-Omni-Instruct 处理语音、Qwen3-Omni-Captioner 处理非语音与音乐，GPT-OSS-120B 融合并做跨模态一致性检查）在结构上等价于三字段后融合。
+
+【范式四 · 剧本级结构化（含时间戳与角色绑定）】Qwen3.5-Omni 提供「剧本级细粒度描述，含自动切片、时间戳打标、人物与音频关系描述」，是目前唯一原生支持此形态的通用模型。CineDance 走到了最细：镜头级五维属性 + 转场类型 + 局部角色表 + 句级 ASR + 镜头级音频 prompt（音乐/环境音/音效）+ 角色音色描述，并完成 ASR 句子到角色 anchor token 的绑定。
+
+【质量准则的形式化（AVSCap 的贡献）】高质量 omni-modal caption 需同时满足三条：Acoustic Completeness（覆盖 Speech / SFX / Music 三类）、Visual Completeness（环境、人物、动作、物体交互、camera motion、OCR）、Audio-Visual Synergy（视听事件的显式绑定与时序对齐）。这是目前最可操作的 schema 验收标准。
+
+【输入形态的隐含要求】Ovi 的做法揭示了关键约束：打标输入为「7 帧均匀采样关键帧 + 完整音轨」，即 caption 模型本身必须具备音频理解能力，7 帧的稀疏采样意味着视觉描述偏事件级/语义级而非逐帧密集 —— AV 联合打标天然是「视觉粗、音频细」的不对称形态。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+不适用。四个数据集均为纯视觉，无音轨描述、无视听双流caption schema。与 LTX-2 全音景描述、Script-a-Video 因子化流、Foley-Omni 三字段等音视频联合范式相比，这批数据集代表的是另一个正交方向——把caption之外的第二类监督放在几何与状态维度（相机、深度、3D轨迹、骨骼、世界状态、动作ID）而非听觉维度
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文完全未涉及音视频联合 caption [不确定]——其四个奖励模型全为视觉维度，PE 的三项奖励（文本-视频对齐、视频美学、结构奖励）亦无音频项。对于具备 AV 生成能力的模型，论文只在蒸馏阶段引用 OmniForcing 的非对称块因果对齐与音频 sink token，属架构而非标注 schema。
+【横向后训练侧的 AV caption 实践】
+· NAVA 的 SFT 子集用 Gemini-3-Pro 重打的正是「更准确、结构化、时序落地的音视觉 caption（audio-visual captions）」，是后训练阶段升级 AV 联合标注的明确案例；
+· Movie Gen 音频 SFT 集的 cinematic split 由影视感分类器 + AED（声音事件检测）自动筛后人工选定，标注体系区分画内音与画外环境/主题音乐；
+· JavisDiT++ 的偏好排序在文本-音频与文本-视频两条对齐链路上分别用 ImageBind 打分，等价于把 caption 分流为视听两个评估轨道；
+· 生态侧 captioner 的后训练已高度成熟：AVoCaDO 的 GRPO 奖励含五维 checklist 覆盖度（GPT-4.1 判定）、对白 F1（speaker 准确率 + content 编辑距离 DP 对齐相似度，阈值 0.6）、长度正则（>4096 token 惩罚）；AVSCap 的 GRPO 混合奖励 = 长度控制 + 语音保真 + 音视一致性，并给出关键论断「RL 增益 > 扩 SFT 数据量」；腾讯混元 1.5 的 caption 模型用 OPA-DPO 抑制多模态幻觉。这些是 caption 侧后训练的成熟范式，但尚未反向传导到视频生成模型自身的 AV 偏好奖励设计中。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1076,6 +1310,10 @@ Unison 的音视频联合标注 schema 是二字段 factorized 结构，但其�
 ### [Goku](../models/Goku.md)
 
 不适用/未涉及。数据流水线中无 ASR 转写环节，无说话人身份、语言、口音、情绪等属性标注。相反，Goku 对画面中的文字（含字幕）是**主动剔除**的（OCR 文字面积超 1%~2% 即丢弃片段），说明其数据取向刻意规避对白与字幕场景。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+不适用 + [不确定]。无音频生成任务，因而不需要 ASR 转写、说话人身份/语言/口音/情绪标注。官方未披露训练数据中是否保留并利用了原视频的对白信息（例如作为语义线索辅助 caption），推测未使用。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1226,6 +1464,22 @@ Avatar 1.5 涉及说话人处理，但未采用 ASR 转写路线——报告未�
 
 训练数据侧未披露。间接证据：安全栈明确将「audio transcripts（音频转写）」作为独立通道送入安全分类器，说明 OpenAI 具备并常规使用视频音轨的ASR转写能力，该能力用于训练数据打标是自然延伸。说话人身份/语言/口音/情绪等属性标注，无任何披露。产品侧的 cameo 功能要求用户录制一次性的视频+音频样本以完成身份验证并绑定其形象与声音，说明存在「说话人身份-音色-形象」的绑定表征，但这属于个性化/条件注入机制而非训练数据标注schema。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+这是 SpeakerVid-5M 最强的维度，也是其区别于其他视频数据集的核心资产：
+【转写】Whisper 执行 ASR，逐 clip 输出转写文本，并保留三项诊断量用于过滤：转写置信度（< −1.5 剔除，HQ 子集要求 > −1）、no-speech probability（> 0.8 剔除）、compression ratio（> 2.5 剔除，用于识别重复退化/幻觉输出）。pipeline 中还会检测「language mismatch（语言不匹配）」并据此过滤。
+【说话人分离与身份标注】三重机制串联，构成本数据集的技术骨干：
+  1) 3D-Speaker 做声纹 diarization，按说话时长/频次挑出两个主说话人（合计占总说话时长 80% 以上），其余说话人丢弃——这一「只要两个主角」的决策直接定义了数据集的 dyadic 属性。
+  2) SyncNet confidence 做音画绑定，把音频侧的说话人 ID 关联到 YOLO 检出的视觉 bbox 上，回答「这段声音属于画面里哪个人」。
+  3) ArcFace 做跨 clip 身份校正，计算人脸余弦相似度验证一致性，离群样本若与其他 ID 相似度更高则重新分配 ID。
+  最终得到单人分支 83K 个、对话分支 16K 个唯一说话人 ID，且 ID 在整个数据集范围内跨 clip 可追溯。
+【说话/倾听状态判定（数据集独有）】两套规则：
+  - 共处同框（co-present）场景：若只有一人在说话，且两人的 SyncNet 分数差异大于预设阈值，则分数较低的一方被判定为「倾听中」。
+  - 非共处（non-co-present）场景：若 ASR 结果有效、转写置信度高于阈值、但该人视频的 SyncNet 分数低于预设阈值，则判定其为倾听者。
+  这套判定直接生成了 listening 分支，是把「谁在听」显式建模为数据标签的少见设计。
+【多轮对话上下文】multi-turn 分支把前序轮次的 ASR 转写按时间窗口 [x−T, x] 聚合，形成多轮对话上下文标注；时间间隔小于 δt 的相邻 clip 判为连续对话可拼接。
+【未标注的属性】语言/语种标签、口音、情绪类别、语速、音色描述——这些在 MOVA 的音频 caption 中被自然语言化覆盖的属性，在 SpeakerVid-5M 中均无对应字段（情绪信息仅通过视觉侧的 facial expression summary 间接体现）。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 不适用。数据 pipeline 不处理音轨，无 ASR 转写，无说话人身份/语言/口音/情绪标注。阶跃星辰体系内这类能力在独立的 Step-Audio 系列语音模型中（该模型支持情绪、方言、语种、歌声等属性的语音生成），但与 Step-Video-T2V 的训练数据无任何交集。[不确定]
@@ -1264,6 +1518,48 @@ Avatar 1.5 涉及说话人处理，但未采用 ASR 转写路线——报告未�
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 有较完整的说话人属性标注链路：从原始音频中提取语音成分 → VAD（voice activity detection）+ ASD（active speaker detection）标注每个语音段的时间戳及其关联说话人 → 依据说话人与画面主体的对应关系将每段标为 onscreen / offscreen / overlap 三类。caption 中含 dialogue 字段。但论文未明确说明是否做了完整 ASR 文本转写，也未标注说话人的语种、口音、年龄等属性 [部分不确定]。评测基准 Vidu-StreamBench 中提到覆盖多样的说话人属性与情绪。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+存在明显的能力-披露断层，是本条目最大的信息缺口之一。
+【Wan 2.1】显式排除语音：V2A 训练集「systematically remove videos … containing speech/vocal music」，因此不存在任何 ASR 转写或说话人属性标注环节；报告明确承认由此导致模型无法生成笑声、哭声与说话声。
+【Wan2.2-S2V】处理的是说话人视频，但论文的数据章节只做「主动说话人检测」（Light-ASD）与人脸可见性筛选，未提及对白 ASR 转写、说话人身份/语言/口音/情绪标注；其 dense caption 规范（相机角度/外观动作/背景环境）也不含听觉字段。
+【Wan 2.5/2.6/2.7】能力上已经支持精确唇同步、中英文台词朗诵与演唱、音频驱动口型与表演，2.6 更支持「角色扮演」（上传个人视频复刻形象与声音）——后者实质上要求音色/声纹层面的说话人建模。这些能力在数据侧必然对应 ASR 转写 + 说话人分离（diarization）+ 声纹/音色标注的完整流水线，但阿里从未公开任何相关信息：没有 ASR 模型选型、没有转写质量指标、没有说话人属性字段定义、没有语言/口音标注。
+对比 LTX-2 明确把「精确转写 + speaker + language + accent」写进 caption schema，Wan 系在这一维度上是完全的黑盒。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【AVBench 覆盖最全】10 维度中 Speech Content Accuracy（语音内容准确率，隐含 ASR 转写比对）、Speech Realism（语音真实度）、Lip Sync Consistency（唇同步一致性）三项直接针对对白；硬负例构造涵盖说话人身份错配（speaker identity mismatches）与情绪极性反转（emotional polarity reversals）—— 说明其数据标注中包含说话人身份与情绪标签。Hard 子集标注了说话人数量（3–4 人）与语音重叠属性。
+【PhyAVBench】语音任务使用 Whisper-Large V3 计算 WER 作为内容准确性指标。
+【VABench】唇同步指标借鉴 LatentSync 方法计算对齐置信度，仅施加于检测到 talking head 的「人声-语言性」子集。
+【AV-SyncBench】人声场景使用 OpenVoice V2 做音色替换构造语义负样本，隐含说话人音色/身份属性的可控编辑能力；场景标签区分单人说话、对话、群体发声、演唱四类。
+【Omni-Judge】未单列对白维度[不确定]。
+口音、语言标签的标注情况五者均未披露[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+【ASR 模型选择的三条路线】
+· 外挂专用 ASR（最普遍）：Whisper-large-v3（OpenAI，~1.55B）是事实标准，被 SkyReels-V4、UniTalking、Unison（评测侧）、Apollo/Klear、UniVerse-1、CineDance（评测 WER/CER）广泛使用；阿里 SenseVoice（~234M，中英粤日韩 + 情感/事件识别）被 Apollo/Klear 与 Whisper、Qwen2.5-Omni 三模型并用；ElevenLabs Scribe 被 InstructAV2AV 用于精确语音时间戳。
+· Omni 模型内生转写（2026 年趋势）：Ovi 明确不用独立 ASR，台词转写直接由打标 MLLM 从音轨产出；UniVerse-1 用 Qwen2.5-Omni 同时输出核验后的语音内容；CineDance 用 Qwen3-Omni-30B-A3B 统一承担句级 ASR、镜头级音频 prompt、角色音色描述三项子任务，理由是其在说话人归属任务上远超专用 diarization 工具（Pyannote-3.1 仅 62.7%、DiariZen 63.1%）。
+· RL 逼出转写能力（AVoCaDO 的独创）：不走独立 ASR 模块，而是在 GRPO 阶段用 dialogue reward ℛ_D 强制模型学会转写 —— 对白被抽取为 (speaker, spoken content) 结构对，ℛ_D = speaker 识别准确率与 content 相似度的 F1，content 相似度用编辑距离 + 动态规划找最优对齐子序列，阈值 0.6。这是目前公开最实用的对白准确率优化方案。
+
+【说话人属性标注的完整度谱系】
+· 最完整：LTX-2 标注 speaker / language / accent 三属性 —— 是多语种唇同步能力的数据基础，也是全生态唯一显式标注口音的方案。
+· 中等：CineDance 的角色音色描述 + ASR 句子到角色 anchor token 的绑定（窗口化方案把 Qwen3-Omni 从 67.2% 提升到 95.4%，对照 Gemini 系列 82.8%–87.4%）；Apollo/Klear 由音频模型体系抽取性别、年龄等属性；InstructAV2AV 用 TalkNet 做主动说话人检测，标注谁在说话及其时空位置。
+· 最简：AVoCaDO 只做 (speaker, content) 二元组，无语言/口音字段。
+
+【说话人分离的方法论对照（CineDance Tab.5，本生态唯一的定量对照）】100 条片段基准上，Qwen3-Omni-30B + 滑窗 prompt 达 83.1%，整片输入仅 56.4% —— 说明 prompt 的窗口化设计对说话人分离的影响远大于模型选择本身。
+
+【语音质量的下游影响】AVSCapBench 显示 Speech 是所有 AV captioner 最强的维度（Gemini-3 系列 79.8、AVoCaDO 70.42、AVSCap 69.45），但裸 Qwen2.5-Omni 仅 13.92 —— 语音转写能力必须靠专项训练获得。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+基本不适用。SceneScribe-1M、SpatialVID、WildWorld 均无对白转写与说话人属性标注。Action100M 唯一相关：源自 HowTo100M 的旁白ASR转写可用于72%的视频（覆盖10.6年内容），但论文明确其标注范式是“不依赖ASR的纯视觉动作监督”，ASR仅作为对照/辅助线索，且不含说话人身份、语言、口音、情绪等属性字段
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文完全未涉及 [不确定]。横向：后训练阶段的对白与说话人属性标注几乎空白——Movie Gen 音频 SFT 的 cinematic split 反而明确排除含人声片段；Seedance 1.5 pro 称奖励覆盖音频保真度但未说明是否含对白准确率或说话人一致性 [不确定]；Kling 3.0 Omni 的偏好标注是否含口型同步度与音色一致性未披露 [不确定]。
+生态侧的可迁移经验来自 captioner 后训练：AVoCaDO 的对白 F1 奖励（speaker 准确率 + 内容编辑距离 DP 对齐相似度，阈值 0.6）是目前唯一把「对白转写准确性」形式化为可优化奖励的设计，理论上可直接迁移为 AV 生成模型的对白维度奖励，但截至调研时尚无生成侧工作这样做。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1343,6 +1639,13 @@ Avatar 1.5 涉及说话人处理，但未采用 ASR 转写路线——报告未�
 (1) **相机运动**——不通过几何估计获得，而是由 Tarsier2 在生成视频 caption 时以自然语言形式隐式描述（zoom in、pan right 等），属于「语言化的镜头标签」而非参数化相机轨迹。
 (2) **运动强度**——RAFT 光流得到的标量 motion score，既作过滤阈值也作 caption 中的数值条件。
 【未涉及】相机内外参标定、深度图、3D point tracks、光流场作为条件输入、人体姿态/骨架、物体框与轨迹、分割掩码、显式状态标注等。Goku 的条件控制维度仅有「文本 + （I2V 场景下的）首帧图像 + 运动分数」，结构化程度显著低于 2026 年前后强调几何可控性的工作。
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（无明确披露，仅有强间接线索）。未提及相机参数标定、深度图、3D point tracks、姿态/骨骼关键点或显式物理状态标注。间接线索：
+(1) video-01-director 的运镜词表（约15种镜头运动指令，可组合使用）说明至少存在镜头运动的离散标签标注，但这属于语义标签而非连续相机外参；
+(2) Hailuo 02/2.3 对物理规律合理性与复杂人体动作的强调，可能对应姿态或运动学层面的标注/筛选，但无任何说明；
+(3) S2V-01 的主体参考（Subject-Reference）能力需要人物身份一致性的数据支撑，暗示存在人脸/身份 embedding 层面的标注与配对数据构造，同样未披露。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -1487,6 +1790,19 @@ MTSS 不包含任何数值型几何标注：无相机内外参、无深度图、
 
 完全未披露。未提及相机参数、深度图、3D point tracks、动作标注或显式物理状态标注。第三方技术解读称训练数据带有覆盖重力、动量、浮力、材料形变、碰撞动力学的「物理标注（physical annotations）」，若属实则构成显式结构化状态标注，但该说法非 OpenAI 官方表述，无法证实。OpenAI 官方仅在能力层面宣称模型「understands real-world physics」并将 Sora 2 定位为迈向物理世界模拟器（world simulator）的一步。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md)
+
+结构化标注是本数据集的强项，密度远高于多数生成类视频数据集：
+【人体姿态】DWpose 输出人脸、手部、身体的完整关键点序列（skeletal sequences）。这是为下游手势生成、身体动作驱动任务准备的核心几何标注。注意：因数据体积过大，骨架序列本身未上传至 HuggingFace，仅开源了计算代码，使用方需自行运行。
+【空间框】YOLO 人体检测与跟踪得到的逐帧时空 bounding box，存于 merge_anno，同时也是 clip 空间裁剪的依据。
+【人脸身份特征】ArcFace 人脸特征与跨 clip 余弦相似度，用于说话人 ID 的一致性校验。
+【画幅与朝向的离散化标注】caption 中的 Upper-Body Only（半身/全身）、Facing Direction（正面/侧面）、Number of People——这三项把身体构图显式离散化，是 Table 1 中相对 CelebV-HQ 等头部数据集的差异化标注项。
+【相机运动】caption 中的 Camera Motion 字段以文字形式标注相机运动模式，但为自然语言/类目描述，非参数化的相机位姿（无外参矩阵、无轨迹坐标）。
+【运动强度】1–5 分制的 Motion Intensity Level（Qwen2.5-VL 三 persona 集成打分）。
+【模糊与质量分】人脸/手部的 Laplacian 方差模糊分、clarity 分、DOVER 分。
+【音画同步的数值化】SyncNet 的 offset、confidence、embedding distance 三元组逐 clip 保存。
+【未提供】相机内外参数、深度图、3D point tracks、光流场、3D 人体网格（SMPL 等）、显式物理状态标注。评测侧使用了 Deep3DFaceRecon 计算表情 FID，但那是 VidChatBench 的评测工具而非训练数据标注。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 结构化标注较少，主要是两类标量与一类文本：
@@ -1525,6 +1841,43 @@ MTSS 不包含任何数值型几何标注：无相机内外参、无深度图、
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 无显式几何标注。caption 中含「镜头语言（camera language）」与「影视化属性（cinematic properties）」「光照（lighting）」等半结构化文本标签，omni 模型另输出 shot、scene 等语义标签，但论文未提及相机参数估计、深度图、3D point tracks、姿态/骨骼关键点等几何或显式状态标注 [不确定]。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 系在结构化标注上比多数同行更重，且大多服务于「可控生成」而非单纯质检。
+【姿态】Wan2.2-S2V：VitPose 跟踪每个角色的2D姿态并转换为 DWPose 格式，明确一物两用——(1) 作为可选的多模态控制信号接入生成模型，实现与人体动作的精确时间对齐；(2) 作为细粒度筛选依据（剔除人物时空占比过小者）。
+【相机】Wan 2.1：人工标注了一批视频的相机角度与相机运动，一路直接用于最终阶段训练 caption 模型，一路用于训练专家模型对更多视频批量扩标（供早期训练阶段使用）。这是 Wan 系「人工标种子 → 专家模型扩标 → 全量覆盖」杠杆式标注的典型样板，报告明确其提升了生成模型的相机运动可控性。Wan 2.1 另有专门的相机运动可控性扩展模块（5.5节）。
+【人脸】个性化数据：1FPS 人脸检测、ArcFace 帧间相似度、人脸分割（去背景干扰）、人脸关键点检测（用于训练时的画布对齐）。
+【图文一致性/时序一致性度量】SigLIP 特征余弦相似度被用作三类任务的数据筛选量尺——I2V 数据要求首帧特征与其余帧特征均值的相似度高于阈值（阈值数值未公布）；视频续写数据要求前1.5秒片段与后3.5秒片段的 SigLIP 特征相似度达标；首尾帧转场数据则反向提高首尾差异大的样本比例。
+【光流】Wan-Dancer 用 SEA-RAFT 生成光流 mask 并并入损失函数；S2V 用 UniMatch 光流算运动分。
+【空间关系与计数】借助目标检测数据集构造左/右/上/下空间关系数据；Grounding DINO 做计数校验。
+【未见】相机内外参、深度图、3D point tracks、显式物理状态标注均无。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+【PhyAVBench 最丰富】其 41 个细粒度测试点本质就是一套结构化物理属性标注体系：材质硬度/阻尼、密度、表面纹理、物体尺寸/形状/厚度、撞击速度、接触面积/锐度、转速、松紧度、张力、流速、粘度、空间体积、表面吸声、传播介质、声源距离、方位（水平/垂直定位）等，均为可枚举的显式状态标注。此外 Observer Physics 维度隐含相机/听者位置与距离参数，Binaural Effect 测试点涉及双耳空间方位标注。
+【VABench 立体声子集】116 条提示词显式指定左右声道空间方位，等价于声源方位的结构化标注；评测侧计算 Mid/Side 能量比、相位相干性、声道间一致性等空间几何量。
+【AV-SyncBench】标注扰动的精确时间参数（偏移 50–500ms 五档、抖动 30–700ms 三档、变速 0.8×–1.25× 十档），是时间轴上的结构化标注。
+【AVBench】硬负例含时间偏移 0.2–3.0s 的精确标注。
+五者均未涉及相机参数、深度图、3D point tracks 等视觉几何标注[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md) ⚠️
+
+captioner 生态在几何/结构化标注上采取「专用模型外挂、结果拼进 caption」的一致策略，而非要求 VLM 直接输出几何量：
+【相机参数与运镜（最成熟）】Movie Gen 的 16 类相机运动分类器（高置信度预测作前缀拼进 caption）；SkyCaptioner-V1 的 6DoF 相机运动子专家（分类式，9.3 万条人工标注 + 1.6 万条运动轴均衡合成数据，1.5 万条测试集上单类型运动准确率 89%，整体相机运动字段准确率 85.3%）；腾讯混元的独立 camera movement classifier（1.5 版为 clip 级 + 时序级双粒度）；LongCat-Video 的 pan/tilt/zoom 轻量分类器；Allegro 以固定句式「Camera [MOTION_PATTERN]」嵌入 caption。Tarsier2 是少数天然会描述相机运动类型的通用 captioner。
+【实例级空间标注】InstructAV2AV 用 Grounded-SAM-2（开放词表检测 + 分割 + 视频跟踪）产出实例级 mask，作为「可编辑对象」的锚点与 mask-guided 合成的编辑区域 —— 是本生态中几何标注参与最深的案例。
+【OCR / 文字检测】Motif-Video 2B 配 PaddleOCR-VL（经 vLLM 服务化）做帧上文字检测；AVSCap 的 Visual Completeness 准则显式包含 OCR。
+【动作/时序标注】ALIVE 做「decomposing sub-motion units」—— 把动作分解为子动作单元并人工标注每个完整小动作的起止时间戳，是本生态成本最高的细粒度时序标注；Tarsier2 的 SFT 阶段做细粒度时序对齐；CineDance 的镜头分组与叙事边界判定（F1 88.4%）。
+【深度 / 3D point tracks】[不确定] 未见任何主流 captioner 生态工作输出深度图或 3D point tracks 作为 caption 的组成部分 —— 这类标注在世界模型/机器人视频数据（如 Cosmos 系列）中出现，但不属于 T2V caption 生态的标准配置。
+【显式状态标注】CineDance 的局部角色表 + 活跃场景是最接近「显式状态」的公开设计。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+本条目的核心字段。SceneScribe-1M（几何三件套+文本）：①相机参数——MegaSaM 估计，其基于 DROID-SLAM 相机跟踪骨架，在束调整（bundle adjustment）中注入 Depth Anything 与 UniDepth 的深度先验；论文对比评估过 DPVO、Fast3r、MonST3R、VGGT 后选定 MegaSaM，理由是特征点稀缺时更稳健、且对动态场景与低相机视差更有效；②稠密深度图——由 MegaSaM 的束调整层输出时序一致的连续视频深度；③3D点轨迹——TAPIP3D，将2D视频特征投影到3D世界空间以补偿相机运动，迭代精修得到长时程一致的3D point tracks，并可投影回像平面兼容2D跟踪任务；④文本描述。SpatialVID：逐帧相机位姿+内参、深度图（MegaSaM 的深度模块替换为 UniDepth v2 + Depth Anything v2）、SAM2 生成的动态物体掩膜与逐帧动态比例、三项轨迹度量（MoveDist/RotAngle/TrajTurns），以及序列化运动指令——由相邻帧间的相对平移与旋转推导，映射到受控的电影摄影术语词表（dolly in、pan left、truck right 等），把连续位姿离散为可被文本模型消费的指令序列，这是该数据集最独特的设计。WildWorld（引擎真值，精度最高）：逐帧119列标注，含①角色与怪物骨骼——3D关键点与关节树结构；②世界状态——实体位置、旋转、速度、动画ID、血量/耐力等玩法属性；③相机内参与外参；④无损编码深度图；⑤离散动作标签——角色侧5,960个唯一三元组（武器类型、bank ID、motion ID）、455个唯一角色动作，怪物侧2,132个唯一对、527个motion ID，覆盖移动、攻击、闪避、防御、道具使用、过渡动作。Action100M：结构化标注偏语义而非几何——时序定位边界 + 开放词表动作标签 + actor 识别 + 分层caption树，属于“结构化动作标注”而非3D几何标注
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+锚论文未涉及 [不确定]。横向仅两例：Cosmos-Predict 2.5 的领域特化后训练用「world scenario map」（由 HD 地图与 3D 框投影而来）作为 Cosmos-Transfer2.5 驾驶控制网的控制信号，是后训练阶段使用几何结构化标注的最明确案例；LTX-2 发布了相机运动、姿态控制、唇形配音（lip dubbing）等一系列控制 LoRA，显然需要专门构造的几何/姿态配对数据集，但构造方法完全未公开 [不确定]。LongCat-Video 在 SFT 阶段并入「相机运动与视觉风格」的专项数据集以强化指令跟随，但未说明是否含显式相机参数标注 [不确定]。LongCat Avatar 1.5 在 GRPO 中引入首帧手部可见性检查以优先采样含手样本，是把结构化检测器用于 rollout 采样调度的独特做法。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1595,6 +1948,10 @@ MTSS 不包含任何数值型几何标注：无相机内外参、无深度图、
 唯一与「合成/改写」沾边的两处均非训练数据：
 (1) 分布均衡阶段对表征不足类别做的「augmentation and oversampling」——这里的 augmentation 应指传统数据增强/重采样，论文未说明是否含生成式扩增；
 (2) 评测阶段用 GPT-4o 扩写 GenEval 的短提示词（「we expand the original short prompts in GenEval with ChatGPT-4o, preserving their semantics while enhancing descriptive detail」），属于 prompt rewriting 的评测技巧，用于弥合训练期密集 caption 与评测期短提示词之间的分布差距——这一点本身是「训练 caption 风格影响推理提示词形态」的重要证据。[部分不确定]（均衡阶段 augmentation 的具体含义）
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未提及使用合成数据、受控扰动或编辑构造训练对（如 InstructAV2AV 式的成对构造）。S2V-01 的主体参考任务在原理上通常需要「同一人物跨片段」的配对数据，可能通过身份聚类自动构造训练对而非人工采集，但这是方法论推测，无一手依据。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md)
 
@@ -1741,6 +2098,13 @@ SkyReels 系列在两代都重度使用合成数据，且用途各异，是本�
 
 完全未披露。System Card 中「information that our users or human trainers and researchers provide or generate」的「generate」一词可能涵盖人类训练师生成的内容，但是否包含模型合成数据、是否通过受控扰动/编辑构造训练对（如 InstructAV2AV 式的编辑配对），完全无信息。安全评测环节使用了「helpful-only 版本的视频模型」批量生成对抗样本输出用于构建自动化评测集，这是模型生成数据用于评测/安全对齐的明确案例，但不属于主训练数据合成。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+无。SpeakerVid-5M 全部由真实 YouTube 视频经切分、裁剪、过滤、标注得到，不含任何模型生成或受控扰动构造的合成样本，也没有构造「编辑前/编辑后」式的训练对（对比 InstructAV2AV 的受控扰动构造）。
+【唯一的「构造」成分是数据重组而非数据合成】四分支的组织方式带有明显的构造性：dialogue 分支把同一时段两个说话人的独立 clip 配成 pair；listening 分支通过 SyncNet 分数差判定倾听者从而从原本的说话场景中派生出倾听样本；multi-turn 分支通过时间窗口聚合与 δt 间隔拼接构造多轮上下文。这些都是对真实素材的重新配对与串联（re-pairing / re-sequencing），不涉及像素或音频的生成、编辑或扰动。
+【标注侧的合成成分】所有 caption、话题类目、运动强度分均由 MLLM/LLM 自动生成，属「合成标注」而非「合成内容」。
+【数据增广】论文未描述任何训练时或数据构建时的增广策略（如时间抖动、颜色扰动、mixup 等）。[不确定]
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md) ⚠️
 
 训练语料侧未使用合成数据构造（无受控扰动/编辑构造训练对，如 InstructAV2AV 那类做法）。带「构造」性质的只有后训练两处，均为模型自采样而非语料合成：
@@ -1786,6 +2150,49 @@ UniTalking 构造了一类明确的合成训练数据，且规模不小——这
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 [不确定]。论文未提及使用合成数据或通过受控扰动/编辑构造训练对。训练侧的「人造监督」体现在训练策略而非数据构造上：第二阶段用 Teacher Forcing 与 Diffusion Forcing 混合策略做因果适配，第三阶段用 DMD（Distribution Matching Distillation）+ PCM（Phased Consistency Models）正则做少步蒸馏，由双向教师模型为学生提供分布匹配监督。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md) ⚠️
+
+Wan 2.1 明确使用合成数据，且给出了两个规模不小的具体案例；但没有 InstructAV2AV 式的「受控扰动构造音视频编辑训练对」。
+1) 视觉文字合成（数亿量级）：在纯白背景上渲染中文字符，合成「hundreds of millions」张含文字图像。与真实世界含文字图像（经多 OCR 模型识别中英文后送 Qwen2-VL 生成含精确文字内容的描述）两条支路在预训练阶段混合使用。报告称该组合使模型能以准确字形和高真实感生成视频中的罕见字，在视觉文字生成上显著领先。
+2) 人脸多样性合成（O(1)M 量级）：从 O(10)M 个性化视频中随机取 O(1)M 条，用 Instant-ID 为每条合成多样化人脸；构建了含100+条 prompt 的文本模板库（动漫、线稿、电影感、Minecraft 等风格），每次随机取一条 prompt 与一个从其余视频估计出的随机人体姿态作为 Instant-ID 输入；生成后再用 ArcFace 相似度过滤低质样本。报告称此举大幅提升了个性化数据集在风格、姿态、光照、遮挡上的多样性。
+3) 反向约束：合成图检测专家分类器主动剔除来源不明的 AI 生成图像，因为 <10% 的污染即显著劣化性能——即「自建可控合成数据可用，野生 AI 生成图必须清除」，这一分寸是 Wan 数据观中很清晰的一条。
+2.5/2.6/2.7 是否使用合成音视频对（如受控配音错位构造负样本）未知。[不确定]
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+本字段是 AVBench 与 AV-SyncBench 的核心方法论，对训练侧构造受控数据对极具价值：
+【AVBench 的硬负例合成】从 OpenHumanVid 抽取 30K 真实片段作正例，通过 LLM 驱动扰动 + 算法性错配，按维度扩展至每维度 100K 对、合计 300K 条监督样本。硬负例类型明确列举五类：① 时间偏移（0.2–3.0 秒）；② 声学损坏（音高变换、变速）；③ 说话人身份错配；④ 情绪极性反转；⑤ 状态转换（state transitions）。这套「真实正例 + 五类可控降级负例」的配方可直接复用于训练评测器或数据过滤器。
+【AV-SyncBench 的双轴扰动合成】时序轴三种扰动：全局偏移（50–500 ms，五个档位）、局部抖动（30–700 ms，三个严重度）、全局变速（0.8×–1.25×，十个档位）；语义轴两种扰动：人声音色替换（OpenVoice V2）与乐器音色迁移（预训练 DDSP），关键设计是语义扰动强制保持时间不变性（temporal invariance）—— 编辑后的音频与原音频时序完全一致、仅语义属性改变，从而实现两个轴的严格解耦。这是「正交扰动构造正交评测维度」的教科书式做法。
+【PhyAVBench 的单变量配对】337 组配对提示词，每组仅单一物理变量不同、其余条件全部不变，属于文本侧的受控变量合成；对应的真实视频则为实拍而非合成。
+【VABench】提示词层面为 LLM 合成，但视听内容全部由被测模型生成，不做人工降级构造[不确定是否含负样本设计]。
+【Omni-Judge】不构造合成数据。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+【合成 caption 数据（本生态最普遍的合成形态）】
+· 教师蒸馏本身即是合成：GPT-4V/Gemini 生成的 caption 全部属于合成标注，ShareGPT4Video-40K、Koala-36M 种子集、AVoCaDO-SFT-107K、Script-a-Video 的 500K MTSS 皆是。
+· 两阶段合成（AVoCaDO）：Gemini-2.5-Pro 先分别生成 visual caption 与 audio caption，再把两条 caption + 原视频喂回同一模型合成时序连贯的多模态 caption —— 「先分解再合成」的两阶段设计显著优于一次性联合生成。
+· 三份并列合成（AVSCap-130K）：每条视频产出 visual / audio / synergistic 三份标注，供不同训练目标使用。
+· 自举式合成：video-SALMONN 2 用自身产出的高质量 caption 语料再做后续模型的 SFT。
+· 偏好数据合成：Tarsier2 用 model-based sampling 自动构造偏好对做 DPO；AVoCaDO/AVSCap 的 GRPO reward 本身即在线合成偏好信号。
+【合成训练样本（受控扰动/编辑构造训练对）】
+· SkyCaptioner-V1 的相机运动子专家使用 1.6 万条「运动轴均衡合成数据」补足长尾运镜类型 —— 这是为纠正标注器自身的类别不均衡而做的受控合成，是本生态最明确的合成数据用例。
+· InstructAV2AV 用 Qwen3-Omni 生成编辑指令 + Grounded-SAM-2 的 mask-guided 合成构造「源-指令-目标」三元组（InsAVE-80K），属于 captioner 被用于合成数据构造而非视频描述。
+· Movie Gen 的 cross-paired 合成数据（PT2V）：略微降低 ArcFace 身份相似度，但换来显著更多样的头部姿态与更自然的表情。
+【合成数据的方法论隐患】InstructAV2AV 用同一个 Qwen3-Omni 既生成指令又做五维度验证打分，论文自身承认「生成与验收同源是本 pipeline 的方法论隐患」；AVSCap 既是 benchmark 作者又是榜首，同源过拟合风险需用第三方基准交叉验证。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md)
+
+WildWorld 是纯合成数据构造的代表：全部1.08亿帧由游戏引擎实时渲染产生，配套自建采集平台（OBS Studio + Reshade 分屏子窗口 + 多源时间戳同步）同时录取RGB与深度，动作与状态可被主动控制以构造受控扰动样本——同一场景下改变动作ID即可生成配对的反事实序列，这是真实视频无法提供的监督形式。其余三者均为真实视频的自动标注，不构造合成训练对：SceneScribe-1M 与 SpatialVID 通过几何重建模型生成伪真值（pseudo-GT）标注，属于“模型标注”而非“数据合成”；Action100M 通过VLM伪标注（并与PLM-3B直接伪标注做了对比消融）扩展监督，同样不涉及视频合成
+
+### [视频生成后训练数据策略](../models/post_training_data.md)
+
+后训练阶段的「合成数据」有两条完全不同的路径，本条目需严格区分：
+【路径一：受控失真构造负样本（自动化偏好对）】SkyReels-V2 的「半自动数据生产线」是最完整的公开案例——自动侧通过对真实视频施加受控失真生成损坏样本，与真实视频天然构成偏好对，覆盖 V2V、I2V、T2V 三种变体，与人工标注的 3 万样本对互补。这条路径的优势是零标注成本、负样本可控；劣势是失真类型与模型真实失效模式可能不匹配。
+【路径二：模型自采样构造候选组（在线/离线偏好对）】锚论文的 GRPO 属此路径的在线形态：给定 prompt c，从参考策略采样 N 条轨迹组成一组，用组内归一化优势 A_i =（R_i − mean）/ std 做相对比较，无需预标注偏好对。Cosmos-Predict 2.5 同为在线形态（每条件 8 rollout × 20 扩散步、组内归一化、训练 256 steps、batch 32）。离线形态则有 Step-Video-T2V（每 prompt 不同随机种子生成多个视频后人工标注）、Kling 3.0 Omni（同一 MVL 条件多变体 + 人类比较）、JavisDiT++（每 prompt 3 个生成 + 1 条真值共 4 候选）。
+【锚论文奖励模型训练中的合成数据】Stage 2 明确「利用由不同能力等级模型与不同 RL 迭代产生的无标注数据」训练奖励模型——即用模型演化过程中的中间产物作为 RM 的额外训练素材，这是一个成本极低且分布贴合的合成数据来源，也是 Seedance 1.0「偏好数据涵盖模型不同阶段生成的合成视频」的同类做法。
+【蒸馏侧的自生成数据】锚论文 Phase 4 的 Self-Forcing 蒸馏中，每帧基于此前自生成输出做自回归 rollout（带 KV cache），DMD loss 在视频级施加——训练数据即学生模型自己的 rollout，是纯粹的自生成数据。StreamChar 的两阶段蒸馏 Stage II（400 steps，student lr 2e-6、fake score network lr 4e-7）同样用在线 chunk rollout。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md)
 
@@ -1861,6 +2268,10 @@ Data-Juicer 的设计取向是「尽可能减少人工介入，用模型反馈�
 
 论文中**未提及任何人工标注、人工质检或人工复核环节**，整条五阶段流水线呈现为全自动、纯模型与阈值驱动的设计（PySceneDetect + DINOv2 + 美学模型 + OCR + RAFT + 分类模型 + VLM/LLM 打标）。
 可能存在但未披露的人工介入点包括：内部视频分类模型的 9 大类/86 子类类目体系设计与训练标注、6000 万内部高质量图像的「高质量」判定标准、各级阈值（4.3/4.5、0.85/0.90、0.02/0.01、运动分数上下限）的确定过程——这些阈值的选取本身几乎必然经过人工试错与抽样目检，但论文未展开。此外论文的主观质量对比（Figure 5 等）涉及人工评判，但属于评测而非数据流程。[不确定]（实际人工投入程度）
+
+### [Hailuo / MiniMax Video](../models/Hailuo.md) ⚠️
+
+[不确定]（完全无披露）。未说明数据侧是否有人工标注、人工质检或「模型初筛+人工复核」环节，也未披露标注团队规模。产品侧存在明确的人类反馈通道：海螺AI 与 Hailuo AI 网页端/App 提供生成结果的用户评价与举报入口，Media Agent 支持人工手动调整，理论上可沉淀为偏好数据，但官方未说明这些反馈是否回流到训练。
 
 ### [HunyuanVideo-Foley](../models/HunyuanVideo-Foley.md) ⚠️
 
@@ -2022,6 +2433,15 @@ SkyReels 系列的人工介入设计较为清晰，采取「人工建判据 + �
 
 训练数据标注侧：仅知存在「human trainers and researchers provide or generate」的数据，说明有人工参与数据提供与生成，但规模、流程、是否人工质检复核均未披露。部署侧人工介入有明确说明：与外部 OpenAI Red Team Network 红队成员合作测试（覆盖性内容、裸露、极端主义、自残、违法行为、暴力血腥、政治说服，以及青少年安全与肖像使用等专项政策），红队反馈用于调整prompt过滤器、屏蔽词表与分类器阈值；内容审核采用「自动化 + 人工复核」组合以识别滥用模式，并提供应用内举报通道与申诉机制。[不确定]
 
+### [SpeakerVid-5M](../models/SpeakerVid-5M.md) ⚠️
+
+人工介入程度低且集中在流程的最前端，后续环节完全自动化：
+【采集端的人工筛选（唯一明确的人工环节）】论文明确表述为「manually collected high-quality videos featuring two-person dialogue from YouTube」——即由人工从 YouTube 上挑选高质量的双人对话视频作为源素材（153K 条 / 64,386 小时）。这一步决定了数据集的体裁构成与整体质量基线，是最关键的人工判断，但论文未说明筛选标准的具体条目、参与人数、以及人工筛选的通过率。
+【阈值设定】五维质量过滤的阈值（亮度 10/210、DOVER 0.25、clarity 最低 5%、模糊分 0.1、ASR 置信度 −1.5 等）以及 HQ 子集阈值均为人工设定的经验值，但论文未像 MOVA 那样说明是否通过「人工抽检不同 cutoff 下的留存样本」来标定。[不确定]
+【标注环节】完全自动化。caption、话题、运动强度、ASR、骨架、同步指标全部由模型产出，无人工标注、无人工复核、无「模型初筛 + 人工验收」的双阶段设计。
+【质量评估】论文未报告任何针对自动标注结果的人工准确率评估（如 caption 幻觉率、diarization 错误率、说话/倾听判定准确率的人工抽检），这使得标注质量缺乏独立验证。多 persona 集成打分可视为对人工共识的一种模型化替代，但不等同于人工校验。
+【评测环节】VidChatBench 采用全自动客观指标（FID、FVD、PSNR、SSIM、ArcFace 余弦距离、CLIP 距离、SyncNet 置信度、表情 FID、SIM-o），未见人类偏好评测（human preference / Arena）设计。
+
 ### [Step-Video-T2V](../models/Step-Video-T2V.md)
 
 人工被集中投放在漏斗最末端（预训练全自动、后训练重人工），分三处：
@@ -2065,6 +2485,56 @@ SkyReels 系列的人工介入设计较为清晰，采取「人工建判据 + �
 ### [Vidu S1](../models/Vidu_S1.md) ⚠️
 
 数据侧几乎全自动：过滤与标注均由专家模型 + omni 大模型 + 启发式规则（如语音能量占比规则）完成，论文未提及任何人工标注或人工复核环节 [数据侧人工介入程度不确定]。人工介入明确出现在评测端：在自建的 Vidu-StreamBench（500 样本）上组织人工偏好评测，与 HeyGen、LemonSlice、Kling Avatar 2.0 三家商用系统做成对 A/B 测试，评测维度含 Overall、Motion Dynamics、Identity Consistency、Audio-Video Sync、Subject Controllability。
+
+### [Wan 2.5 / 2.6 / 2.7](../models/Wan.md)
+
+人工介入采取「少量高价值人工标注 → 训练专家模型 → 全量自动化」的杠杆式设计，共出现在六处：
+1) 视觉质量打分器的种子标注：从每个簇中抽样交人工按 1–5 分打分（1最差5最好），用全部标注数据训练专家评估模型，再对全量数据打分。这是整个漏斗第2级的基石。
+2) 相机角度与运动的种子标注：人工标注一批视频，既直接训 caption 模型，也训专家模型批量扩标。
+3) 后训练数据的人工精选：图像侧除专家模型 top20% 外，另有「manual collection」——人工从各类别与各来源收集顶级图像，并主动填补数据集中缺失的概念以增强泛化。
+4) caption 训练数据中的人工密集标注：报告称人工标注的图像与视频 dense caption 是「我们最高质量的 caption 数据」，专用于模型训练的最终阶段。
+5) Wan2.2-S2V 的人工数据收集：人工从公开可访问来源精选含刻意且复杂的人体活动（说话、唱歌、跳舞）的视频，与自动粗筛并行构成初始视频池。
+6) 评测侧：Wan-Bench 训练了一个 YOLOv3 类模型检测 AI 生成伪影，其训练数据为 2万张（20,000）人工标注的 AI 生成图像；最终综合分采用「人类反馈引导的加权策略」（human feedback guided weighting strategy）确定各维度权重。
+未见对逐样本 caption 的人工复核或抽检流程描述；2.5+ 的人工介入规模未知。
+
+### [音视频生成评测基准合集](../models/av_benchmarks.md) ⚠️
+
+五者人工介入程度差异明显，构成从「重人工」到「轻人工」的完整光谱：
+【PhyAVBench 人工介入最重】人类专家贯穿全部五个阶段：剔除 LLM 生成的不可行/冗余物理原理、审核分类体系消歧去冗、逐条核验并改写配对提示词以保证单变量差异、亲自组织 184 名参与者在可控环境录制 11,605 条视频、以及质控阶段复核物理一致性与三方对齐并对问题样本做删除/修订/重采集。主观评测环节 PVR-MOS 动用 74 名评分员按 1–5 分评估音频差异与物理变化的对应程度。
+【AV-SyncBench 交叉复核机制最规范】5 名人工标注员，每条视频片段至少由 3 人独立审核，核验主声源画面可见性并剔除低质样本 —— 「N=5 标注池、每样本 ≥3 人交叉」是可直接复用的质检配置。前置由 Gemini 3 Flash 做粗筛，构成标准的「模型初筛 + 人工复核」两级结构。
+【Omni-Judge】6 名具备音视频生成研究经验的博士生对 600 条视频按 4 个方面（质量、语义对齐、时序对齐、美学）打 1–5 分整数分，作为衡量 Omni-LLM 裁判能力的人类基准。
+【AVBench】4 名领域专家执行成对比较（2AFC），按维度选出更优模型并允许打平，胜率计算式为 (W + 0.5T)/(W + T + L)，再用 Pearson 相关系数验证自动打分与人类偏好的一致性。
+【VABench】明确使用 human workers 配合 LLM 过滤测试样本并调整测试数据分布，人工核验类目归属、要素可观测性、物理常识约束、听觉推断合理性与问题区分度；但未披露标注人数与一致性指标[不确定]。
+
+### [视频 Caption 模型生态](../models/caption_models.md)
+
+人工介入在 captioner 生态中集中于三个位置，且呈「少量高价值人工 + 大规模模型推理」的一致格局：
+【位置一 · 种子数据人工精标（成本最高、价值最大）】
+· SkyCaptioner-V1 的相机运动子专家：9.3 万条高置信度人工标注 + 1.5 万条人工测试集。
+· ALIVE：caption 模型的训练数据为「MLLM 生成 → 人工修订（manually revised caption data）→ 两轮 SFT」的经典自建路径，用一次性人工成本换大规模推理的低成本；另有 sub-motion units 的起止时间戳人工标注。
+· Movie Gen：后训练阶段的 caption 由人工在模型输出基础上精修。
+· Step-Video-T2V：SFT 阶段由人工「优化 caption」，是不做 captioner 幻觉抑制后训练时的兜底手段。
+【位置二 · 打标器选型与评测中的人工研究】
+· Panda-70M 用 1000 条 clip 的用户研究做贪心集合覆盖选出 8 个打标器；同时报告人类之间的一致率仅 44.9% —— 这个数字定义了整个 caption 质量评测的天花板，是本生态最重要的人工评测发现。
+· Movie Gen 的 caption 方案对比全部靠人工 A/B：视频 caption 被偏好 67% vs 逐帧改写方案 15%。
+· AVSCapBench 的 1226 条视频为人工标注；UGC-VideoCap 采用三阶段 human-in-the-loop（分别标 audio-only / visual-only / joint AV）。
+· Open-Sora Plan 的阈值合理性经 2000 条人工抽检验证。
+【位置三 · 人工被 LLM-judge 替代的趋势】2025–2026 年，caption 质量的逐条人工复核几乎被 GPT-4.1 / Gemini 打分完全替代（AVoCaDO 的 completeness 打分、AVSCap 的 automated verification、AuroraCap 的 VDCScore），人工只保留在基准构建与最终 A/B 环节。这一替代的代价尚未被系统评估 —— 考虑到人类一致率仅 44.9%，LLM-judge 与人类判断的偏差可能已被「人类自己也不一致」所掩盖。
+
+### [几何/结构化标注数据集合集](../models/geometric_datasets.md) ⚠️
+
+整体人工介入极轻，以自动化为主。SpatialVID 人工介入最多：初筛阶段人工审阅33,443条源视频，剔除损坏内容、标题含不当词或“全景相机”字样、以及与 MegaSaM 重建管线不兼容者；后续标注全自动。WildWorld：人工用于构建评测集——WildBench 的200条样本由人工挑选以覆盖多角色/武器/怪物/难度/事件，并做了人工评价与VLM judge 的一致性验证（85%一致率）；数据采集端由游戏内自动录制。SceneScribe-1M：论文未描述任何人工验证环节，质量控制全部由 Qwen2.5-VL-72B 与 TransNetV2 自动完成[不确定]。Action100M：无显式人工验证，靠 GPT-OSS-120B 三轮 Self-Refine 替代人工复核
+
+### [视频生成后训练数据策略](../models/post_training_data.md) ⚠️
+
+【锚论文】人工只出现在两处：① 奖励模型训练所用的「human preference annotation (y1,y2)」，标注量、标注协议、标注员规模全未披露 [不确定]；② 最终评测采用 GSB（Good–Same–Bad）协议，并明确「we ask the human artist to give an overall comparison for the results」——由人类艺术家给出整体比较。论文选择 GSB 而非强制二选一的理由说得很清楚：GSB 允许标注者在差异细微时表达「无差别」，从而减少边缘case上被迫做出的噪声判断，这对视频评测尤其重要。
+【横向的人工介入形态谱系（后训练是人工密度最高的阶段）】
+· 纯人工偏好标注：Step-Video-T2V（标注员对多种子生成结果做偏好评分，全程由质控人员监督一致性）、Kling 3.0 Omni（人类评估者比较多变体）、HunyuanVideo 1.5（GSB 标注，I2V 侧配图还需人工核验图文一致性）；
+· 多维度结构化标注协议（最精细）：Seedance 1.0——「在指定维度选最优/最差，同时保证最优者在其他维度不劣于最差者」。这个约束条件直接解决了多维奖励下的矛盾配对问题，与 JavisDiT++ 的「归一化模态感知排序（normalized modality-aware ranking）」是同一问题的两种解法（后者明确目的是「保证每个模态内部的一致性，而不是把优质音频与劣质视频混搭配对」）；
+· 半自动生产线：SkyReels-V2（人工 3 万样本对 + 自动受控失真样本）；
+· SFT 集的人工终审：HunyuanVideo 100 万人工精选（七维 rubric）、SkyReels-V4 100 万人工精选、Movie Gen 人工挑影视感 + 人工重写 caption、Step-Video-T2V 逐条人工评审、Apollo Stage III 的 manually-curated 高质量集；
+· 公开偏好集的专业标注：VideoReward 雇佣「professional annotators」对每个三元组分别在 VQ/MQ/TA 三维记录成对偏好（A 胜/平局/B 胜），并用带平局的 Bradley-Terry 模型（BTT）建模；
+· 人工只用于评测不回流训练（本主题最普遍的浪费）：Movie Gen、CogVideoX、Open-Sora 2.0（100 prompt 人工胜率）、Ovi（50 人盲测）、Unison（40 样本 × 25 人 = 1000 次排序投票）、UniTalking（20 人 × 50 prompt）、InstructAV2AV（25 人 × 20 样本 × 3 维）、Foley-Omni（A/S/T-MOS）、HunyuanVideo-Foley（MOS-Q/S/T）、CineDance（每视频 10 名评测员 5 点量表）、UltraVideo（10 人对比）、LVD-2M（200 份响应）、Script-a-Video（20 名专业评分员）——这些工作都已组织了人力做主观评测，把同一批标注扩展为偏好对的边际成本极低，却无一这样做。这是开源/学术侧后训练的系统性缺口。
 
 ### [主流视频预训练数据集合并调研：Panda-70M、InternVid、Koala…](../models/pretraining_datasets.md) ⚠️
 
